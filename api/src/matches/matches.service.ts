@@ -8,6 +8,7 @@ import { type EstadoPartido, OutcomePartido, Prisma } from "@prisma/client";
 import { esEstadoInicialValido, transicionar } from "@totalfutbol/core";
 import { randomInt } from "node:crypto";
 import { PrismaService } from "../prisma/prisma.service";
+import { RatingService } from "../rating/rating.service";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
 import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
 import { ReportarResultadoDto } from "./dto/reportar-resultado.dto";
@@ -28,7 +29,10 @@ const INCLUIR_DETALLE = {
 
 @Injectable()
 export class MatchesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ratingService: RatingService,
+  ) {}
 
   async generar(
     usuarioId: string,
@@ -116,9 +120,11 @@ export class MatchesService {
   /**
    * Doble reporte independiente (concepto.md §9). Un reporte mueve
    * EN_JUEGO -> REPORTADO; el segundo, si coincide en outcome con el
-   * primero, mueve REPORTADO -> CONFIRMADO. Si discrepan, el partido
-   * queda en REPORTADO — el arbol de disputa (§10) es del hito de
-   * disputas, todavia no esta cableado.
+   * primero, mueve REPORTADO -> CONFIRMADO y liquida en el acto
+   * (CONFIRMADO -> LIQUIDADO), escribiendo el asiento en rating_ledger
+   * dentro de la misma transaccion. Si discrepan, el partido queda en
+   * REPORTADO — el arbol de disputa (§10) es del hito de disputas,
+   * todavia no esta cableado.
    */
   async reportar(usuarioId: string, matchId: string, dto: ReportarResultadoDto) {
     return this.prisma.$transaction(async (tx) => {
@@ -172,6 +178,17 @@ export class MatchesService {
           estadoActual = transicionar("REPORTADO", "CONFIRMADO");
           outcomeFinal = primero.outcome;
         }
+      }
+
+      if (estadoActual === "CONFIRMADO" && outcomeFinal) {
+        await this.ratingService.liquidar(
+          tx,
+          matchId,
+          match.equipoLocalId,
+          match.equipoVisitanteId,
+          outcomeFinal,
+        );
+        estadoActual = transicionar("CONFIRMADO", "LIQUIDADO");
       }
 
       return tx.match.update({
