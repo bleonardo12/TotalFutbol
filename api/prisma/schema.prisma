@@ -29,6 +29,21 @@ model User {
   @@map("users")
 }
 
+/// Codigo OTP por telefono (login/registro). El codigo se guarda hasheado;
+/// nunca en texto plano.
+model OtpCode {
+  id         String   @id @default(cuid())
+  telefono   String
+  codigoHash String
+  expiraEn   DateTime
+  intentos   Int      @default(0)
+  usado      Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([telefono, usado])
+  @@map("otp_codes")
+}
+
 enum EstadoEquipo {
   PROVISIONAL
   RANKEADO
