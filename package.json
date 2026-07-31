@@ -6,6 +6,9 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "pnpm -r --parallel --if-present run dev",
+    "dev:api": "pnpm --filter @totalfutbol/api run dev",
+    "dev:app": "pnpm --filter @totalfutbol/app run dev",
     "lint": "pnpm -r --if-present run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
