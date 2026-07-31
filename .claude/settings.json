@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --filter @totalfutbol/api run lint*)",
+      "Bash(pnpm exec prettier --check *)",
+      "Bash(nslookup *)"
+    ]
+  }
+}
