@@ -1,0 +1,244 @@
+// Esquema Hito 1 (la espina): entidades nucleo del camino feliz.
+// Disputas, fair-play e incidentes, temporadas/divisiones y fichas de
+// desafio se agregan en hitos posteriores (ver docs/arquitectura.md §8).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Capitan/es de equipo. La identidad ancla en el telefono verificado por OTP.
+model User {
+  id        String   @id @default(cuid())
+  telefono  String   @unique
+  email     String?  @unique
+  nombre    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  equiposCapitaneados   Team[]        @relation("CapitanDeEquipo")
+  integraciones         TeamMember[]
+  reportesComoLocal     Match[]       @relation("ReporterLocal")
+  reportesComoVisitante Match[]       @relation("ReporterVisitante")
+  reportesEnviados      MatchReport[]
+
+  @@map("users")
+}
+
+enum EstadoEquipo {
+  PROVISIONAL
+  RANKEADO
+}
+
+/// La unidad rankeada. rating/rd/volatilidad son la materializacion
+/// del ultimo asiento de RatingLedger; la fuente de verdad es el ledger.
+model Team {
+  id        String       @id @default(cuid())
+  nombre    String
+  capitanId String
+  capitan   User         @relation("CapitanDeEquipo", fields: [capitanId], references: [id])
+  estado    EstadoEquipo @default(PROVISIONAL)
+
+  rating      Float @default(1500)
+  rd          Float @default(350)
+  volatilidad Float @default(0.06)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  integrantes        TeamMember[]
+  desafiosHechos     Challenge[]    @relation("EquipoDesafiante")
+  desafiosRecibidos  Challenge[]    @relation("EquipoDesafiado")
+  partidosComoLocal  Match[]        @relation("EquipoLocal")
+  partidosComoVisita Match[]        @relation("EquipoVisitante")
+  reportesEnviados   MatchReport[]
+  asientosDeRating   RatingLedger[]
+
+  @@index([rating])
+  @@map("teams")
+}
+
+enum RolIntegrante {
+  CAPITAN
+  JUGADOR
+}
+
+/// Plantel progresivo: el equipo nace con nombre + capitan, el resto se suma despues.
+model TeamMember {
+  id        String        @id @default(cuid())
+  teamId    String
+  team      Team          @relation(fields: [teamId], references: [id])
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  rol       RolIntegrante @default(JUGADOR)
+  createdAt DateTime      @default(now())
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+/// Cancha/sede. Sus coordenadas alimentan las zonas emergentes del ranking (§15).
+model Venue {
+  id         String   @id @default(cuid())
+  nombre     String
+  lat        Float
+  lng        Float
+  verificada Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  desafios Challenge[]
+  partidos Match[]
+
+  @@map("venues")
+}
+
+enum CantidadJugadores {
+  F5
+  F6
+  F7
+  F8
+  F11
+}
+
+enum Superficie {
+  SINTETICO
+  SALON
+  PASTO
+  TIERRA
+}
+
+enum EstadoDesafio {
+  PROPUESTO
+  ACEPTADO
+  RECHAZADO
+  EXPIRADO
+}
+
+/// Pacto a distancia (etapa 2, §2). No mueve rating por si solo: recien
+/// se vuelve vinculante cuando se firma el Match por QR en la cancha.
+model Challenge {
+  id           String @id @default(cuid())
+  desafianteId String
+  desafiante   Team   @relation("EquipoDesafiante", fields: [desafianteId], references: [id])
+  desafiadoId  String
+  desafiado    Team   @relation("EquipoDesafiado", fields: [desafiadoId], references: [id])
+
+  cantidadJugadores CantidadJugadores
+  superficie        Superficie
+  sedeId            String?
+  sede              Venue?            @relation(fields: [sedeId], references: [id])
+  fechaPropuesta    DateTime?
+
+  estado    EstadoDesafio @default(PROPUESTO)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  partido Match?
+
+  @@map("challenges")
+}
+
+/// Maquina de estados del partido (concepto.md §8):
+/// PACTADO (solo etapa 2) -> FIRMADO (QR en cancha) -> EN_JUEGO -> REPORTADO
+/// -> CONFIRMADO -> LIQUIDADO, con ramas EN_DISPUTA y SUSPENDIDO/VOID.
+enum EstadoPartido {
+  PACTADO
+  FIRMADO
+  EN_JUEGO
+  REPORTADO
+  CONFIRMADO
+  EN_DISPUTA
+  LIQUIDADO
+  SUSPENDIDO
+  VOID
+}
+
+enum OutcomePartido {
+  GANA_LOCAL
+  GANA_VISITANTE
+  EMPATE
+}
+
+model Match {
+  id String @id @default(cuid())
+
+  challengeId String?    @unique
+  challenge   Challenge? @relation(fields: [challengeId], references: [id])
+
+  equipoLocalId     String
+  equipoLocal       Team   @relation("EquipoLocal", fields: [equipoLocalId], references: [id])
+  equipoVisitanteId String
+  equipoVisitante   Team   @relation("EquipoVisitante", fields: [equipoVisitanteId], references: [id])
+
+  cantidadJugadores CantidadJugadores
+  superficie        Superficie
+  sedeId            String?
+  sede              Venue?            @relation(fields: [sedeId], references: [id])
+
+  estado EstadoPartido @default(FIRMADO)
+
+  /// Codigo/QR del handshake: un lado lo genera, el otro lo consume.
+  codigoHandshake String @unique
+
+  /// Reporter por lado, fijado en el handshake (invariante: no se reasigna).
+  reporterLocalId     String?
+  reporterLocal       User?   @relation("ReporterLocal", fields: [reporterLocalId], references: [id])
+  reporterVisitanteId String?
+  reporterVisitante   User?   @relation("ReporterVisitante", fields: [reporterVisitanteId], references: [id])
+
+  outcomeFinal OutcomePartido?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reportes       MatchReport[]
+  asientosLedger RatingLedger[]
+
+  @@map("matches")
+}
+
+/// Un reporte por lado (doble reporte independiente, §9). Si coinciden en
+/// outcome, el partido liquida; el marcador puede diferir sin bloquear.
+model MatchReport {
+  id         String @id @default(cuid())
+  matchId    String
+  match      Match  @relation(fields: [matchId], references: [id])
+  teamId     String
+  team       Team   @relation(fields: [teamId], references: [id])
+  reporterId String
+  reporter   User   @relation(fields: [reporterId], references: [id])
+
+  outcome     OutcomePartido
+  golesLocal  Int?
+  golesVisita Int?
+
+  createdAt DateTime @default(now())
+
+  @@unique([matchId, reporterId])
+  @@map("match_reports")
+}
+
+/// Append-only: cada liquidacion agrega un asiento, nunca se edita ni borra.
+/// El rating actual de un equipo se materializa a partir de estos asientos.
+model RatingLedger {
+  id      String @id @default(cuid())
+  teamId  String
+  team    Team   @relation(fields: [teamId], references: [id])
+  matchId String
+  match   Match  @relation(fields: [matchId], references: [id])
+
+  delta                 Float
+  ratingResultante      Float
+  rdResultante          Float
+  volatilidadResultante Float
+
+  createdAt DateTime @default(now())
+
+  @@index([teamId, createdAt])
+  @@map("rating_ledger")
+}

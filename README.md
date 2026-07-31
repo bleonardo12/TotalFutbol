@@ -24,6 +24,11 @@ Monorepo con **pnpm workspaces**:
 ```bash
 pnpm install
 
+# Base de datos (Postgres en docker-compose, puerto 5433 en el host)
+docker compose up -d
+cp api/.env.example api/.env   # ajustar si hace falta
+pnpm --filter @totalfutbol/api run prisma:migrate
+
 # Levanta /api y /app juntos
 pnpm dev
 
@@ -31,6 +36,17 @@ pnpm dev
 pnpm dev:api   # Nest en modo watch, http://localhost:3000
 pnpm dev:app   # Metro/Expo, abrir con la app Expo Go o un dev build
 ```
+
+## Base de datos
+
+Schema en `api/prisma/schema.prisma` (Prisma + PostgreSQL). Comandos desde `/api`:
+
+| Comando                | Que hace                                                   |
+| ---------------------- | ---------------------------------------------------------- |
+| `pnpm prisma:migrate`  | Crea/aplica migraciones en dev (`prisma migrate dev`)      |
+| `pnpm prisma:deploy`   | Aplica migraciones pendientes sin generar nuevas (CI/prod) |
+| `pnpm prisma:generate` | Regenera el Prisma Client                                  |
+| `pnpm prisma:studio`   | Explorador visual de datos                                 |
 
 ## Scripts
 
