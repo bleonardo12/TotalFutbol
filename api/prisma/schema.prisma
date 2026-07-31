@@ -20,11 +20,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  equiposCapitaneados   Team[]        @relation("CapitanDeEquipo")
+  equiposCapitaneados   Team[]           @relation("CapitanDeEquipo")
   integraciones         TeamMember[]
-  reportesComoLocal     Match[]       @relation("ReporterLocal")
-  reportesComoVisitante Match[]       @relation("ReporterVisitante")
+  reportesComoLocal     Match[]          @relation("ReporterLocal")
+  reportesComoVisitante Match[]          @relation("ReporterVisitante")
   reportesEnviados      MatchReport[]
+  handshakesGenerados   MatchHandshake[]
 
   @@map("users")
 }
@@ -65,13 +66,14 @@ model Team {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  integrantes        TeamMember[]
-  desafiosHechos     Challenge[]    @relation("EquipoDesafiante")
-  desafiosRecibidos  Challenge[]    @relation("EquipoDesafiado")
-  partidosComoLocal  Match[]        @relation("EquipoLocal")
-  partidosComoVisita Match[]        @relation("EquipoVisitante")
-  reportesEnviados   MatchReport[]
-  asientosDeRating   RatingLedger[]
+  integrantes         TeamMember[]
+  desafiosHechos      Challenge[]      @relation("EquipoDesafiante")
+  desafiosRecibidos   Challenge[]      @relation("EquipoDesafiado")
+  partidosComoLocal   Match[]          @relation("EquipoLocal")
+  partidosComoVisita  Match[]          @relation("EquipoVisitante")
+  reportesEnviados    MatchReport[]
+  asientosDeRating    RatingLedger[]
+  handshakesGenerados MatchHandshake[]
 
   @@index([rating])
   @@map("teams")
@@ -106,8 +108,9 @@ model Venue {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  desafios Challenge[]
-  partidos Match[]
+  desafios   Challenge[]
+  partidos   Match[]
+  handshakes MatchHandshake[]
 
   @@map("venues")
 }
@@ -177,6 +180,29 @@ enum OutcomePartido {
   GANA_LOCAL
   GANA_VISITANTE
   EMPATE
+}
+
+/// Ticket efimero del handshake: un lado genera el codigo/QR, el otro lo
+/// consume. El Match recien nace (FIRMADO) cuando se consume — antes de
+/// eso no hay "partido", solo un codigo esperando ser escaneado.
+model MatchHandshake {
+  id            String @id @default(cuid())
+  codigo        String @unique
+  equipoLocalId String
+  equipoLocal   Team   @relation(fields: [equipoLocalId], references: [id])
+  generadoPorId String
+  generadoPor   User   @relation(fields: [generadoPorId], references: [id])
+
+  cantidadJugadores CantidadJugadores
+  superficie        Superficie
+  sedeId            String?
+  sede              Venue?            @relation(fields: [sedeId], references: [id])
+
+  expiraEn    DateTime
+  consumidoEn DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@map("match_handshakes")
 }
 
 model Match {
