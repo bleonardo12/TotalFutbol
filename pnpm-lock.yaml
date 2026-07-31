@@ -122,6 +122,18 @@ importers:
         specifier: ^8.20.0
         version: 8.65.0(eslint@9.39.5(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
 
+  packages/core:
+    devDependencies:
+      '@totalfutbol/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.4
+        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.49.0)(yaml@2.9.0)
+
 packages:
 
   '@adobe/css-tools@4.5.0':
