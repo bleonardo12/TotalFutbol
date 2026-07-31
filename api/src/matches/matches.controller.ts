@@ -4,6 +4,7 @@ import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { UsuarioActual } from "../auth/jwt/usuario-actual.decorator";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
 import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
+import { ReportarResultadoDto } from "./dto/reportar-resultado.dto";
 import { MatchesService } from "./matches.service";
 
 @Controller("matches")
@@ -29,5 +30,15 @@ export class MatchesController {
       throw new NotFoundException("Partido no encontrado");
     }
     return match;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(":id/reportar")
+  async reportar(
+    @UsuarioActual() usuario: User,
+    @Param("id") id: string,
+    @Body() dto: ReportarResultadoDto,
+  ) {
+    return this.matchesService.reportar(usuario.id, id, dto);
   }
 }
