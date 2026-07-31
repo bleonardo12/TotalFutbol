@@ -19,4 +19,23 @@ module.exports = tseslint.config(
       ],
     },
   },
+  {
+    // Archivos de configuracion en CommonJS (eslint.config.js, prettier.config.js, etc.)
+    files: ["**/*.js", "**/*.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: {
+        require: "readonly",
+        module: "writable",
+        exports: "writable",
+        __dirname: "readonly",
+        __filename: "readonly",
+        process: "readonly",
+        console: "readonly",
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 );
