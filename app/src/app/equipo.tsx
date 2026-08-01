@@ -57,6 +57,7 @@ export default function Equipo(): React.JSX.Element {
             Estado: {equipo.estado === "RANKEADO" ? "Rankeado" : "Provisional"}
           </Text>
           <Text style={styles.etiqueta}>Rating: {Math.round(equipo.rating)}</Text>
+          <Text style={styles.etiqueta}>Fair-play: {Math.round(equipo.fairPlay)}</Text>
           <Link href="/partido" style={styles.link}>
             Ver mis partidos
           </Link>

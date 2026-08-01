@@ -7,6 +7,7 @@ export interface Equipo {
   rating: number;
   rd: number;
   volatilidad: number;
+  fairPlay: number;
 }
 
 export function crearEquipo(token: string, nombre: string): Promise<Equipo> {
