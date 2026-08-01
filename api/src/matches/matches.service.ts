@@ -382,6 +382,65 @@ export class MatchesService {
     });
   }
 
+  /**
+   * Incidentes / agresiones (concepto.md §11): NO adjudica quien tuvo la
+   * culpa, se pega al partido. Delta simetrico a ambos equipos -- no hay
+   * nada que ganar contra-denunciando, la señal confiable sale del
+   * agregado de flags de rivales DISTINTOS en el tiempo, no de un
+   * incidente aislado. Un flag por equipo por partido (@@unique lo
+   * garantiza). Sin restriccion de estado del partido: una agresion
+   * puede pasar en cualquier momento, incluso antes de reportar
+   * resultado.
+   */
+  async flaggearIncidente(
+    usuarioId: string,
+    matchId: string,
+    descripcion: string | undefined,
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const match = await tx.match.findUnique({ where: { id: matchId } });
+      if (!match) {
+        throw new NotFoundException("Partido no encontrado");
+      }
+
+      const teamId = await this.equipoDelUsuario(usuarioId, match);
+      if (!teamId) {
+        throw new ForbiddenException("No sos integrante de ninguno de los dos equipos");
+      }
+
+      try {
+        await tx.matchIncidentFlag.create({
+          data: {
+            matchId,
+            flaggeadoPorTeamId: teamId,
+            flaggeadoPorUserId: usuarioId,
+            descripcion,
+          },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+          throw new ConflictException("Tu equipo ya reporto un incidente en este partido");
+        }
+        throw error;
+      }
+
+      await this.fairPlayService.aplicar(
+        tx,
+        match.equipoLocalId,
+        matchId,
+        "INCIDENTE_FLAG",
+        FAIR_PLAY_DELTA.INCIDENTE_FLAG,
+      );
+      await this.fairPlayService.aplicar(
+        tx,
+        match.equipoVisitanteId,
+        matchId,
+        "INCIDENTE_FLAG",
+        FAIR_PLAY_DELTA.INCIDENTE_FLAG,
+      );
+    });
+  }
+
   private async verificarPertenencia(usuarioId: string, teamId: string): Promise<void> {
     const esIntegrante = await this.prisma.teamMember.findUnique({
       where: { teamId_userId: { teamId, userId: usuarioId } },
@@ -389,6 +448,17 @@ export class MatchesService {
     if (!esIntegrante) {
       throw new ForbiddenException("No sos integrante de ese equipo");
     }
+  }
+
+  private async equipoDelUsuario(
+    usuarioId: string,
+    match: { equipoLocalId: string; equipoVisitanteId: string },
+  ): Promise<string | null> {
+    const integrante = await this.prisma.teamMember.findFirst({
+      where: { userId: usuarioId, teamId: { in: [match.equipoLocalId, match.equipoVisitanteId] } },
+      select: { teamId: true },
+    });
+    return integrante?.teamId ?? null;
   }
 
   private generarCodigo(): string {

@@ -1,9 +1,20 @@
-import { Body, Controller, Get, NotFoundException, Param, Post, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
 import type { User } from "@prisma/client";
 import { AdminGuard } from "../auth/jwt/admin.guard";
 import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { UsuarioActual } from "../auth/jwt/usuario-actual.decorator";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
+import { FlaggearIncidenteDto } from "./dto/flaggear-incidente.dto";
 import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
 import { ReportarResultadoDto } from "./dto/reportar-resultado.dto";
 import { ResolverDisputaDto } from "./dto/resolver-disputa.dto";
@@ -58,5 +69,16 @@ export class MatchesController {
     @Body() dto: ResolverDisputaDto,
   ) {
     return this.matchesService.resolverDisputa(usuario, id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(":id/incidente")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async flaggearIncidente(
+    @UsuarioActual() usuario: User,
+    @Param("id") id: string,
+    @Body() dto: FlaggearIncidenteDto,
+  ): Promise<void> {
+    await this.matchesService.flaggearIncidente(usuario.id, id, dto.descripcion);
   }
 }
