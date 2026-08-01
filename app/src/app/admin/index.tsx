@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { type CapaDisputa, listarDisputasPendientes } from "@/api/disputes";
 import { useAuthStore } from "@/store/auth-store";
@@ -25,6 +25,7 @@ export default function PanelAdmin(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ title: "Panel de admin" }} />
       <Text style={styles.titulo}>Disputas pendientes</Text>
 
       <FlatList

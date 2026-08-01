@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -51,6 +51,7 @@ export default function SubirEvidencia(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ title: "Subir evidencia" }} />
       <Text style={styles.titulo}>Subir evidencia</Text>
 
       {!fotoUri ? (

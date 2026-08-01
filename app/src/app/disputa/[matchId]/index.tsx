@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, Stack, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   Image,
@@ -60,6 +60,7 @@ export default function EstadoDisputa(): React.JSX.Element {
   if (partidoQuery.isLoading || disputaQuery.isLoading) {
     return (
       <View style={styles.centro}>
+        <Stack.Screen options={{ title: "Disputa" }} />
         <ActivityIndicator />
       </View>
     );
@@ -71,6 +72,7 @@ export default function EstadoDisputa(): React.JSX.Element {
   if (!partido || !disputa) {
     return (
       <View style={styles.centro}>
+        <Stack.Screen options={{ title: "Disputa" }} />
         <Text style={styles.aviso}>No se pudo cargar la disputa.</Text>
       </View>
     );
@@ -78,6 +80,7 @@ export default function EstadoDisputa(): React.JSX.Element {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Stack.Screen options={{ title: "Disputa" }} />
       <Text style={styles.titulo}>
         {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
       </Text>

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { responderPoll, type RespuestaPoll } from "@/api/disputes";
@@ -33,6 +33,7 @@ export default function PollPlantel(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ title: "Consulta al plantel" }} />
       <Text style={styles.titulo}>Consulta al plantel</Text>
       <Text style={styles.explicacion}>
         Esto no decide nada por si solo: es una señal mas para que el admin resuelva la disputa.
