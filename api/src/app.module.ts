@@ -4,6 +4,7 @@ import { AuthModule } from "./auth/auth.module";
 import { HealthController } from "./health/health.controller";
 import { MatchesModule } from "./matches/matches.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { RankingModule } from "./ranking/ranking.module";
 import { TeamsModule } from "./teams/teams.module";
 import { VenuesModule } from "./venues/venues.module";
 
@@ -15,6 +16,7 @@ import { VenuesModule } from "./venues/venues.module";
     TeamsModule,
     VenuesModule,
     MatchesModule,
+    RankingModule,
   ],
   controllers: [HealthController],
 })
