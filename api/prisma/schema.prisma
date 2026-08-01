@@ -11,21 +11,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum RolUsuario {
+  JUGADOR
+  ADMIN
+}
+
 /// Capitan/es de equipo. La identidad ancla en el telefono verificado por OTP.
 model User {
-  id        String   @id @default(cuid())
-  telefono  String   @unique
-  email     String?  @unique
+  id        String     @id @default(cuid())
+  telefono  String     @unique
+  email     String?    @unique
   nombre    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  rol       RolUsuario @default(JUGADOR)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
-  equiposCapitaneados   Team[]           @relation("CapitanDeEquipo")
+  equiposCapitaneados   Team[]                 @relation("CapitanDeEquipo")
   integraciones         TeamMember[]
-  reportesComoLocal     Match[]          @relation("ReporterLocal")
-  reportesComoVisitante Match[]          @relation("ReporterVisitante")
+  reportesComoLocal     Match[]                @relation("ReporterLocal")
+  reportesComoVisitante Match[]                @relation("ReporterVisitante")
   reportesEnviados      MatchReport[]
   handshakesGenerados   MatchHandshake[]
+  disputasResueltas     Dispute[]
+  evidenciasSubidas     DisputeEvidence[]
+  respuestasPoll        DisputePollRespuesta[]
 
   @@map("users")
 }
@@ -67,13 +76,15 @@ model Team {
   updatedAt DateTime @updatedAt
 
   integrantes         TeamMember[]
-  desafiosHechos      Challenge[]      @relation("EquipoDesafiante")
-  desafiosRecibidos   Challenge[]      @relation("EquipoDesafiado")
-  partidosComoLocal   Match[]          @relation("EquipoLocal")
-  partidosComoVisita  Match[]          @relation("EquipoVisitante")
+  desafiosHechos      Challenge[]            @relation("EquipoDesafiante")
+  desafiosRecibidos   Challenge[]            @relation("EquipoDesafiado")
+  partidosComoLocal   Match[]                @relation("EquipoLocal")
+  partidosComoVisita  Match[]                @relation("EquipoVisitante")
   reportesEnviados    MatchReport[]
   asientosDeRating    RatingLedger[]
   handshakesGenerados MatchHandshake[]
+  evidenciasSubidas   DisputeEvidence[]
+  respuestasPoll      DisputePollRespuesta[]
 
   @@index([rating])
   @@map("teams")
@@ -239,6 +250,7 @@ model Match {
 
   reportes       MatchReport[]
   asientosLedger RatingLedger[]
+  disputa        Dispute?
 
   @@map("matches")
 }
@@ -282,4 +294,86 @@ model RatingLedger {
 
   @@index([teamId, createdAt])
   @@map("rating_ledger")
+}
+
+enum CapaDisputa {
+  C1_EVIDENCIA
+  C2_PLANTELES
+  C3_ADMIN
+}
+
+/// Arbol de disputa por capas (concepto.md §10). Nace cuando el segundo
+/// reporte discrepa del primero (Match pasa a EN_DISPUTA). Cada capa tiene
+/// su propio vencimiento (capaExpiraEn); un job la hace avanzar si nadie
+/// resolvio antes. El admin puede resolver en cualquier capa, no solo C3.
+model Dispute {
+  id      String @id @default(cuid())
+  matchId String @unique
+  match   Match  @relation(fields: [matchId], references: [id])
+
+  capa CapaDisputa @default(C1_EVIDENCIA)
+
+  /// Codigo unico que la foto de evidencia debe mostrar (anti-reciclaje de fotos viejas).
+  nonce        String   @unique
+  capaExpiraEn DateTime
+
+  resuelta      Boolean         @default(false)
+  /// Si resuelta y no anulada, el outcome que gano la disputa.
+  resolucion    OutcomePartido?
+  anulada       Boolean         @default(false)
+  resueltaPorId String?
+  resueltaPor   User?           @relation(fields: [resueltaPorId], references: [id])
+  resueltaEn    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  evidencias        DisputeEvidence[]
+  respuestasPlantel DisputePollRespuesta[]
+
+  @@map("disputes")
+}
+
+/// Evidencia de C1: foto con el nonce de la disputa visible. Pesa mas que
+/// cualquier voto (§10) — la resuelve el admin, no un conteo automatico.
+model DisputeEvidence {
+  id          String  @id @default(cuid())
+  disputeId   String
+  dispute     Dispute @relation(fields: [disputeId], references: [id])
+  teamId      String
+  team        Team    @relation(fields: [teamId], references: [id])
+  subidoPorId String
+  subidoPor   User    @relation(fields: [subidoPorId], references: [id])
+
+  url         String
+  descripcion String?
+
+  createdAt DateTime @default(now())
+
+  @@map("dispute_evidence")
+}
+
+enum RespuestaPoll {
+  CONFIRMA_CAPITAN
+  CONTRADICE_CAPITAN
+}
+
+/// Consulta al plantel de C2 — NO es una votacion vinculante (§10). Sirve
+/// como señal para el admin: defeccion interna o evidencia que no se subio.
+model DisputePollRespuesta {
+  id           String  @id @default(cuid())
+  disputeId    String
+  dispute      Dispute @relation(fields: [disputeId], references: [id])
+  teamId       String
+  team         Team    @relation(fields: [teamId], references: [id])
+  integranteId String
+  integrante   User    @relation(fields: [integranteId], references: [id])
+
+  respuesta  RespuestaPoll
+  comentario String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([disputeId, integranteId])
+  @@map("dispute_poll_respuestas")
 }
