@@ -103,6 +103,19 @@ export function resolverDisputa(
   });
 }
 
+/**
+ * Incidentes/agresiones (concepto.md §11): no adjudica quien tuvo la culpa,
+ * se pega al partido. Un flag por equipo por partido (la API da 409 en el
+ * segundo intento del mismo equipo).
+ */
+export function flaggearIncidente(token: string, id: string, descripcion?: string): Promise<void> {
+  return apiRequest(`/matches/${id}/incidente`, {
+    method: "POST",
+    token,
+    body: { descripcion },
+  });
+}
+
 export function reportarResultado(
   token: string,
   id: string,

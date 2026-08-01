@@ -3,7 +3,12 @@ import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
-import { obtenerPartido, reportarResultado, type OutcomePartido } from "@/api/matches";
+import {
+  flaggearIncidente,
+  obtenerPartido,
+  reportarResultado,
+  type OutcomePartido,
+} from "@/api/matches";
 import { useAuthStore } from "@/store/auth-store";
 
 type ResultadoPropio = "GANE" | "PERDI" | "EMPATE";
@@ -38,6 +43,8 @@ export default function DetallePartido(): React.JSX.Element {
   const [resultado, setResultado] = useState<ResultadoPropio | null>(null);
   const [golesPropios, setGolesPropios] = useState("");
   const [golesRival, setGolesRival] = useState("");
+  const [mostrarIncidente, setMostrarIncidente] = useState(false);
+  const [descripcionIncidente, setDescripcionIncidente] = useState("");
 
   const usuarioQuery = useQuery({
     queryKey: ["usuario", "actual"],
@@ -67,6 +74,15 @@ export default function DetallePartido(): React.JSX.Element {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partidos", id] });
       queryClient.invalidateQueries({ queryKey: ["equipos", "mios"] });
+    },
+  });
+
+  const incidenteMutacion = useMutation({
+    mutationFn: () =>
+      flaggearIncidente(accessToken as string, id, descripcionIncidente || undefined),
+    onSuccess: () => {
+      setMostrarIncidente(false);
+      setDescripcionIncidente("");
     },
   });
 
@@ -190,6 +206,43 @@ export default function DetallePartido(): React.JSX.Element {
           </Pressable>
         </Link>
       )}
+
+      {(esLocal || esVisitante) && (
+        <View style={styles.incidenteSeccion}>
+          {!mostrarIncidente ? (
+            <Pressable style={styles.botonSecundario} onPress={() => setMostrarIncidente(true)}>
+              <Text style={styles.botonSecundarioTexto}>Reportar incidente</Text>
+            </Pressable>
+          ) : (
+            <>
+              <Text style={styles.etiqueta}>
+                No hace falta decir quien tuvo la culpa, solo que paso algo en el partido.
+              </Text>
+              <TextInput
+                style={styles.inputGoles}
+                placeholder="Descripcion (opcional)"
+                value={descripcionIncidente}
+                onChangeText={setDescripcionIncidente}
+                maxLength={280}
+              />
+              {incidenteMutacion.isError && (
+                <Text style={styles.error}>{incidenteMutacion.error.message}</Text>
+              )}
+              <Pressable
+                style={[styles.boton, incidenteMutacion.isPending && styles.botonDeshabilitado]}
+                disabled={incidenteMutacion.isPending}
+                onPress={() => incidenteMutacion.mutate()}
+              >
+                {incidenteMutacion.isPending ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.botonTexto}>Enviar reporte de incidente</Text>
+                )}
+              </Pressable>
+            </>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -284,5 +337,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#666",
     marginTop: 16,
+  },
+  incidenteSeccion: {
+    gap: 8,
+    marginTop: 16,
+  },
+  botonSecundario: {
+    borderWidth: 1,
+    borderColor: "#c0392b",
+    borderRadius: 8,
+    padding: 14,
+    alignItems: "center",
+  },
+  botonSecundarioTexto: {
+    color: "#c0392b",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
