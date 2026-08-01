@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
@@ -181,6 +181,14 @@ export default function DetallePartido(): React.JSX.Element {
 
       {!puedeReportar && yaReporte && !partido.outcomeFinal && (
         <Text style={styles.aviso}>Ya reportaste. Esperando el reporte del rival.</Text>
+      )}
+
+      {partido.estado === "EN_DISPUTA" && (
+        <Link href={{ pathname: "/disputa/[matchId]", params: { matchId: id } }} asChild>
+          <Pressable style={styles.boton}>
+            <Text style={styles.botonTexto}>Ver disputa</Text>
+          </Pressable>
+        </Link>
       )}
     </View>
   );
