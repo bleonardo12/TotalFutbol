@@ -1,3 +1,4 @@
+import { InjectQueue } from "@nestjs/bullmq";
 import {
   ConflictException,
   ForbiddenException,
@@ -6,6 +7,7 @@ import {
 } from "@nestjs/common";
 import { type EstadoPartido, OutcomePartido, Prisma } from "@prisma/client";
 import { esEstadoInicialValido, transicionar } from "@totalfutbol/core";
+import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { RatingService } from "../rating/rating.service";
@@ -13,9 +15,11 @@ import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
 import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
 import { ReportarResultadoDto } from "./dto/reportar-resultado.dto";
 import {
+  COLA_VENCIMIENTO_REPORTE,
   HANDSHAKE_ALFABETO,
   HANDSHAKE_CODIGO_LONGITUD,
   HANDSHAKE_TTL_MINUTOS,
+  VENTANA_DISPUTA_HORAS,
 } from "./matches.constantes";
 
 const INCLUIR_DETALLE = {
@@ -32,6 +36,7 @@ export class MatchesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ratingService: RatingService,
+    @InjectQueue(COLA_VENCIMIENTO_REPORTE) private readonly colaVencimiento: Queue,
   ) {}
 
   async generar(
@@ -128,15 +133,17 @@ export class MatchesService {
 
   /**
    * Doble reporte independiente (concepto.md §9). Un reporte mueve
-   * EN_JUEGO -> REPORTADO; el segundo, si coincide en outcome con el
-   * primero, mueve REPORTADO -> CONFIRMADO y liquida en el acto
-   * (CONFIRMADO -> LIQUIDADO), escribiendo el asiento en rating_ledger
-   * dentro de la misma transaccion. Si discrepan, el partido queda en
-   * REPORTADO — el arbol de disputa (§10) es del hito de disputas,
-   * todavia no esta cableado.
+   * EN_JUEGO -> REPORTADO y programa el vencimiento de silencio=asentimiento
+   * (Capa B, §10) a VENTANA_DISPUTA_HORAS. El segundo reporte, si coincide
+   * en outcome con el primero, mueve REPORTADO -> CONFIRMADO y liquida en
+   * el acto (CONFIRMADO -> LIQUIDADO) dentro de la misma transaccion. Si
+   * discrepan, abre disputa (ver MatchesService — se cablea en el proximo
+   * commit).
    */
   async reportar(usuarioId: string, matchId: string, dto: ReportarResultadoDto) {
-    return this.prisma.$transaction(async (tx) => {
+    let esPrimerReporte = false;
+
+    const resultado = await this.prisma.$transaction(async (tx) => {
       const match = await tx.match.findUnique({ where: { id: matchId } });
       if (!match) {
         throw new NotFoundException("Partido no encontrado");
@@ -176,6 +183,7 @@ export class MatchesService {
       let estadoActual: EstadoPartido = match.estado;
       if (estadoActual === "EN_JUEGO") {
         estadoActual = transicionar("EN_JUEGO", "REPORTADO");
+        esPrimerReporte = true;
       }
 
       const reportes = await tx.matchReport.findMany({ where: { matchId } });
@@ -204,6 +212,54 @@ export class MatchesService {
         where: { id: matchId },
         data: { estado: estadoActual, outcomeFinal },
         include: INCLUIR_DETALLE,
+      });
+    });
+
+    if (esPrimerReporte) {
+      await this.colaVencimiento.add(
+        "vencimiento",
+        { matchId },
+        { delay: VENTANA_DISPUTA_HORAS * 60 * 60 * 1000, jobId: matchId },
+      );
+    }
+
+    return resultado;
+  }
+
+  /**
+   * Capa B (concepto.md §10): si nadie mas reporto dentro de la ventana,
+   * el unico reporte que hay se toma como aceptado tacitamente y liquida
+   * igual que si hubiera coincidido con un segundo reporte. Si el partido
+   * ya avanzo por otro camino (segundo reporte, disputa), no hace nada —
+   * es idempotente a proposito, porque el job puede llegar a correr
+   * despues de que el estado ya cambio por otro lado.
+   */
+  async aplicarSilencioAsentimiento(matchId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const match = await tx.match.findUnique({ where: { id: matchId } });
+      if (!match || match.estado !== "REPORTADO") {
+        return;
+      }
+
+      const reportes = await tx.matchReport.findMany({ where: { matchId } });
+      const unico = reportes[0];
+      if (!unico) {
+        return;
+      }
+
+      const estadoConfirmado = transicionar("REPORTADO", "CONFIRMADO");
+      await this.ratingService.liquidar(
+        tx,
+        matchId,
+        match.equipoLocalId,
+        match.equipoVisitanteId,
+        unico.outcome,
+      );
+      const estadoLiquidado = transicionar(estadoConfirmado, "LIQUIDADO");
+
+      await tx.match.update({
+        where: { id: matchId },
+        data: { estado: estadoLiquidado, outcomeFinal: unico.outcome },
       });
     });
   }
