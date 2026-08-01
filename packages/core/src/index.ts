@@ -17,3 +17,14 @@ export {
   transicionar,
   TransicionInvalidaError,
 } from "./maquina-partido/maquina-partido";
+
+export type { EventoFairPlay, LadoPresuncion } from "./fair-play/tipos";
+export {
+  FAIR_PLAY_DELTA,
+  FAIR_PLAY_INICIAL,
+  FAIR_PLAY_MAX,
+  FAIR_PLAY_MIN,
+  FAIR_PLAY_UMBRAL_PRESUNCION,
+  FAIR_PLAY_VENTANA_DECAY_DIAS,
+} from "./fair-play/constantes";
+export { calcularFairPlay, haypresuncion } from "./fair-play/fair-play";
