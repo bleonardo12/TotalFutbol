@@ -6,10 +6,11 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { type EstadoPartido, OutcomePartido, Prisma, type User } from "@prisma/client";
-import { esEstadoInicialValido, transicionar } from "@totalfutbol/core";
+import { esEstadoInicialValido, FAIR_PLAY_DELTA, transicionar } from "@totalfutbol/core";
 import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
 import { DisputesService } from "../disputes/disputes.service";
+import { FairPlayService } from "../fair-play/fair-play.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { RatingService } from "../rating/rating.service";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
@@ -39,6 +40,7 @@ export class MatchesService {
     private readonly prisma: PrismaService,
     private readonly ratingService: RatingService,
     private readonly disputesService: DisputesService,
+    private readonly fairPlayService: FairPlayService,
     @InjectQueue(COLA_VENCIMIENTO_REPORTE) private readonly colaVencimiento: Queue,
   ) {}
 
@@ -213,6 +215,21 @@ export class MatchesService {
           match.equipoVisitanteId,
           outcomeFinal,
         );
+        // Doble reporte coincidente = conducta limpia para ambos (concepto.md §11).
+        await this.fairPlayService.aplicar(
+          tx,
+          match.equipoLocalId,
+          matchId,
+          "PARTIDO_LIMPIO",
+          FAIR_PLAY_DELTA.PARTIDO_LIMPIO,
+        );
+        await this.fairPlayService.aplicar(
+          tx,
+          match.equipoVisitanteId,
+          matchId,
+          "PARTIDO_LIMPIO",
+          FAIR_PLAY_DELTA.PARTIDO_LIMPIO,
+        );
         estadoActual = transicionar("CONFIRMADO", "LIQUIDADO");
       }
 
@@ -271,6 +288,27 @@ export class MatchesService {
         match.equipoVisitanteId,
         unico.outcome,
       );
+
+      // El que reporto de buena fe y espero la ventana entera tambien es
+      // conducta limpia; el que nunca confirmo se marca por ghosting
+      // (concepto.md §11).
+      const equipoQueGhosteo =
+        unico.teamId === match.equipoLocalId ? match.equipoVisitanteId : match.equipoLocalId;
+      await this.fairPlayService.aplicar(
+        tx,
+        unico.teamId,
+        matchId,
+        "PARTIDO_LIMPIO",
+        FAIR_PLAY_DELTA.PARTIDO_LIMPIO,
+      );
+      await this.fairPlayService.aplicar(
+        tx,
+        equipoQueGhosteo,
+        matchId,
+        "GHOSTING",
+        FAIR_PLAY_DELTA.GHOSTING,
+      );
+
       const estadoLiquidado = transicionar(estadoConfirmado, "LIQUIDADO");
 
       await tx.match.update({
