@@ -9,6 +9,7 @@ import {
 import {
   type CapaDisputa,
   type Dispute,
+  type OutcomePartido,
   Prisma,
   type RespuestaPoll,
   type User,
@@ -227,6 +228,39 @@ export class DisputesService {
       include: {
         team: { select: { id: true, nombre: true } },
         subidoPor: { select: { id: true, telefono: true, nombre: true } },
+      },
+    });
+  }
+
+  /**
+   * C3 (concepto.md §10): el admin decide, dentro de la misma transaccion
+   * que la transicion de estado del Match (responsabilidad del llamador,
+   * igual que en abrir()). Si `resolucion` viene indefinida, la disputa
+   * se anula por indeterminable (VOID) — el admin no tiene por que poder
+   * reconstruir la verdad siempre.
+   */
+  async resolver(
+    tx: Prisma.TransactionClient,
+    matchId: string,
+    usuarioId: string,
+    resolucion: OutcomePartido | undefined,
+  ): Promise<Dispute> {
+    const dispute = await tx.dispute.findUnique({ where: { matchId } });
+    if (!dispute) {
+      throw new NotFoundException("Este partido no tiene una disputa abierta");
+    }
+    if (dispute.resuelta) {
+      throw new ConflictException("La disputa ya esta resuelta");
+    }
+
+    return tx.dispute.update({
+      where: { id: dispute.id },
+      data: {
+        resuelta: true,
+        resolucion: resolucion ?? null,
+        anulada: !resolucion,
+        resueltaPorId: usuarioId,
+        resueltaEn: new Date(),
       },
     });
   }

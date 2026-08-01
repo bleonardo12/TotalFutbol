@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { type EstadoPartido, OutcomePartido, Prisma } from "@prisma/client";
+import { type EstadoPartido, OutcomePartido, Prisma, type User } from "@prisma/client";
 import { esEstadoInicialValido, transicionar } from "@totalfutbol/core";
 import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
@@ -15,6 +15,7 @@ import { RatingService } from "../rating/rating.service";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
 import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
 import { ReportarResultadoDto } from "./dto/reportar-resultado.dto";
+import { ResolverDisputaDto } from "./dto/resolver-disputa.dto";
 import {
   COLA_VENCIMIENTO_REPORTE,
   HANDSHAKE_ALFABETO,
@@ -275,6 +276,50 @@ export class MatchesService {
       await tx.match.update({
         where: { id: matchId },
         data: { estado: estadoLiquidado, outcomeFinal: unico.outcome },
+      });
+    });
+  }
+
+  /**
+   * C3 (concepto.md §10): el admin es el ultimo decisor. Si manda una
+   * `resolucion` (GANA_LOCAL/GANA_VISITANTE/EMPATE), el partido se
+   * confirma y liquida con ese outcome, igual que si hubiera coincidido
+   * en un doble reporte. Si no manda resolucion, es indeterminable: el
+   * partido queda VOID (sin mover el rating, concepto.md: "suspendido o
+   * abandonado = void").
+   */
+  async resolverDisputa(usuario: User, matchId: string, dto: ResolverDisputaDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const match = await tx.match.findUnique({ where: { id: matchId } });
+      if (!match) {
+        throw new NotFoundException("Partido no encontrado");
+      }
+      if (match.estado !== "EN_DISPUTA") {
+        throw new ConflictException("Este partido no tiene una disputa activa para resolver");
+      }
+
+      await this.disputesService.resolver(tx, matchId, usuario.id, dto.resolucion);
+
+      let estadoActual: EstadoPartido = transicionar(
+        "EN_DISPUTA",
+        dto.resolucion ? "CONFIRMADO" : "VOID",
+      );
+
+      if (dto.resolucion) {
+        await this.ratingService.liquidar(
+          tx,
+          matchId,
+          match.equipoLocalId,
+          match.equipoVisitanteId,
+          dto.resolucion,
+        );
+        estadoActual = transicionar(estadoActual, "LIQUIDADO");
+      }
+
+      return tx.match.update({
+        where: { id: matchId },
+        data: { estado: estadoActual, outcomeFinal: dto.resolucion },
+        include: INCLUIR_DETALLE,
       });
     });
   }

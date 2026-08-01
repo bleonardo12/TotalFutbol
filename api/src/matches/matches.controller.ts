@@ -1,10 +1,12 @@
 import { Body, Controller, Get, NotFoundException, Param, Post, UseGuards } from "@nestjs/common";
 import type { User } from "@prisma/client";
+import { AdminGuard } from "../auth/jwt/admin.guard";
 import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { UsuarioActual } from "../auth/jwt/usuario-actual.decorator";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
 import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
 import { ReportarResultadoDto } from "./dto/reportar-resultado.dto";
+import { ResolverDisputaDto } from "./dto/resolver-disputa.dto";
 import { MatchesService } from "./matches.service";
 
 @Controller("matches")
@@ -46,5 +48,15 @@ export class MatchesController {
     @Body() dto: ReportarResultadoDto,
   ) {
     return this.matchesService.reportar(usuario.id, id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Post(":id/resolver-disputa")
+  async resolverDisputa(
+    @UsuarioActual() usuario: User,
+    @Param("id") id: string,
+    @Body() dto: ResolverDisputaDto,
+  ) {
+    return this.matchesService.resolverDisputa(usuario, id, dto);
   }
 }

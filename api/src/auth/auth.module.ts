@@ -3,6 +3,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
+import { AdminGuard } from "./jwt/admin.guard";
 import { JwtAuthGuard } from "./jwt/jwt-auth.guard";
 import { JwtStrategy } from "./jwt/jwt.strategy";
 import { TokensService } from "./jwt/tokens.service";
@@ -19,8 +20,9 @@ import { OtpService } from "./otp/otp.service";
     TokensService,
     JwtStrategy,
     JwtAuthGuard,
+    AdminGuard,
     { provide: OTP_SENDER, useClass: LogOtpSender },
   ],
-  exports: [JwtAuthGuard],
+  exports: [JwtAuthGuard, AdminGuard],
 })
 export class AuthModule {}
