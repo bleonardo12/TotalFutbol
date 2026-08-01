@@ -3,6 +3,7 @@ import { apiRequest, apiRequestFormData } from "./client";
 import type { OutcomePartido } from "./matches";
 
 export type CapaDisputa = "C1_EVIDENCIA" | "C2_PLANTELES" | "C3_ADMIN";
+export type RespuestaPoll = "CONFIRMA_CAPITAN" | "CONTRADICE_CAPITAN";
 
 export interface EquipoResumen {
   id: string;
@@ -37,6 +38,17 @@ export function obtenerDisputa(token: string, matchId: string): Promise<Dispute>
   return apiRequest(`/disputes/${matchId}`, { token });
 }
 
+export interface DisputePollRespuesta {
+  id: string;
+  teamId: string;
+  team: EquipoResumen;
+  integranteId: string;
+  integrante: UsuarioActual;
+  respuesta: RespuestaPoll;
+  comentario: string | null;
+  createdAt: string;
+}
+
 export function subirEvidencia(
   token: string,
   matchId: string,
@@ -54,4 +66,17 @@ export function subirEvidencia(
   }
 
   return apiRequestFormData(`/disputes/${matchId}/evidencia`, formData, token);
+}
+
+export function responderPoll(
+  token: string,
+  matchId: string,
+  respuesta: RespuestaPoll,
+  comentario?: string,
+): Promise<DisputePollRespuesta> {
+  return apiRequest(`/disputes/${matchId}/poll`, {
+    method: "POST",
+    token,
+    body: { respuesta, comentario },
+  });
 }

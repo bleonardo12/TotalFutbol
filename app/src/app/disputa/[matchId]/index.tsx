@@ -101,14 +101,22 @@ export default function EstadoDisputa(): React.JSX.Element {
       )}
 
       {!disputa.resuelta && (
-        <Link
-          href={{ pathname: "/disputa/[matchId]/subir-evidencia", params: { matchId } }}
-          asChild
-        >
-          <Pressable style={styles.boton}>
-            <Text style={styles.botonTexto}>Subir evidencia</Text>
-          </Pressable>
-        </Link>
+        <>
+          <Link
+            href={{ pathname: "/disputa/[matchId]/subir-evidencia", params: { matchId } }}
+            asChild
+          >
+            <Pressable style={styles.boton}>
+              <Text style={styles.botonTexto}>Subir evidencia</Text>
+            </Pressable>
+          </Link>
+
+          <Link href={{ pathname: "/disputa/[matchId]/poll", params: { matchId } }} asChild>
+            <Pressable style={styles.botonSecundario}>
+              <Text style={styles.botonSecundarioTexto}>Responder consulta al plantel</Text>
+            </Pressable>
+          </Link>
+        </>
       )}
 
       <View style={styles.seccion}>
@@ -218,6 +226,18 @@ const styles = StyleSheet.create({
   },
   botonTexto: {
     color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  botonSecundario: {
+    borderWidth: 1,
+    borderColor: "#208AEF",
+    borderRadius: 8,
+    padding: 14,
+    alignItems: "center",
+  },
+  botonSecundarioTexto: {
+    color: "#208AEF",
     fontWeight: "600",
     fontSize: 16,
   },
