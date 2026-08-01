@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { obtenerUsuarioActual } from "@/api/auth";
 import { crearEquipo, misEquipos } from "@/api/teams";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -11,6 +12,12 @@ export default function Equipo(): React.JSX.Element {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [nombre, setNombre] = useState("");
+
+  const usuarioQuery = useQuery({
+    queryKey: ["usuario", "actual"],
+    queryFn: () => obtenerUsuarioActual(accessToken as string),
+    enabled: accessToken !== null,
+  });
 
   const equiposQuery = useQuery({
     queryKey: ["equipos", "mios"],
@@ -82,6 +89,11 @@ export default function Equipo(): React.JSX.Element {
             )}
           </Pressable>
         </View>
+      )}
+      {usuarioQuery.data?.rol === "ADMIN" && (
+        <Link href="/admin" style={styles.link}>
+          Panel de admin
+        </Link>
       )}
       <Pressable style={styles.botonSecundario} onPress={salir}>
         <Text style={styles.botonSecundarioTexto}>Cerrar sesion</Text>

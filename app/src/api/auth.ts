@@ -5,10 +5,13 @@ export interface ParDeTokens {
   refreshToken: string;
 }
 
+export type RolUsuario = "JUGADOR" | "ADMIN";
+
 export interface UsuarioActual {
   id: string;
   telefono: string;
   nombre: string | null;
+  rol: RolUsuario;
 }
 
 export function solicitarOtp(telefono: string): Promise<void> {

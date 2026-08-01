@@ -77,6 +77,19 @@ export function obtenerPartido(token: string, id: string): Promise<Partido> {
   return apiRequest(`/matches/${id}`, { token });
 }
 
+/** Solo ADMIN. Sin `resolucion` la disputa se anula (VOID, indeterminable). */
+export function resolverDisputa(
+  token: string,
+  id: string,
+  resolucion?: OutcomePartido,
+): Promise<Partido> {
+  return apiRequest(`/matches/${id}/resolver-disputa`, {
+    method: "POST",
+    token,
+    body: { resolucion },
+  });
+}
+
 export function reportarResultado(
   token: string,
   id: string,

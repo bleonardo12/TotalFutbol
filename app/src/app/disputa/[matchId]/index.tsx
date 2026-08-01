@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
@@ -9,8 +9,9 @@ import {
   Text,
   View,
 } from "react-native";
+import { obtenerUsuarioActual } from "@/api/auth";
 import { type CapaDisputa, obtenerDisputa } from "@/api/disputes";
-import { obtenerPartido } from "@/api/matches";
+import { obtenerPartido, resolverDisputa, type OutcomePartido } from "@/api/matches";
 import { useAuthStore } from "@/store/auth-store";
 
 const ETIQUETA_CAPA: Record<CapaDisputa, string> = {
@@ -26,6 +27,13 @@ function formatearFecha(iso: string): string {
 export default function EstadoDisputa(): React.JSX.Element {
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const queryClient = useQueryClient();
+
+  const usuarioQuery = useQuery({
+    queryKey: ["usuario", "actual"],
+    queryFn: () => obtenerUsuarioActual(accessToken as string),
+    enabled: accessToken !== null,
+  });
 
   const partidoQuery = useQuery({
     queryKey: ["partidos", matchId],
@@ -37,6 +45,16 @@ export default function EstadoDisputa(): React.JSX.Element {
     queryKey: ["disputas", matchId],
     queryFn: () => obtenerDisputa(accessToken as string, matchId),
     enabled: accessToken !== null && !!matchId,
+  });
+
+  const resolverMutacion = useMutation({
+    mutationFn: (resolucion?: OutcomePartido) =>
+      resolverDisputa(accessToken as string, matchId, resolucion),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["disputas", matchId] });
+      queryClient.invalidateQueries({ queryKey: ["partidos", matchId] });
+      queryClient.invalidateQueries({ queryKey: ["disputas", "pendientes"] });
+    },
   });
 
   if (partidoQuery.isLoading || disputaQuery.isLoading) {
@@ -117,6 +135,47 @@ export default function EstadoDisputa(): React.JSX.Element {
             </Pressable>
           </Link>
         </>
+      )}
+
+      {usuarioQuery.data?.rol === "ADMIN" && !disputa.resuelta && (
+        <View style={styles.seccion}>
+          <Text style={styles.subtitulo}>Resolver (admin)</Text>
+          {resolverMutacion.isError && (
+            <Text style={styles.error}>{resolverMutacion.error.message}</Text>
+          )}
+          <Pressable
+            style={styles.boton}
+            disabled={resolverMutacion.isPending}
+            onPress={() => resolverMutacion.mutate("GANA_LOCAL")}
+          >
+            <Text style={styles.botonTexto}>Gano {partido.equipoLocal.nombre}</Text>
+          </Pressable>
+          <Pressable
+            style={styles.boton}
+            disabled={resolverMutacion.isPending}
+            onPress={() => resolverMutacion.mutate("EMPATE")}
+          >
+            <Text style={styles.botonTexto}>Empate</Text>
+          </Pressable>
+          <Pressable
+            style={styles.boton}
+            disabled={resolverMutacion.isPending}
+            onPress={() => resolverMutacion.mutate("GANA_VISITANTE")}
+          >
+            <Text style={styles.botonTexto}>Gano {partido.equipoVisitante.nombre}</Text>
+          </Pressable>
+          <Pressable
+            style={styles.botonSecundario}
+            disabled={resolverMutacion.isPending}
+            onPress={() => resolverMutacion.mutate(undefined)}
+          >
+            {resolverMutacion.isPending ? (
+              <ActivityIndicator color="#208AEF" />
+            ) : (
+              <Text style={styles.botonSecundarioTexto}>Anular (indeterminable)</Text>
+            )}
+          </Pressable>
+        </View>
       )}
 
       <View style={styles.seccion}>
@@ -240,5 +299,9 @@ const styles = StyleSheet.create({
     color: "#208AEF",
     fontWeight: "600",
     fontSize: 16,
+  },
+  error: {
+    color: "#c0392b",
+    textAlign: "center",
   },
 });

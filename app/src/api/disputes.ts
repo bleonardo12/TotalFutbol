@@ -38,6 +38,23 @@ export function obtenerDisputa(token: string, matchId: string): Promise<Dispute>
   return apiRequest(`/disputes/${matchId}`, { token });
 }
 
+export interface DisputaPendiente {
+  id: string;
+  matchId: string;
+  capa: CapaDisputa;
+  capaExpiraEn: string;
+  match: {
+    id: string;
+    equipoLocal: EquipoResumen;
+    equipoVisitante: EquipoResumen;
+  };
+}
+
+/** Solo ADMIN. Cola de disputas sin resolver, en cualquier capa, ordenadas por vencimiento. */
+export function listarDisputasPendientes(token: string): Promise<DisputaPendiente[]> {
+  return apiRequest("/disputes", { token });
+}
+
 export interface DisputePollRespuesta {
   id: string;
   teamId: string;
