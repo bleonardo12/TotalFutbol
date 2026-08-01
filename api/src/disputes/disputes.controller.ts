@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import type { User } from "@prisma/client";
+import { AdminGuard } from "../auth/jwt/admin.guard";
 import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { UsuarioActual } from "../auth/jwt/usuario-actual.decorator";
 import { EVIDENCIA_TAMANO_MAXIMO_BYTES } from "./disputes.constantes";
@@ -20,6 +21,13 @@ import { SubirEvidenciaDto } from "./dto/subir-evidencia.dto";
 @Controller("disputes")
 export class DisputesController {
   constructor(private readonly disputesService: DisputesService) {}
+
+  /** Cola del admin: todas las disputas todavia sin resolver, en cualquier capa. */
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get()
+  async listarPendientes() {
+    return this.disputesService.listarPendientes();
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get(":matchId")

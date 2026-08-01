@@ -32,7 +32,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get("me")
-  yo(@UsuarioActual() usuario: User): Pick<User, "id" | "telefono" | "nombre"> {
-    return { id: usuario.id, telefono: usuario.telefono, nombre: usuario.nombre };
+  yo(@UsuarioActual() usuario: User): Pick<User, "id" | "telefono" | "nombre" | "rol"> {
+    return { id: usuario.id, telefono: usuario.telefono, nombre: usuario.nombre, rol: usuario.rol };
   }
 }

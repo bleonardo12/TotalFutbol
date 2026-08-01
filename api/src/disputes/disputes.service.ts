@@ -166,6 +166,28 @@ export class DisputesService {
   }
 
   /**
+   * Cola del admin (concepto.md §10, C3: "el admin es el ultimo
+   * decisor"). Devuelve todas las disputas sin resolver, en cualquier
+   * capa -- el admin puede resolver una disputa aunque todavia no haya
+   * llegado a C3, no hay que esperar a que se venzan C1 y C2 primero.
+   */
+  async listarPendientes() {
+    return this.prisma.dispute.findMany({
+      where: { resuelta: false },
+      include: {
+        match: {
+          select: {
+            id: true,
+            equipoLocal: { select: { id: true, nombre: true } },
+            equipoVisitante: { select: { id: true, nombre: true } },
+          },
+        },
+      },
+      orderBy: { capaExpiraEn: "asc" },
+    });
+  }
+
+  /**
    * El admin ve todo, incluidas las respuestas del poll de plantel (C2).
    * Los equipos involucrados ven la disputa (evidencia de ambos lados
    * incluida) pero no las respuestas del poll — no es una votacion
