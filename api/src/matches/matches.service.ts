@@ -9,6 +9,7 @@ import { type EstadoPartido, OutcomePartido, Prisma } from "@prisma/client";
 import { esEstadoInicialValido, transicionar } from "@totalfutbol/core";
 import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
+import { DisputesService } from "../disputes/disputes.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { RatingService } from "../rating/rating.service";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
@@ -36,6 +37,7 @@ export class MatchesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ratingService: RatingService,
+    private readonly disputesService: DisputesService,
     @InjectQueue(COLA_VENCIMIENTO_REPORTE) private readonly colaVencimiento: Queue,
   ) {}
 
@@ -137,8 +139,8 @@ export class MatchesService {
    * (Capa B, §10) a VENTANA_DISPUTA_HORAS. El segundo reporte, si coincide
    * en outcome con el primero, mueve REPORTADO -> CONFIRMADO y liquida en
    * el acto (CONFIRMADO -> LIQUIDADO) dentro de la misma transaccion. Si
-   * discrepan, abre disputa (ver MatchesService — se cablea en el proximo
-   * commit).
+   * discrepan, abre disputa (REPORTADO -> EN_DISPUTA, Capa C) en la misma
+   * transaccion — el arbol C1/C2/C3 lo resuelve el modulo disputes.
    */
   async reportar(usuarioId: string, matchId: string, dto: ReportarResultadoDto) {
     let esPrimerReporte = false;
@@ -194,6 +196,9 @@ export class MatchesService {
         if (primero && reportes.every((r) => r.outcome === primero.outcome)) {
           estadoActual = transicionar("REPORTADO", "CONFIRMADO");
           outcomeFinal = primero.outcome;
+        } else {
+          estadoActual = transicionar("REPORTADO", "EN_DISPUTA");
+          await this.disputesService.abrir(tx, matchId);
         }
       }
 
