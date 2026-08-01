@@ -37,6 +37,14 @@ pnpm dev:api   # Nest en modo watch, http://localhost:3000
 pnpm dev:app   # Metro/Expo, abrir con la app Expo Go o un dev build
 ```
 
+`/app` necesita saber donde esta `/api`. Copiar `app/.env.example` a `app/.env` y ajustar
+`EXPO_PUBLIC_API_URL` segun donde corra la app:
+
+- Emulador Android: `http://10.0.2.2:3000` (`localhost` del emulador apunta a si mismo, no a tu PC).
+- Dispositivo fisico (Expo Go o dev build) en la misma red: la IP LAN de tu PC, ej.
+  `http://192.168.x.x:3000`.
+- Web/simulador iOS en la misma maquina: `http://localhost:3000` anda directo.
+
 ## Base de datos
 
 Schema en `api/prisma/schema.prisma` (Prisma + PostgreSQL). Comandos desde `/api`:
