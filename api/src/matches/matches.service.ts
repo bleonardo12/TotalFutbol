@@ -144,6 +144,7 @@ export class MatchesService {
    */
   async reportar(usuarioId: string, matchId: string, dto: ReportarResultadoDto) {
     let esPrimerReporte = false;
+    let disputaAbiertaId: string | undefined;
 
     const resultado = await this.prisma.$transaction(async (tx) => {
       const match = await tx.match.findUnique({ where: { id: matchId } });
@@ -198,7 +199,8 @@ export class MatchesService {
           outcomeFinal = primero.outcome;
         } else {
           estadoActual = transicionar("REPORTADO", "EN_DISPUTA");
-          await this.disputesService.abrir(tx, matchId);
+          const disputa = await this.disputesService.abrir(tx, matchId);
+          disputaAbiertaId = disputa.id;
         }
       }
 
@@ -225,6 +227,14 @@ export class MatchesService {
         "vencimiento",
         { matchId },
         { delay: VENTANA_DISPUTA_HORAS * 60 * 60 * 1000, jobId: matchId },
+      );
+    }
+
+    if (disputaAbiertaId) {
+      await this.disputesService.programarVencimientoCapa(
+        disputaAbiertaId,
+        "C1_EVIDENCIA",
+        "C2_PLANTELES",
       );
     }
 

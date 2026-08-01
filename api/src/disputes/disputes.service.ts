@@ -1,3 +1,4 @@
+import { InjectQueue } from "@nestjs/bullmq";
 import {
   BadRequestException,
   ConflictException,
@@ -5,16 +6,28 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma, type User } from "@prisma/client";
+import { type CapaDisputa, type Dispute, Prisma, type User } from "@prisma/client";
+import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
 import { VENTANA_DISPUTA_HORAS } from "../matches/matches.constantes";
 import { PrismaService } from "../prisma/prisma.service";
 import { StorageService } from "../storage/storage.service";
-import { EVIDENCIA_MIME_PERMITIDOS, NONCE_ALFABETO, NONCE_LONGITUD } from "./disputes.constantes";
+import {
+  COLA_VENCIMIENTO_DISPUTA,
+  EVIDENCIA_MIME_PERMITIDOS,
+  NONCE_ALFABETO,
+  NONCE_LONGITUD,
+} from "./disputes.constantes";
 
 interface ArchivoEvidencia {
   buffer: Buffer;
   mimetype: string;
+}
+
+interface DatosVencimientoCapa {
+  disputeId: string;
+  capaEsperada: CapaDisputa;
+  siguienteCapa: CapaDisputa;
 }
 
 @Injectable()
@@ -22,19 +35,22 @@ export class DisputesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
+    @InjectQueue(COLA_VENCIMIENTO_DISPUTA) private readonly colaVencimiento: Queue,
   ) {}
 
   /**
    * Abre la disputa cuando el segundo reporte discrepa del primero
    * (concepto.md §10, Capa C). Corre dentro de la misma transaccion que
    * el reporte que la dispara — quien llama es responsable de la
-   * transicion de estado del Match (EN_DISPUTA).
+   * transicion de estado del Match (EN_DISPUTA) y de programar el
+   * vencimiento de la capa C1 despues de que la transaccion cierre
+   * (programarVencimientoCapa, fuera de la tx).
    */
-  async abrir(tx: Prisma.TransactionClient, matchId: string): Promise<void> {
+  async abrir(tx: Prisma.TransactionClient, matchId: string): Promise<Dispute> {
     for (let intento = 0; intento < 5; intento++) {
       const nonce = this.generarNonce();
       try {
-        await tx.dispute.create({
+        return await tx.dispute.create({
           data: {
             matchId,
             capa: "C1_EVIDENCIA",
@@ -42,7 +58,6 @@ export class DisputesService {
             capaExpiraEn: new Date(Date.now() + VENTANA_DISPUTA_HORAS * 60 * 60 * 1000),
           },
         });
-        return;
       } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
           continue; // colision de nonce (muy improbable): reintenta con uno nuevo
@@ -52,6 +67,47 @@ export class DisputesService {
     }
 
     throw new Error("No se pudo generar un nonce de disputa unico");
+  }
+
+  /** Encola el vencimiento de una capa. Se llama fuera de cualquier transaccion Postgres. */
+  async programarVencimientoCapa(
+    disputeId: string,
+    capaEsperada: CapaDisputa,
+    siguienteCapa: CapaDisputa,
+  ): Promise<void> {
+    await this.colaVencimiento.add(
+      "vencimiento-capa",
+      { disputeId, capaEsperada, siguienteCapa } satisfies DatosVencimientoCapa,
+      {
+        delay: VENTANA_DISPUTA_HORAS * 60 * 60 * 1000,
+        jobId: `${disputeId}-${capaEsperada}`,
+      },
+    );
+  }
+
+  /**
+   * Handler del job de vencimiento (concepto.md §10: "cada capa con
+   * reloj"). Si la disputa sigue en `capaEsperada` (nadie la resolvio ni
+   * avanzo por otro lado), la mueve a `siguienteCapa` y reinicia el
+   * vencimiento. Idempotente: si ya se resolvio o ya avanzo, no hace nada.
+   */
+  async avanzarCapaSiVence(
+    disputeId: string,
+    capaEsperada: CapaDisputa,
+    siguienteCapa: CapaDisputa,
+  ): Promise<void> {
+    const dispute = await this.prisma.dispute.findUnique({ where: { id: disputeId } });
+    if (!dispute || dispute.resuelta || dispute.capa !== capaEsperada) {
+      return;
+    }
+
+    await this.prisma.dispute.update({
+      where: { id: disputeId },
+      data: {
+        capa: siguienteCapa,
+        capaExpiraEn: new Date(Date.now() + VENTANA_DISPUTA_HORAS * 60 * 60 * 1000),
+      },
+    });
   }
 
   /**
