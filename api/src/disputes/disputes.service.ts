@@ -14,6 +14,7 @@ import {
   type RespuestaPoll,
   type User,
 } from "@prisma/client";
+import { transicionar } from "@totalfutbol/core";
 import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
 import { VENTANA_DISPUTA_HORAS } from "../matches/matches.constantes";
@@ -34,7 +35,8 @@ interface ArchivoEvidencia {
 interface DatosVencimientoCapa {
   disputeId: string;
   capaEsperada: CapaDisputa;
-  siguienteCapa: CapaDisputa;
+  /** Ausente en el job de C3: vencer ahi no avanza de capa, fuerza VOID. */
+  siguienteCapa?: CapaDisputa;
 }
 
 @Injectable()
@@ -76,11 +78,15 @@ export class DisputesService {
     throw new Error("No se pudo generar un nonce de disputa unico");
   }
 
-  /** Encola el vencimiento de una capa. Se llama fuera de cualquier transaccion Postgres. */
+  /**
+   * Encola el vencimiento de una capa. Se llama fuera de cualquier
+   * transaccion Postgres. Sin `siguienteCapa` (caso C3_ADMIN) el job
+   * fuerza VOID en vez de avanzar de capa.
+   */
   async programarVencimientoCapa(
     disputeId: string,
     capaEsperada: CapaDisputa,
-    siguienteCapa: CapaDisputa,
+    siguienteCapa: CapaDisputa | undefined,
   ): Promise<void> {
     await this.colaVencimiento.add(
       "vencimiento-capa",
@@ -98,11 +104,10 @@ export class DisputesService {
    * avanzo por otro lado), la mueve a `siguienteCapa` y reinicia el
    * vencimiento. Idempotente: si ya se resolvio o ya avanzo, no hace nada.
    *
-   * Al llegar a C2_PLANTELES por vencimiento de C1, encadena el proximo
-   * vencimiento (C2 -> C3_ADMIN) para que el poll del plantel tambien
-   * tenga reloj propio. C3_ADMIN no encadena mas: de ahi en mas es el
-   * admin quien resuelve, o el vencimiento de C3 (VOID automatico, fuera
-   * del alcance de este metodo).
+   * Al llegar a una nueva capa por vencimiento, encadena el proximo
+   * vencimiento: C1->C2 encadena C2->C3, y C2->C3 encadena el vencimiento
+   * terminal de C3 (forzarVoidSiVence, sin `siguienteCapa` propio porque
+   * no avanza de capa sino que fuerza VOID).
    */
   async avanzarCapaSiVence(
     disputeId: string,
@@ -124,7 +129,40 @@ export class DisputesService {
 
     if (siguienteCapa === "C2_PLANTELES") {
       await this.programarVencimientoCapa(disputeId, "C2_PLANTELES", "C3_ADMIN");
+    } else if (siguienteCapa === "C3_ADMIN") {
+      await this.programarVencimientoCapa(disputeId, "C3_ADMIN", undefined);
     }
+  }
+
+  /**
+   * Vencimiento terminal de C3 (concepto.md §10: "void si es
+   * indeterminable"). Si nadie resolvio la disputa (ni el admin ni otro
+   * camino) dentro de la ventana de C3, el partido queda VOID sin mover
+   * el rating — igual que si el admin la hubiera anulado a mano
+   * (MatchesService.resolverDisputa sin `resolucion`), salvo que aca
+   * `resueltaPorId` queda null: nadie la resolvio, se vencio sola.
+   * Idempotente, mismo criterio que avanzarCapaSiVence.
+   */
+  async forzarVoidSiVence(disputeId: string, capaEsperada: CapaDisputa): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const dispute = await tx.dispute.findUnique({ where: { id: disputeId } });
+      if (!dispute || dispute.resuelta || dispute.capa !== capaEsperada) {
+        return;
+      }
+
+      const match = await tx.match.findUnique({ where: { id: dispute.matchId } });
+      if (!match || match.estado !== "EN_DISPUTA") {
+        return;
+      }
+
+      const estadoVoid = transicionar("EN_DISPUTA", "VOID");
+
+      await tx.match.update({ where: { id: match.id }, data: { estado: estadoVoid } });
+      await tx.dispute.update({
+        where: { id: disputeId },
+        data: { resuelta: true, anulada: true, resueltaEn: new Date() },
+      });
+    });
   }
 
   /**

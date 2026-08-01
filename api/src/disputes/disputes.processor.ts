@@ -7,7 +7,8 @@ import { DisputesService } from "./disputes.service";
 interface DatosVencimientoCapa {
   disputeId: string;
   capaEsperada: CapaDisputa;
-  siguienteCapa: CapaDisputa;
+  /** Ausente en el job de C3: vencer ahi no avanza de capa, fuerza VOID. */
+  siguienteCapa?: CapaDisputa;
 }
 
 @Processor(COLA_VENCIMIENTO_DISPUTA)
@@ -17,10 +18,11 @@ export class VencimientoCapaProcessor extends WorkerHost {
   }
 
   async process(job: Job<DatosVencimientoCapa>): Promise<void> {
-    await this.disputesService.avanzarCapaSiVence(
-      job.data.disputeId,
-      job.data.capaEsperada,
-      job.data.siguienteCapa,
-    );
+    const { disputeId, capaEsperada, siguienteCapa } = job.data;
+    if (siguienteCapa) {
+      await this.disputesService.avanzarCapaSiVence(disputeId, capaEsperada, siguienteCapa);
+    } else {
+      await this.disputesService.forzarVoidSiVence(disputeId, capaEsperada);
+    }
   }
 }
