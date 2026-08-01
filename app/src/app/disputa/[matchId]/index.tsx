@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Link, useLocalSearchParams } from "expo-router";
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { type CapaDisputa, obtenerDisputa } from "@/api/disputes";
 import { obtenerPartido } from "@/api/matches";
 import { useAuthStore } from "@/store/auth-store";
@@ -90,6 +98,17 @@ export default function EstadoDisputa(): React.JSX.Element {
             Escribilo a mano y visible en la foto que subas como evidencia.
           </Text>
         </View>
+      )}
+
+      {!disputa.resuelta && (
+        <Link
+          href={{ pathname: "/disputa/[matchId]/subir-evidencia", params: { matchId } }}
+          asChild
+        >
+          <Pressable style={styles.boton}>
+            <Text style={styles.botonTexto}>Subir evidencia</Text>
+          </Pressable>
+        </Link>
       )}
 
       <View style={styles.seccion}>
@@ -190,5 +209,16 @@ const styles = StyleSheet.create({
   aviso: {
     textAlign: "center",
     color: "#666",
+  },
+  boton: {
+    backgroundColor: "#208AEF",
+    borderRadius: 8,
+    padding: 14,
+    alignItems: "center",
+  },
+  botonTexto: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });

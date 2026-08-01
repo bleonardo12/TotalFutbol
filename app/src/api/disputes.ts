@@ -1,5 +1,5 @@
 import type { UsuarioActual } from "./auth";
-import { apiRequest } from "./client";
+import { apiRequest, apiRequestFormData } from "./client";
 import type { OutcomePartido } from "./matches";
 
 export type CapaDisputa = "C1_EVIDENCIA" | "C2_PLANTELES" | "C3_ADMIN";
@@ -35,4 +35,23 @@ export interface Dispute {
 
 export function obtenerDisputa(token: string, matchId: string): Promise<Dispute> {
   return apiRequest(`/disputes/${matchId}`, { token });
+}
+
+export function subirEvidencia(
+  token: string,
+  matchId: string,
+  foto: { uri: string; nombre: string; tipo: string },
+  descripcion?: string,
+): Promise<DisputeEvidencia> {
+  const formData = new FormData();
+  formData.append("archivo", {
+    uri: foto.uri,
+    name: foto.nombre,
+    type: foto.tipo,
+  } as unknown as Blob);
+  if (descripcion) {
+    formData.append("descripcion", descripcion);
+  }
+
+  return apiRequestFormData(`/disputes/${matchId}/evidencia`, formData, token);
 }

@@ -51,3 +51,24 @@ export async function apiRequest<T>(path: string, opciones: OpcionesRequest = {}
 
   return datos as T;
 }
+
+/** Para subidas multipart (archivos). No se fija Content-Type a mano: fetch arma el boundary solo. */
+export async function apiRequestFormData<T>(
+  path: string,
+  formData: FormData,
+  token: string,
+): Promise<T> {
+  const respuesta = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  const datos: unknown = await respuesta.json().catch(() => undefined);
+
+  if (!respuesta.ok) {
+    throw new ApiError(respuesta.status, extraerMensaje(datos, respuesta.status));
+  }
+
+  return datos as T;
+}
