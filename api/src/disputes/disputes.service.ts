@@ -6,7 +6,13 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { type CapaDisputa, type Dispute, Prisma, type User } from "@prisma/client";
+import {
+  type CapaDisputa,
+  type Dispute,
+  Prisma,
+  type RespuestaPoll,
+  type User,
+} from "@prisma/client";
 import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
 import { VENTANA_DISPUTA_HORAS } from "../matches/matches.constantes";
@@ -211,6 +217,59 @@ export class DisputesService {
       include: {
         team: { select: { id: true, nombre: true } },
         subidoPor: { select: { id: true, telefono: true, nombre: true } },
+      },
+    });
+  }
+
+  /**
+   * C2 (concepto.md §9-10): cada integrante del plantel de ambos equipos
+   * puede decir si confirma o contradice lo que reporto el capitan de SU
+   * equipo. No es una votacion vinculante ni publica — es señal por
+   * agregado para el admin (C3). Un integrante puede cambiar su respuesta
+   * mientras la disputa siga abierta (upsert).
+   */
+  async responderPoll(
+    matchId: string,
+    usuario: User,
+    dto: { respuesta: RespuestaPoll; comentario?: string },
+  ) {
+    const match = await this.prisma.match.findUnique({
+      where: { id: matchId },
+      select: { equipoLocalId: true, equipoVisitanteId: true },
+    });
+    if (!match) {
+      throw new NotFoundException("Partido no encontrado");
+    }
+
+    const teamId = await this.equipoDelUsuario(usuario.id, match);
+    if (!teamId) {
+      throw new ForbiddenException("No sos integrante de ninguno de los dos equipos");
+    }
+
+    const dispute = await this.prisma.dispute.findUnique({ where: { matchId } });
+    if (!dispute) {
+      throw new NotFoundException("Este partido no tiene una disputa abierta");
+    }
+    if (dispute.resuelta) {
+      throw new ConflictException("La disputa ya esta resuelta");
+    }
+
+    return this.prisma.disputePollRespuesta.upsert({
+      where: { disputeId_integranteId: { disputeId: dispute.id, integranteId: usuario.id } },
+      create: {
+        disputeId: dispute.id,
+        teamId,
+        integranteId: usuario.id,
+        respuesta: dto.respuesta,
+        comentario: dto.comentario,
+      },
+      update: {
+        respuesta: dto.respuesta,
+        comentario: dto.comentario,
+      },
+      include: {
+        team: { select: { id: true, nombre: true } },
+        integrante: { select: { id: true, telefono: true, nombre: true } },
       },
     });
   }

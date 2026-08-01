@@ -14,6 +14,7 @@ import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { UsuarioActual } from "../auth/jwt/usuario-actual.decorator";
 import { EVIDENCIA_TAMANO_MAXIMO_BYTES } from "./disputes.constantes";
 import { DisputesService } from "./disputes.service";
+import { ResponderPollDto } from "./dto/responder-poll.dto";
 import { SubirEvidenciaDto } from "./dto/subir-evidencia.dto";
 
 @Controller("disputes")
@@ -38,5 +39,15 @@ export class DisputesController {
     @Body() dto: SubirEvidenciaDto,
   ) {
     return this.disputesService.subirEvidencia(matchId, usuario, archivo, dto.descripcion);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(":matchId/poll")
+  async responderPoll(
+    @UsuarioActual() usuario: User,
+    @Param("matchId") matchId: string,
+    @Body() dto: ResponderPollDto,
+  ) {
+    return this.disputesService.responderPoll(matchId, usuario, dto);
   }
 }
