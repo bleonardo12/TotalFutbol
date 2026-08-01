@@ -1,6 +1,6 @@
-// Esquema Hito 1 (la espina): entidades nucleo del camino feliz.
-// Disputas, fair-play e incidentes, temporadas/divisiones y fichas de
-// desafio se agregan en hitos posteriores (ver docs/arquitectura.md §8).
+// Hito 1 (la espina) + Hito 2 (disputas) + Hito 3 (fair-play) — entidades
+// nucleo. Temporadas/divisiones y fichas de desafio se agregan en hitos
+// posteriores (ver docs/arquitectura.md §8).
 
 generator client {
   provider = "prisma-client-js"
@@ -35,6 +35,7 @@ model User {
   disputasResueltas     Dispute[]
   evidenciasSubidas     DisputeEvidence[]
   respuestasPoll        DisputePollRespuesta[]
+  incidentesFlagged     MatchIncidentFlag[]
 
   @@map("users")
 }
@@ -72,6 +73,11 @@ model Team {
   rd          Float @default(350)
   volatilidad Float @default(0.06)
 
+  /// Un solo numero de confianza (0-1000, arranque 900, concepto.md §11).
+  /// Materializado desde fair_play_ledger con decay temporal — igual que
+  /// rating se materializa desde rating_ledger.
+  fairPlay Float @default(900)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -85,6 +91,8 @@ model Team {
   handshakesGenerados MatchHandshake[]
   evidenciasSubidas   DisputeEvidence[]
   respuestasPoll      DisputePollRespuesta[]
+  eventosFairPlay     FairPlayLedger[]
+  incidentesFlagged   MatchIncidentFlag[]
 
   @@index([rating])
   @@map("teams")
@@ -248,9 +256,11 @@ model Match {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  reportes       MatchReport[]
-  asientosLedger RatingLedger[]
-  disputa        Dispute?
+  reportes        MatchReport[]
+  asientosLedger  RatingLedger[]
+  disputa         Dispute?
+  eventosFairPlay FairPlayLedger[]
+  incidentes      MatchIncidentFlag[]
 
   @@map("matches")
 }
@@ -376,4 +386,54 @@ model DisputePollRespuesta {
 
   @@unique([disputeId, integranteId])
   @@map("dispute_poll_respuestas")
+}
+
+enum TipoEventoFairPlay {
+  PARTIDO_LIMPIO
+  GHOSTING
+  REPORTE_FALSO_PROBADO
+  DISPUTA_FRIVOLA
+  INCIDENTE_FLAG
+}
+
+/// Append-only, igual que RatingLedger (arquitectura.md: "ledger append-only
+/// para rating y fair-play → auditable y reconstruible"). Team.fairPlay se
+/// recalcula desde este historial completo (con decay temporal) cada vez
+/// que se agrega un evento — nunca se edita ni borra un asiento.
+model FairPlayLedger {
+  id      String  @id @default(cuid())
+  teamId  String
+  team    Team    @relation(fields: [teamId], references: [id])
+  matchId String?
+  match   Match?  @relation(fields: [matchId], references: [id])
+
+  tipo               TipoEventoFairPlay
+  delta              Float
+  fairPlayResultante Float
+
+  createdAt DateTime @default(now())
+
+  @@index([teamId, createdAt])
+  @@map("fair_play_ledger")
+}
+
+/// Flag de incidente (agresion, concepto.md §11): NO adjudica quien tuvo la
+/// culpa. Se pega al partido y ambos equipos reciben un delta simetrico —
+/// la señal confiable es el agregado de flags de rivales DISTINTOS en el
+/// tiempo, no un incidente aislado. Un flag por equipo por partido.
+model MatchIncidentFlag {
+  id                 String @id @default(cuid())
+  matchId            String
+  match              Match  @relation(fields: [matchId], references: [id])
+  flaggeadoPorTeamId String
+  flaggeadoPorTeam   Team   @relation(fields: [flaggeadoPorTeamId], references: [id])
+  flaggeadoPorUserId String
+  flaggeadoPorUser   User   @relation(fields: [flaggeadoPorUserId], references: [id])
+
+  descripcion String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([matchId, flaggeadoPorTeamId])
+  @@map("match_incident_flags")
 }
