@@ -33,6 +33,8 @@ export interface Dispute {
   resueltaPor: UsuarioActual | null;
   resueltaEn: string | null;
   evidencias: DisputeEvidencia[];
+  /** Solo presente para ADMIN (concepto.md §11): nunca se muestra a los equipos en disputa. */
+  presuncionContraEquipoId?: string | null;
 }
 
 export function obtenerDisputa(token: string, matchId: string): Promise<Dispute> {

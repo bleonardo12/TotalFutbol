@@ -17,6 +17,14 @@ export type OutcomePartido = "GANA_LOCAL" | "GANA_VISITANTE" | "EMPATE";
 export interface EquipoResumen {
   id: string;
   nombre: string;
+  fairPlay: number;
+}
+
+export type TipoSancionFairPlay = "REPORTE_FALSO_PROBADO" | "DISPUTA_FRIVOLA";
+
+export interface SancionFairPlay {
+  tipo: TipoSancionFairPlay;
+  equipoSancionadoId: string;
 }
 
 export interface ReporteResultado {
@@ -77,16 +85,21 @@ export function obtenerPartido(token: string, id: string): Promise<Partido> {
   return apiRequest(`/matches/${id}`, { token });
 }
 
-/** Solo ADMIN. Sin `resolucion` la disputa se anula (VOID, indeterminable). */
+/**
+ * Solo ADMIN. Sin `resolucion` la disputa se anula (VOID, indeterminable).
+ * `sancion` es independiente de `resolucion`: se puede anular y ademas
+ * sancionar si queda claro que un lado mintio.
+ */
 export function resolverDisputa(
   token: string,
   id: string,
   resolucion?: OutcomePartido,
+  sancion?: SancionFairPlay,
 ): Promise<Partido> {
   return apiRequest(`/matches/${id}/resolver-disputa`, {
     method: "POST",
     token,
-    body: { resolucion },
+    body: { resolucion, sancion },
   });
 }
 

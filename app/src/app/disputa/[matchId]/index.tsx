@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Stack, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -11,8 +12,18 @@ import {
 } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
 import { type CapaDisputa, obtenerDisputa } from "@/api/disputes";
-import { obtenerPartido, resolverDisputa, type OutcomePartido } from "@/api/matches";
+import {
+  obtenerPartido,
+  resolverDisputa,
+  type OutcomePartido,
+  type TipoSancionFairPlay,
+} from "@/api/matches";
 import { useAuthStore } from "@/store/auth-store";
+
+const ETIQUETA_SANCION: Record<TipoSancionFairPlay, string> = {
+  REPORTE_FALSO_PROBADO: "Reporte falso probado",
+  DISPUTA_FRIVOLA: "Disputa frivola",
+};
 
 const ETIQUETA_CAPA: Record<CapaDisputa, string> = {
   C1_EVIDENCIA: "Evidencia (C1)",
@@ -28,6 +39,8 @@ export default function EstadoDisputa(): React.JSX.Element {
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const accessToken = useAuthStore((s) => s.accessToken);
   const queryClient = useQueryClient();
+  const [sancionTipo, setSancionTipo] = useState<TipoSancionFairPlay | null>(null);
+  const [sancionEquipoId, setSancionEquipoId] = useState<string | null>(null);
 
   const usuarioQuery = useQuery({
     queryKey: ["usuario", "actual"],
@@ -48,8 +61,13 @@ export default function EstadoDisputa(): React.JSX.Element {
   });
 
   const resolverMutacion = useMutation({
-    mutationFn: (resolucion?: OutcomePartido) =>
-      resolverDisputa(accessToken as string, matchId, resolucion),
+    mutationFn: (resolucion?: OutcomePartido) => {
+      const sancion =
+        sancionTipo && sancionEquipoId
+          ? { tipo: sancionTipo, equipoSancionadoId: sancionEquipoId }
+          : undefined;
+      return resolverDisputa(accessToken as string, matchId, resolucion, sancion);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["disputas", matchId] });
       queryClient.invalidateQueries({ queryKey: ["partidos", matchId] });
@@ -143,6 +161,71 @@ export default function EstadoDisputa(): React.JSX.Element {
       {usuarioQuery.data?.rol === "ADMIN" && !disputa.resuelta && (
         <View style={styles.seccion}>
           <Text style={styles.subtitulo}>Resolver (admin)</Text>
+
+          {disputa.presuncionContraEquipoId && (
+            <Text style={styles.presuncion}>
+              Presuncion por diferencial de fair-play contra{" "}
+              {disputa.presuncionContraEquipoId === partido.equipoLocal.id
+                ? partido.equipoLocal.nombre
+                : partido.equipoVisitante.nombre}
+              . No decide nada por si sola.
+            </Text>
+          )}
+
+          <Text style={styles.etiqueta}>Sancionar (opcional)</Text>
+          <View style={styles.opcionesSancion}>
+            {(["REPORTE_FALSO_PROBADO", "DISPUTA_FRIVOLA"] as const).map((tipo) => (
+              <Pressable
+                key={tipo}
+                style={[styles.chip, sancionTipo === tipo && styles.chipSeleccionado]}
+                onPress={() => setSancionTipo(sancionTipo === tipo ? null : tipo)}
+              >
+                <Text
+                  style={[styles.chipTexto, sancionTipo === tipo && styles.chipTextoSeleccionado]}
+                >
+                  {ETIQUETA_SANCION[tipo]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {sancionTipo && (
+            <View style={styles.opcionesSancion}>
+              <Pressable
+                style={[
+                  styles.chip,
+                  sancionEquipoId === partido.equipoLocal.id && styles.chipSeleccionado,
+                ]}
+                onPress={() => setSancionEquipoId(partido.equipoLocal.id)}
+              >
+                <Text
+                  style={[
+                    styles.chipTexto,
+                    sancionEquipoId === partido.equipoLocal.id && styles.chipTextoSeleccionado,
+                  ]}
+                >
+                  {partido.equipoLocal.nombre}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.chip,
+                  sancionEquipoId === partido.equipoVisitante.id && styles.chipSeleccionado,
+                ]}
+                onPress={() => setSancionEquipoId(partido.equipoVisitante.id)}
+              >
+                <Text
+                  style={[
+                    styles.chipTexto,
+                    sancionEquipoId === partido.equipoVisitante.id && styles.chipTextoSeleccionado,
+                  ]}
+                >
+                  {partido.equipoVisitante.nombre}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
           {resolverMutacion.isError && (
             <Text style={styles.error}>{resolverMutacion.error.message}</Text>
           )}
@@ -306,5 +389,35 @@ const styles = StyleSheet.create({
   error: {
     color: "#c0392b",
     textAlign: "center",
+  },
+  presuncion: {
+    fontSize: 13,
+    color: "#a15c00",
+    backgroundColor: "#fff4e0",
+    padding: 8,
+    borderRadius: 6,
+  },
+  opcionesSancion: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  chip: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  chipSeleccionado: {
+    backgroundColor: "#a15c00",
+    borderColor: "#a15c00",
+  },
+  chipTexto: {
+    fontSize: 13,
+    color: "#333",
+  },
+  chipTextoSeleccionado: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });
