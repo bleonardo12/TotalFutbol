@@ -5,11 +5,14 @@
  *   -> CONFIRMADO | EN_DISPUTA -> LIQUIDADO
  *                                        ↘ SUSPENDIDO/ABANDONADO -> VOID
  *
- * Hito 1 (la espina) solo cablea el camino feliz: PACTADO -> FIRMADO ->
- * EN_JUEGO -> REPORTADO -> CONFIRMADO -> LIQUIDADO. EN_DISPUTA, SUSPENDIDO
- * y VOID ya estan en el tipo (coinciden con el enum de Prisma) porque son
- * parte del modelo cerrado del dominio, pero sus transiciones dependen del
- * arbol de disputa y se cablean en el hito de disputas (arquitectura.md §8).
+ * Hito 1 (la espina) cablea el camino feliz completo: PACTADO -> FIRMADO ->
+ * EN_JUEGO -> REPORTADO -> CONFIRMADO -> LIQUIDADO.
+ *
+ * Hito 2 (disputas) agrega REPORTADO -> EN_DISPUTA (los reportes discrepan)
+ * y EN_DISPUTA -> CONFIRMADO | VOID (arbol de disputa, concepto.md §10; el
+ * admin puede resolver en cualquier capa, no solo C3). SUSPENDIDO -> VOID
+ * (agresion/abandono) sigue sin cablear: depende de incidentes/fair-play,
+ * que es el hito siguiente (arquitectura.md §8).
  */
 export type EstadoPartido =
   | "PACTADO"
@@ -29,10 +32,10 @@ const TRANSICIONES: Readonly<Record<EstadoPartido, readonly EstadoPartido[]>> = 
   PACTADO: ["FIRMADO"],
   FIRMADO: ["EN_JUEGO"],
   EN_JUEGO: ["REPORTADO"],
-  REPORTADO: ["CONFIRMADO"],
+  REPORTADO: ["CONFIRMADO", "EN_DISPUTA"],
   CONFIRMADO: ["LIQUIDADO"],
   LIQUIDADO: [],
-  EN_DISPUTA: [],
+  EN_DISPUTA: ["CONFIRMADO", "VOID"],
   SUSPENDIDO: [],
   VOID: [],
 };

@@ -54,13 +54,34 @@ describe("transiciones invalidas", () => {
   });
 });
 
-describe("estados de disputa (pendientes hasta el hito de disputas)", () => {
-  it("EN_DISPUTA, SUSPENDIDO y VOID no tienen transiciones cableadas todavia", () => {
-    expect(puedeTransicionar("REPORTADO", "EN_DISPUTA")).toBe(false);
+describe("arbol de disputa (concepto.md §10)", () => {
+  it("REPORTADO -> EN_DISPUTA cuando los reportes discrepan", () => {
+    expect(puedeTransicionar("REPORTADO", "EN_DISPUTA")).toBe(true);
+    expect(transicionar("REPORTADO", "EN_DISPUTA")).toBe("EN_DISPUTA");
+  });
+
+  it("EN_DISPUTA se resuelve con un outcome (-> CONFIRMADO, sigue camino feliz hasta LIQUIDADO) o se anula (-> VOID)", () => {
+    expect(puedeTransicionar("EN_DISPUTA", "CONFIRMADO")).toBe(true);
+    expect(transicionar("EN_DISPUTA", "CONFIRMADO")).toBe("CONFIRMADO");
+    expect(puedeTransicionar("CONFIRMADO", "LIQUIDADO")).toBe(true);
+
+    expect(puedeTransicionar("EN_DISPUTA", "VOID")).toBe(true);
+    expect(transicionar("EN_DISPUTA", "VOID")).toBe("VOID");
+  });
+
+  it("EN_DISPUTA no admite otra cosa que CONFIRMADO o VOID (no vuelve a REPORTADO ni salta a LIQUIDADO directo)", () => {
+    expect(puedeTransicionar("EN_DISPUTA", "REPORTADO")).toBe(false);
     expect(puedeTransicionar("EN_DISPUTA", "LIQUIDADO")).toBe(false);
-    expect(puedeTransicionar("EN_JUEGO", "SUSPENDIDO")).toBe(false);
-    expect(esEstadoTerminal("EN_DISPUTA")).toBe(true);
-    expect(esEstadoTerminal("SUSPENDIDO")).toBe(true);
+  });
+
+  it("VOID es terminal (sin cambio de rating)", () => {
     expect(esEstadoTerminal("VOID")).toBe(true);
+  });
+});
+
+describe("SUSPENDIDO (pendiente hasta el hito de fair-play/incidentes)", () => {
+  it("no tiene transiciones cableadas todavia", () => {
+    expect(puedeTransicionar("EN_JUEGO", "SUSPENDIDO")).toBe(false);
+    expect(esEstadoTerminal("SUSPENDIDO")).toBe(true);
   });
 });
