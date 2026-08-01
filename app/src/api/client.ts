@@ -1,4 +1,4 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
+export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export class ApiError extends Error {
   constructor(
@@ -16,7 +16,7 @@ interface OpcionesRequest {
   token?: string;
 }
 
-function extraerMensaje(datos: unknown, status: number): string {
+export function extraerMensaje(datos: unknown, status: number): string {
   if (datos && typeof datos === "object" && "message" in datos) {
     const { message } = datos as { message: unknown };
     if (typeof message === "string") {
@@ -42,27 +42,6 @@ export async function apiRequest<T>(path: string, opciones: OpcionesRequest = {}
   if (respuesta.status === 204) {
     return undefined as T;
   }
-
-  const datos: unknown = await respuesta.json().catch(() => undefined);
-
-  if (!respuesta.ok) {
-    throw new ApiError(respuesta.status, extraerMensaje(datos, respuesta.status));
-  }
-
-  return datos as T;
-}
-
-/** Para subidas multipart (archivos). No se fija Content-Type a mano: fetch arma el boundary solo. */
-export async function apiRequestFormData<T>(
-  path: string,
-  formData: FormData,
-  token: string,
-): Promise<T> {
-  const respuesta = await fetch(`${API_URL}${path}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
 
   const datos: unknown = await respuesta.json().catch(() => undefined);
 

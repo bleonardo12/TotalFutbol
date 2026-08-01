@@ -1,5 +1,6 @@
+import { File, UploadTask, UploadType } from "expo-file-system";
 import type { UsuarioActual } from "./auth";
-import { apiRequest, apiRequestFormData } from "./client";
+import { API_URL, ApiError, apiRequest, extraerMensaje } from "./client";
 import type { OutcomePartido } from "./matches";
 
 export type CapaDisputa = "C1_EVIDENCIA" | "C2_PLANTELES" | "C3_ADMIN";
@@ -66,23 +67,36 @@ export interface DisputePollRespuesta {
   createdAt: string;
 }
 
-export function subirEvidencia(
+/**
+ * Sube la foto con expo-file-system en vez de fetch+FormData: esta version de
+ * React Native (0.86) ya no soporta el shape clasico {uri, name, type} que
+ * el fetch global espera para archivos ("Unsupported FormDataPart
+ * implementation"). UploadTask maneja el multipart de forma nativa.
+ */
+export async function subirEvidencia(
   token: string,
   matchId: string,
   foto: { uri: string; nombre: string; tipo: string },
   descripcion?: string,
 ): Promise<DisputeEvidencia> {
-  const formData = new FormData();
-  formData.append("archivo", {
-    uri: foto.uri,
-    name: foto.nombre,
-    type: foto.tipo,
-  } as unknown as Blob);
-  if (descripcion) {
-    formData.append("descripcion", descripcion);
+  const archivo = new File(foto.uri);
+  const tarea = new UploadTask(archivo, `${API_URL}/disputes/${matchId}/evidencia`, {
+    httpMethod: "POST",
+    uploadType: UploadType.MULTIPART,
+    fieldName: "archivo",
+    mimeType: foto.tipo,
+    headers: { Authorization: `Bearer ${token}` },
+    parameters: descripcion ? { descripcion } : undefined,
+  });
+
+  const resultado = await tarea.uploadAsync();
+  const datos: unknown = JSON.parse(resultado.body);
+
+  if (resultado.status < 200 || resultado.status >= 300) {
+    throw new ApiError(resultado.status, extraerMensaje(datos, resultado.status));
   }
 
-  return apiRequestFormData(`/disputes/${matchId}/evidencia`, formData, token);
+  return datos as DisputeEvidencia;
 }
 
 export function responderPoll(
