@@ -23,6 +23,12 @@ export class MatchesController {
     return this.matchesService.consumir(usuario.id, dto);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get("mios")
+  async mios(@UsuarioActual() usuario: User) {
+    return this.matchesService.buscarMios(usuario.id);
+  }
+
   @Get(":id")
   async obtener(@Param("id") id: string) {
     const match = await this.matchesService.buscarPorId(id);

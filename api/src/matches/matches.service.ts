@@ -117,6 +117,15 @@ export class MatchesService {
     return this.prisma.match.findUnique({ where: { id }, include: INCLUIR_DETALLE });
   }
 
+  /** Partidos donde el usuario es uno de los dos reporters fijados. */
+  async buscarMios(usuarioId: string) {
+    return this.prisma.match.findMany({
+      where: { OR: [{ reporterLocalId: usuarioId }, { reporterVisitanteId: usuarioId }] },
+      orderBy: { createdAt: "desc" },
+      include: INCLUIR_DETALLE,
+    });
+  }
+
   /**
    * Doble reporte independiente (concepto.md §9). Un reporte mueve
    * EN_JUEGO -> REPORTADO; el segundo, si coincide en outcome con el
