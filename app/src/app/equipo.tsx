@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { crearEquipo, misEquipos } from "@/api/teams";
@@ -50,6 +50,9 @@ export default function Equipo(): React.JSX.Element {
             Estado: {equipo.estado === "RANKEADO" ? "Rankeado" : "Provisional"}
           </Text>
           <Text style={styles.etiqueta}>Rating: {Math.round(equipo.rating)}</Text>
+          <Link href="/partido" style={styles.link}>
+            Ver mis partidos
+          </Link>
         </View>
       ) : (
         <View style={styles.tarjeta}>
@@ -104,6 +107,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     textAlign: "center",
+  },
+  link: {
+    color: "#208AEF",
+    fontWeight: "600",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 8,
   },
   input: {
     borderWidth: 1,
