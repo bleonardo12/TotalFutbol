@@ -14,7 +14,7 @@ import {
   type RespuestaPoll,
   type User,
 } from "@prisma/client";
-import { transicionar } from "@totalfutbol/core";
+import { haypresuncion, transicionar } from "@totalfutbol/core";
 import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
 import { VENTANA_DISPUTA_HORAS } from "../matches/matches.constantes";
@@ -172,19 +172,25 @@ export class DisputesService {
    * llegado a C3, no hay que esperar a que se venzan C1 y C2 primero.
    */
   async listarPendientes() {
-    return this.prisma.dispute.findMany({
+    const disputas = await this.prisma.dispute.findMany({
       where: { resuelta: false },
       include: {
         match: {
           select: {
             id: true,
-            equipoLocal: { select: { id: true, nombre: true } },
-            equipoVisitante: { select: { id: true, nombre: true } },
+            equipoLocal: { select: { id: true, nombre: true, fairPlay: true } },
+            equipoVisitante: { select: { id: true, nombre: true, fairPlay: true } },
           },
         },
       },
       orderBy: { capaExpiraEn: "asc" },
     });
+
+    // Endpoint ya restringido a ADMIN por el guard del controller.
+    return disputas.map((disputa) => ({
+      ...disputa,
+      presuncionContraEquipoId: this.calcularPresuncion(disputa.match),
+    }));
   }
 
   /**
@@ -196,7 +202,12 @@ export class DisputesService {
   async obtenerPorMatchId(matchId: string, usuario: User) {
     const match = await this.prisma.match.findUnique({
       where: { id: matchId },
-      select: { equipoLocalId: true, equipoVisitanteId: true },
+      select: {
+        equipoLocalId: true,
+        equipoVisitanteId: true,
+        equipoLocal: { select: { id: true, fairPlay: true } },
+        equipoVisitante: { select: { id: true, fairPlay: true } },
+      },
     });
     if (!match) {
       throw new NotFoundException("Partido no encontrado");
@@ -233,7 +244,29 @@ export class DisputesService {
       throw new NotFoundException("Este partido no tiene una disputa abierta");
     }
 
-    return dispute;
+    // La presuncion es un input para la decision del admin (concepto.md
+    // §11) -- nunca se le muestra a los equipos en disputa, para no
+    // avisarles que estan "marcados" mientras la disputa sigue abierta.
+    if (usuario.rol !== "ADMIN") {
+      return dispute;
+    }
+    return { ...dispute, presuncionContraEquipoId: this.calcularPresuncion(match) };
+  }
+
+  /**
+   * Presuncion en C3 (concepto.md §11): si el diferencial de fair-play
+   * entre los dos equipos supera el umbral, se presume contra el de peor
+   * historial. Nunca auto-resuelve — es un input mas para el admin.
+   */
+  private calcularPresuncion(match: {
+    equipoLocal: { id: string; fairPlay: number };
+    equipoVisitante: { id: string; fairPlay: number };
+  }): string | null {
+    const lado = haypresuncion(match.equipoLocal.fairPlay, match.equipoVisitante.fairPlay);
+    if (!lado) {
+      return null;
+    }
+    return lado === "A" ? match.equipoLocal.id : match.equipoVisitante.id;
   }
 
   /**

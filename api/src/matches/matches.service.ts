@@ -27,8 +27,8 @@ import {
 } from "./matches.constantes";
 
 const INCLUIR_DETALLE = {
-  equipoLocal: { select: { id: true, nombre: true } },
-  equipoVisitante: { select: { id: true, nombre: true } },
+  equipoLocal: { select: { id: true, nombre: true, fairPlay: true } },
+  equipoVisitante: { select: { id: true, nombre: true, fairPlay: true } },
   sede: true,
   reporterLocal: { select: { id: true, telefono: true, nombre: true } },
   reporterVisitante: { select: { id: true, telefono: true, nombre: true } },
