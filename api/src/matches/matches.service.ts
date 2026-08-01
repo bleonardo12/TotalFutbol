@@ -1,5 +1,6 @@
 import { InjectQueue } from "@nestjs/bullmq";
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -352,6 +353,25 @@ export class MatchesService {
           dto.resolucion,
         );
         estadoActual = transicionar(estadoActual, "LIQUIDADO");
+      }
+
+      // Independiente de la resolucion: el admin puede anular por
+      // indeterminable y ademas sancionar si le queda claro que un lado
+      // mintio (concepto.md §11).
+      if (dto.sancion) {
+        if (
+          dto.sancion.equipoSancionadoId !== match.equipoLocalId &&
+          dto.sancion.equipoSancionadoId !== match.equipoVisitanteId
+        ) {
+          throw new BadRequestException("El equipo sancionado no pertenece a este partido");
+        }
+        await this.fairPlayService.aplicar(
+          tx,
+          dto.sancion.equipoSancionadoId,
+          matchId,
+          dto.sancion.tipo,
+          FAIR_PLAY_DELTA[dto.sancion.tipo],
+        );
       }
 
       return tx.match.update({
