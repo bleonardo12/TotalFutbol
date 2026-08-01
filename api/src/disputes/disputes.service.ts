@@ -96,6 +96,12 @@ export class DisputesService {
    * reloj"). Si la disputa sigue en `capaEsperada` (nadie la resolvio ni
    * avanzo por otro lado), la mueve a `siguienteCapa` y reinicia el
    * vencimiento. Idempotente: si ya se resolvio o ya avanzo, no hace nada.
+   *
+   * Al llegar a C2_PLANTELES por vencimiento de C1, encadena el proximo
+   * vencimiento (C2 -> C3_ADMIN) para que el poll del plantel tambien
+   * tenga reloj propio. C3_ADMIN no encadena mas: de ahi en mas es el
+   * admin quien resuelve, o el vencimiento de C3 (VOID automatico, fuera
+   * del alcance de este metodo).
    */
   async avanzarCapaSiVence(
     disputeId: string,
@@ -114,6 +120,10 @@ export class DisputesService {
         capaExpiraEn: new Date(Date.now() + VENTANA_DISPUTA_HORAS * 60 * 60 * 1000),
       },
     });
+
+    if (siguienteCapa === "C2_PLANTELES") {
+      await this.programarVencimientoCapa(disputeId, "C2_PLANTELES", "C3_ADMIN");
+    }
   }
 
   /**
