@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import QRCode from "react-native-qrcode-svg";
 import { generarHandshake, type CantidadJugadores, type Superficie } from "@/api/matches";
 import { misEquipos } from "@/api/teams";
 import { useAuthStore } from "@/store/auth-store";
@@ -60,9 +61,12 @@ export default function GenerarPartido(): React.JSX.Element {
     return (
       <View style={styles.container}>
         <Text style={styles.etiqueta}>Codigo del partido</Text>
+        <View style={styles.qrContenedor}>
+          <QRCode value={mutacion.data.codigo} size={220} />
+        </View>
         <Text style={styles.codigo}>{mutacion.data.codigo}</Text>
         <Text style={styles.aviso}>
-          Compartiselo al rival para que se una. Vence en 10 minutos.
+          El rival escanea el QR (o ingresa el codigo a mano). Vence en 10 minutos.
         </Text>
         <Pressable style={styles.boton} onPress={() => router.replace("/partido")}>
           <Text style={styles.botonTexto}>Ver mis partidos</Text>
@@ -172,8 +176,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
+  qrContenedor: {
+    alignItems: "center",
+    marginTop: 16,
+  },
   codigo: {
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: "700",
     textAlign: "center",
     letterSpacing: 4,

@@ -26,7 +26,13 @@
           "imageWidth": 76
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Se usa la camara para escanear el codigo QR del partido."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
