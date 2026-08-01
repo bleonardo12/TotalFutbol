@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
+import { DisputesModule } from "./disputes/disputes.module";
 import { HealthController } from "./health/health.controller";
 import { JobsModule } from "./jobs/jobs.module";
 import { MatchesModule } from "./matches/matches.module";
@@ -20,6 +21,7 @@ import { VenuesModule } from "./venues/venues.module";
     TeamsModule,
     VenuesModule,
     MatchesModule,
+    DisputesModule,
     RankingModule,
   ],
   controllers: [HealthController],
