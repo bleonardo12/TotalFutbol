@@ -7,6 +7,7 @@ import { JobsModule } from "./jobs/jobs.module";
 import { MatchesModule } from "./matches/matches.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { RankingModule } from "./ranking/ranking.module";
+import { SeasonsModule } from "./seasons/seasons.module";
 import { StorageModule } from "./storage/storage.module";
 import { TeamsModule } from "./teams/teams.module";
 import { VenuesModule } from "./venues/venues.module";
@@ -23,6 +24,7 @@ import { VenuesModule } from "./venues/venues.module";
     MatchesModule,
     DisputesModule,
     RankingModule,
+    SeasonsModule,
   ],
   controllers: [HealthController],
 })
