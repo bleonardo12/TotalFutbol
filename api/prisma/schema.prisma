@@ -93,7 +93,6 @@ model Team {
   respuestasPoll      DisputePollRespuesta[]
   eventosFairPlay     FairPlayLedger[]
   incidentesFlagged   MatchIncidentFlag[]
-  temporadas          SeasonEntry[]
   campeonatos         Campeonato[]
 
   @@index([rating])
@@ -440,17 +439,20 @@ model MatchIncidentFlag {
   @@map("match_incident_flags")
 }
 
+/// De mejor a peor (concepto.md §6). No es un dato guardado por equipo: se
+/// recalcula en cualquier momento cortando por percentil el ranking global
+/// (ver RankingService.divisionDe) — no es una liga con tabla de puntos.
 enum Division {
-  PROMOCIONAL
-  ASCENSO
-  PRIMERA
   ELITE
+  ORO
+  PLATA
+  BRONCE
 }
 
-/// Temporada estacional (concepto.md §6, año calendario). El rating perpetuo
-/// nunca resetea; lo que resetea es la competencia dentro de la temporada
-/// (SeasonEntry). "cerrada" es irreversible: ahi se calcula ascenso/descenso
-/// y palmares (Campeonato) para armar la temporada siguiente.
+/// Temporada = año calendario (concepto.md §6). El rating perpetuo (y con
+/// el, la division de cada equipo) nunca resetea. "cerrada" solo dispara un
+/// snapshot de palmares (Campeonato) — no reasigna nada, no hay nada que
+/// mover: la division siempre fue en vivo.
 model Season {
   id          String    @id @default(cuid())
   anio        Int       @unique
@@ -459,27 +461,9 @@ model Season {
   cerrada     Boolean   @default(false)
   cerradaEn   DateTime?
 
-  entradas    SeasonEntry[]
   campeonatos Campeonato[]
 
   @@map("seasons")
-}
-
-/// En que division juega un equipo dentro de una temporada dada. Un equipo
-/// nuevo siempre entra en PROMOCIONAL (sin "temporada anterior" de la que
-/// promover) — asciende por merito, temporada a temporada.
-model SeasonEntry {
-  id       String   @id @default(cuid())
-  seasonId String
-  season   Season   @relation(fields: [seasonId], references: [id])
-  teamId   String
-  team     Team     @relation(fields: [teamId], references: [id])
-  division Division
-
-  createdAt DateTime @default(now())
-
-  @@unique([seasonId, teamId])
-  @@map("season_entries")
 }
 
 /// Palmares (concepto.md §6): 1° de cada division al cierre de temporada.
