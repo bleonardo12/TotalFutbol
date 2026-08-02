@@ -1,62 +1,61 @@
 import { describe, expect, it } from "vitest";
-import { calcularTabla, divisionAnterior, divisionSiguiente } from "./temporadas";
+import { PARTIDOS_MINIMOS_PARA_ELITE } from "./constantes";
+import { asignarDivision } from "./temporadas";
 
-describe("divisionSiguiente", () => {
-  it("avanza un escalon", () => {
-    expect(divisionSiguiente("PROMOCIONAL")).toBe("ASCENSO");
-    expect(divisionSiguiente("ASCENSO")).toBe("PRIMERA");
-    expect(divisionSiguiente("PRIMERA")).toBe("ELITE");
+const PARTIDOS_SOBRAN = PARTIDOS_MINIMOS_PARA_ELITE + 10;
+
+describe("asignarDivision", () => {
+  it("corta en cuartiles exactos con 4 equipos (uno por division)", () => {
+    expect(asignarDivision(0, 4, PARTIDOS_SOBRAN)).toBe("ELITE");
+    expect(asignarDivision(1, 4, PARTIDOS_SOBRAN)).toBe("ORO");
+    expect(asignarDivision(2, 4, PARTIDOS_SOBRAN)).toBe("PLATA");
+    expect(asignarDivision(3, 4, PARTIDOS_SOBRAN)).toBe("BRONCE");
   });
 
-  it("ELITE no tiene siguiente (clamp)", () => {
-    expect(divisionSiguiente("ELITE")).toBe("ELITE");
-  });
-});
-
-describe("divisionAnterior", () => {
-  it("retrocede un escalon", () => {
-    expect(divisionAnterior("ELITE")).toBe("PRIMERA");
-    expect(divisionAnterior("PRIMERA")).toBe("ASCENSO");
-    expect(divisionAnterior("ASCENSO")).toBe("PROMOCIONAL");
-  });
-
-  it("PROMOCIONAL no tiene anterior (clamp)", () => {
-    expect(divisionAnterior("PROMOCIONAL")).toBe("PROMOCIONAL");
-  });
-});
-
-describe("calcularTabla", () => {
-  it("sin partidos, tabla vacia", () => {
-    expect(calcularTabla([])).toEqual([]);
-  });
-
-  it("calcula puntos AFA-style (3-1-0)", () => {
-    const tabla = calcularTabla([
-      { equipoId: "a", resultado: "G" },
-      { equipoId: "a", resultado: "G" },
-      { equipoId: "a", resultado: "E" },
-      { equipoId: "a", resultado: "P" },
+  it("corta en cuartiles exactos con 12 equipos (3 por division)", () => {
+    const divisiones = Array.from({ length: 12 }, (_, posicion) =>
+      asignarDivision(posicion, 12, PARTIDOS_SOBRAN),
+    );
+    expect(divisiones).toEqual([
+      "ELITE",
+      "ELITE",
+      "ELITE",
+      "ORO",
+      "ORO",
+      "ORO",
+      "PLATA",
+      "PLATA",
+      "PLATA",
+      "BRONCE",
+      "BRONCE",
+      "BRONCE",
     ]);
-    expect(tabla).toEqual([{ equipoId: "a", pj: 4, pg: 2, pe: 1, pp: 1, puntos: 7 }]);
   });
 
-  it("agrupa varios equipos por separado", () => {
-    const tabla = calcularTabla([
-      { equipoId: "a", resultado: "G" },
-      { equipoId: "b", resultado: "P" },
-      { equipoId: "b", resultado: "E" },
-    ]);
-    const porEquipo = new Map(tabla.map((fila) => [fila.equipoId, fila]));
-    expect(porEquipo.get("a")).toEqual({ equipoId: "a", pj: 1, pg: 1, pe: 0, pp: 0, puntos: 3 });
-    expect(porEquipo.get("b")).toEqual({ equipoId: "b", pj: 2, pg: 0, pe: 1, pp: 1, puntos: 1 });
+  it("con un total no divisible exacto, ninguna division queda vacia (13 equipos)", () => {
+    const conteo: Record<string, number> = { ELITE: 0, ORO: 0, PLATA: 0, BRONCE: 0 };
+    for (let posicion = 0; posicion < 13; posicion++) {
+      conteo[asignarDivision(posicion, 13, PARTIDOS_SOBRAN)] += 1;
+    }
+    expect(conteo.ELITE + conteo.ORO + conteo.PLATA + conteo.BRONCE).toBe(13);
+    expect(Object.values(conteo).every((cantidad) => cantidad > 0)).toBe(true);
   });
 
-  it("empates en puntos no rompen el calculo (el desempate lo resuelve quien llama)", () => {
-    const tabla = calcularTabla([
-      { equipoId: "a", resultado: "G" },
-      { equipoId: "b", resultado: "G" },
-    ]);
-    expect(tabla.every((fila) => fila.puntos === 3)).toBe(true);
-    expect(tabla).toHaveLength(2);
+  it("con un solo equipo, es Elite (si tiene partidos suficientes)", () => {
+    expect(asignarDivision(0, 1, PARTIDOS_SOBRAN)).toBe("ELITE");
+  });
+
+  it("bloquea Elite por partidos insuficientes y cae a Oro", () => {
+    expect(asignarDivision(0, 4, PARTIDOS_MINIMOS_PARA_ELITE - 1)).toBe("ORO");
+  });
+
+  it("con exactamente el minimo de partidos, entra a Elite", () => {
+    expect(asignarDivision(0, 4, PARTIDOS_MINIMOS_PARA_ELITE)).toBe("ELITE");
+  });
+
+  it("el bloqueo de partidos no afecta a otras divisiones (no hace falta para Oro/Plata/Bronce)", () => {
+    expect(asignarDivision(1, 4, 0)).toBe("ORO");
+    expect(asignarDivision(2, 4, 0)).toBe("PLATA");
+    expect(asignarDivision(3, 4, 0)).toBe("BRONCE");
   });
 });

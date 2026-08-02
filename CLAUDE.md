@@ -23,7 +23,7 @@ Todo en **español** (producto, docs, comentarios).
 ## Decisiones bloqueadas (no reabrir sin motivo)
 
 - **Rating:** Glicko-2 (rating \+ RD \+ volatilidad). **Ranking único por equipo**, no separado por formato. **Outcome-only (G/E/P)**: el marcador no mueve el rating.  
-- **Estructura temporal:** rating **perpetuo** (nunca resetea) \+ **divisiones estacionales estilo AFA** (ascenso/descenso al cierre; campeón de Elite \= campeón del año) \+ histórico/palmarés. El reset vive en la temporada, nunca en el rating.  
+- **Estructura temporal:** **no es un torneo de fútbol, es un ranking de desafíos tipo Spindex.** Rating **perpetuo** (nunca resetea) \+ **divisiones \= cortes porcentuales en vivo** del ranking global (Elite → Oro → Plata → Bronce, ej. cuartiles), no una liga con tabla de puntos ni ascenso/descenso como evento — la división de un equipo es siempre lo que resulta de recalcular el corte ahora mismo. El cierre anual de temporada no reasigna nada: solo registra en el palmarés quién fue n°1 de cada división ese día (campeón de Elite \= campeón del año). Nada se resetea nunca, ni el rating ni la división.  
 - **Formato** \= (cantidad de jugadores × superficie), dos campos.  
 - **Registro** ágil por SMS/WhatsApp OTP o Gmail; identidad persistente; anti-fraude en la **puerta del ranking**, no en el registro. Un equipo nuevo entra provisional y solo rankea con partido mutuamente confirmado. Identidad de plantel progresiva; integridad escala con el tier.  
 - **Vinculación** en la cancha por **QR / código corto**; **un reporter por lado** fijado en el handshake. **Invariante:** el contrato vinculante se firma SOLO por QR en persona; el rating solo se mueve con un partido firmado \+ confirmado. Los desafíos a distancia son un pacto desistible (≤24h); no-show \= golpe de fair-play, **nunca walkover ni cambio de rating**.  
@@ -37,5 +37,5 @@ Todo en **español** (producto, docs, comentarios).
 ## Pendiente (ver `docs/concepto.md §16`)
 
 - Detalles de infra a definir en implementación: proveedor OTP (SMS/WhatsApp AR), credenciales FCM.  
-- Duración/calendario de temporada y reglas finas de ascenso/descenso. Sembrado del rating inicial. Calibración numérica fina. Monetización. Nombre.
+- Duración/calendario exacto del cierre anual y los cortes porcentuales finos de cada división (arranca en cuartiles, a calibrar). Sembrado del rating inicial. Calibración numérica fina. Monetización. Nombre.
 

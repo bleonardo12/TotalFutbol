@@ -77,18 +77,49 @@ Ej.: "fútbol 5 sintético" y "fútbol 5 salón" difieren solo en superficie. Gu
 
 ### Estructura temporal (tres capas)
 
-1. **Rating perpetuo (Glicko).** Nunca se resetea. Es el nivel real y siembra las divisiones cada temporada. Resetearlo sería mentir sobre el nivel.  
-2. **Temporada anual (se renueva).** La renovación NO es un número aparte: es la propia **competencia estacional de las divisiones**. Cada temporada hay una tabla dentro de tu división; al cierre, ascenso/descenso; campeón por división, y el campeón de Elite \= **campeón del año**. Un ingresante puede ganar *su* temporada sin superar a los perpetuos de arriba → motivación fresca cada año.  
-3. **Histórico / legado.** Pico de rating \+ **palmarés** (campeones y títulos por año y división). La gloria que la temporada no borra.
+**No es un torneo de fútbol con tabla de puntos y campeón de liga — es un ranking de desafíos
+tipo Spindex (rating de tenis de mesa), aplicado a equipos.** Todos los equipos registrados
+compiten entre sí en **un solo ranking global, siempre vivo**. Las "divisiones" no son
+competencias aparte: son **cortes por posición** de ese mismo ranking.
 
-La distinción que lo sostiene: separar *qué tan bueno sos* (rating perpetuo, honesto) de *cómo te fue este año* (temporada, reseteable). El reset vive en la competencia estacional, nunca en el rating.
+1. **Rating perpetuo (Glicko).** Nunca se resetea. Es el nivel real, y de él salen tanto el
+   ranking global como la división de cada equipo en todo momento. Resetearlo sería mentir
+   sobre el nivel.
+2. **Temporada anual.** No reasigna nada por sí sola — el ranking y las divisiones son
+   **siempre en vivo**, se recalculan en cualquier momento a partir del rating perpetuo. Lo que
+   hace la temporada es marcar un **cierre anual**: una foto de quién es el n°1 de cada
+   división el día que cierra el año, que queda anotada en el palmarés. El valor de esto es
+   puramente motivacional — "me queda 1 mes de temporada, si quiero llegar arriba tengo que
+   jugar y ganar ahora" — no es un reset de nada ni un mecanismo de ascenso/descenso.
+3. **Histórico / legado.** Pico de rating \+ **palmarés** (quién fue n°1 de cada división al
+   cierre de cada año). La gloria que la temporada no borra.
+
+La distinción que lo sostiene: separar *qué tan bueno sos* (rating perpetuo, honesto, siempre
+vivo) de *cómo te fue este año* (el cierre anual, que solo registra una foto para la historia).
+Nada se resetea nunca — ni el rating ni la división.
 
 ### Niveles / zonas
 
-- **Divisiones estacionales estilo AFA** (ej. Promocional → Ascenso → Primera → Elite). Jugás una temporada dentro de tu división; al cierre, **los de arriba ascienden y los de abajo descienden**. Formato culturalmente nativo, y da el ritmo de temporada (arranque, lucha por no descender, definición, campeón). El rating perpetuo Glicko hace el **seeding** de cada temporada. *(Alternativa descartada: divisiones por banda de rating continua, siempre live — más simple, pero pierde el drama de temporada.)*  
-- **Estado provisional** para ingresantes (RD alto, Elite bloqueada hasta completar X partidos verificados). El bloqueo es por **confianza (RD), no por rank**: un ingresante realmente bueno sale de provisional rápido y **se gana** el derecho a desafiar tops. Se merece por resultados, no por antigüedad.  
-- **Antigüedad ≠ rating.** La antigüedad/cantidad de partidos alimenta la confianza (RD) y desbloquea derechos, pero no da posición. Un equipo viejo y malo no merece estar arriba.  
-- **Defensa del título:** para *retener* un lugar en Elite hay que aceptar un mínimo de desafíos por temporada (variedad incluida). El que se esconde para blindar su rank decae o se marca como "esquivo". La estructura estacional es además el anti-coasting: si no competís la temporada, no puntuás y descendés.
+- **Divisiones por corte porcentual del ranking global** (Elite → Oro → Plata → Bronce, de
+  mejor a peor). Con N equipos registrados, se ordenan todos por rating y se cortan en
+  cuartiles: el 25% mejor es Elite, el siguiente 25% Oro, y así — no una cantidad fija de
+  cupos, un porcentaje, así escala con la cantidad real de equipos (con 12 equipos son 3-3-3-3,
+  con 1000 son 250-250-250-250). La división de un equipo no es un dato guardado que cambia en
+  un evento de "ascenso/descenso": es lo que resulta de recalcular el corte en cualquier
+  momento, siempre a partir del mismo rating perpetuo. Ganar partidos te sube de posición y,
+  con eso, eventualmente de división — no hay un paso aparte.
+- **Estado provisional** para ingresantes (RD alto, Elite bloqueada hasta completar X partidos
+  verificados). El bloqueo es por **confianza (RD), no por rank**: un ingresante realmente
+  bueno sale de provisional rápido y **se gana** el derecho a desafiar tops. Se merece por
+  resultados, no por antigüedad.
+- **Antigüedad ≠ rating.** La antigüedad/cantidad de partidos alimenta la confianza (RD) y
+  desbloquea derechos, pero no da posición. Un equipo viejo y malo no merece estar arriba.
+- **Anti-coasting / anti-esconderse:** un equipo arriba de la tabla que se niega
+  sistemáticamente a aceptar desafíos de equipos muy por debajo debe tener una consecuencia
+  (decae o se marca como "esquivo"); un equipo inferior que le gana a uno muy superior debe
+  sumar más que en un partido parejo (esto último ya lo resuelve Glicko-2 por diseño, §1). Esto
+  depende del sistema de desafíos a distancia (Etapa 2, §2) y de la economía de desafío (§7),
+  todavía no implementados — no confundir con un mecanismo de "defender el título" de liga.
 
 ---
 
@@ -192,7 +223,7 @@ Solo aplica a la **etapa 2** (pacto a distancia). Como el contrato vinculante se
 
 ## 13\. Estadísticas de equipo
 
-**De cara al usuario:** rating actual \+ gráfico de evolución \+ pico histórico; récord G/E/P total y **por formato**; racha actual y mejor racha; head-to-head vs rivales; **tasa de upset** ("mata-gigantes") y **tasa de defensa** (cuánto aguanta contra los de abajo); goles a favor/en contra si se captura marcador; división e historial de ascensos/descensos; actividad (partidos/mes, último activo); fair-play.
+**De cara al usuario:** rating actual \+ gráfico de evolución \+ pico histórico; récord G/E/P total y **por formato**; racha actual y mejor racha; head-to-head vs rivales; **tasa de upset** ("mata-gigantes") y **tasa de defensa** (cuánto aguanta contra los de abajo); goles a favor/en contra si se captura marcador; división actual y evolución de división en el tiempo (sube/baja con el rating, en vivo); actividad (partidos/mes, último activo); fair-play.
 
 **Señales internas (no necesariamente visibles):** RD/volatilidad; tasa de aceptación de desafíos (para detectar "ducking"); patrones de emparejamiento repetido (anti-colusión); tasa de disputa/contradenuncia (detección de patrón).
 
@@ -223,7 +254,7 @@ Las **zonas del ranking emergen** de la geolocalización de las canchas donde se
 ## 16\. Decisiones abiertas / pendientes
 
 - **Stack tecnológico** — DECIDIDO: React Native \+ Expo (app), NestJS \+ PostgreSQL \+ Prisma (backend self-host), monorepo pnpm. Android primero. Ver `docs/arquitectura.md`.  
-- **Duración y calendario de la temporada** — resuelto el modelo (perpetuo \+ divisiones estacionales AFA-style, §6); falta definir el largo de la temporada, fechas de cierre, y las reglas finas de ascenso/descenso (cuántos suben/bajan por división).  
+- **Duración y calendario de la temporada** — resuelto el modelo (ranking global siempre vivo, cortado en divisiones por percentil; el cierre anual solo registra palmarés, §6); falta definir el largo/fechas exactas del cierre y los cortes porcentuales finos de cada división (arranca en cuartiles 25/25/25/25, a calibrar).  
 - **Sembrado del rating inicial** de un equipo nuevo (placement / rating de arranque \+ RD).  
 - **Calibración numérica fina** — todos los pesos de fair-play, ventanas de decaimiento, costos de fichas, umbrales de presunción y de tier: valores iniciales a ajustar con datos reales.  
 - **Monetización** — sin definir; posible vía sedes/canchas como partners.  

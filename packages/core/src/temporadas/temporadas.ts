@@ -1,46 +1,33 @@
-import { ORDEN_DIVISIONES, PUNTOS_POR_RESULTADO } from "./constantes";
-import type { Division, FilaTabla, PartidoDeTemporada } from "./tipos";
-
-/** ELITE no tiene siguiente: devuelve la misma division (clamp). */
-export function divisionSiguiente(division: Division): Division {
-  const indice = ORDEN_DIVISIONES.indexOf(division);
-  const siguiente = ORDEN_DIVISIONES[indice + 1];
-  return siguiente ?? division;
-}
-
-/** PROMOCIONAL no tiene anterior: devuelve la misma division (clamp). */
-export function divisionAnterior(division: Division): Division {
-  const indice = ORDEN_DIVISIONES.indexOf(division);
-  const anterior = ORDEN_DIVISIONES[indice - 1];
-  return anterior ?? division;
-}
+import { ORDEN_DIVISIONES, PARTIDOS_MINIMOS_PARA_ELITE } from "./constantes";
+import type { Division } from "./tipos";
 
 /**
- * Agrupa resultados por equipo y calcula la tabla AFA-style (3-1-0). No
- * ordena: el desempate (rating perpetuo) lo resuelve quien llama, que tiene
- * el rating y esta funcion no.
+ * La division de un equipo no es un dato guardado: es lo que resulta de
+ * cortar el ranking global (siempre vivo) por percentil, ahora mismo
+ * (concepto.md §6 — no es una liga con tabla de puntos, es un ranking de
+ * desafios tipo Spindex). `posicion` es 0-indexed, ordenado por rating
+ * descendente entre los equipos RANKEADO; `total` es la cantidad de esos
+ * equipos.
+ *
+ * Un equipo que por rating caeria en Elite pero todavia no tiene
+ * `PARTIDOS_MINIMOS_PARA_ELITE` partidos liquidados queda bloqueado en Oro
+ * — bloqueo por confianza (RD bajo), no por rank.
  */
-export function calcularTabla(partidos: readonly PartidoDeTemporada[]): FilaTabla[] {
-  const filas = new Map<string, FilaTabla>();
+export function asignarDivision(
+  posicion: number,
+  total: number,
+  partidosLiquidados: number,
+): Division {
+  const percentil = posicion / total;
+  const indiceBanda = Math.min(
+    ORDEN_DIVISIONES.length - 1,
+    Math.floor(percentil * ORDEN_DIVISIONES.length),
+  );
+  const bandaPorRating = ORDEN_DIVISIONES[indiceBanda] as Division;
 
-  for (const { equipoId, resultado } of partidos) {
-    const fila = filas.get(equipoId) ?? {
-      equipoId,
-      pj: 0,
-      pg: 0,
-      pe: 0,
-      pp: 0,
-      puntos: 0,
-    };
-
-    fila.pj += 1;
-    if (resultado === "G") fila.pg += 1;
-    if (resultado === "E") fila.pe += 1;
-    if (resultado === "P") fila.pp += 1;
-    fila.puntos += PUNTOS_POR_RESULTADO[resultado];
-
-    filas.set(equipoId, fila);
+  if (bandaPorRating === "ELITE" && partidosLiquidados < PARTIDOS_MINIMOS_PARA_ELITE) {
+    return "ORO";
   }
 
-  return [...filas.values()];
+  return bandaPorRating;
 }

@@ -129,7 +129,7 @@ No es un MVP de juguete: es la arquitectura correcta construida en la secuencia 
 1. **Espina.** Scaffold del monorepo. Auth OTP. Crear equipo. Venues. Partido vía handshake QR \+ doble reporte \+ liquidación Glicko (camino feliz) \+ rating\_ledger. Ranking básico.  
 2. **Disputas.** Árbol por capas \+ jobs de timeout (silencio=asentimiento, ventanas). Void.  
 3. **Fair-play.** Deltas por evento \+ incidentes \+ decay. Presunción en C3.  
-4. **Temporadas.** Divisiones estacionales, tablas, ascenso/descenso, seeding, palmarés.  
+4. **Temporadas.** Divisiones como cortes porcentuales en vivo del ranking global (no una liga con tabla de puntos), y cierre anual que solo registra palmarés (§6 de concepto.md).  
 5. **Economía \+ engagement.** Fichas de desafío, notificaciones, estadísticas por formato.
 
 ---

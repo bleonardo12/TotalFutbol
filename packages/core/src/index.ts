@@ -29,17 +29,6 @@ export {
 } from "./fair-play/constantes";
 export { calcularFairPlay, haypresuncion } from "./fair-play/fair-play";
 
-export type {
-  Division,
-  FilaTabla,
-  PartidoDeTemporada,
-  ResultadoTemporada,
-} from "./temporadas/tipos";
-export {
-  EQUIPOS_QUE_ASCIENDEN,
-  EQUIPOS_QUE_DESCIENDEN,
-  ORDEN_DIVISIONES,
-  PARTIDOS_MINIMOS_PARA_ELITE,
-  PUNTOS_POR_RESULTADO,
-} from "./temporadas/constantes";
-export { calcularTabla, divisionAnterior, divisionSiguiente } from "./temporadas/temporadas";
+export type { Division } from "./temporadas/tipos";
+export { ORDEN_DIVISIONES, PARTIDOS_MINIMOS_PARA_ELITE } from "./temporadas/constantes";
+export { asignarDivision } from "./temporadas/temporadas";
