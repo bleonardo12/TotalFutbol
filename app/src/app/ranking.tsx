@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { obtenerRanking } from "@/api/ranking";
 import type { Division } from "@/api/teams";
 
@@ -29,7 +29,12 @@ export default function Ranking(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <View style={styles.tabs}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabsScroll}
+        contentContainerStyle={styles.tabs}
+      >
         {OPCIONES.map((opcion) => (
           <Pressable
             key={opcion.etiqueta}
@@ -41,7 +46,7 @@ export default function Ranking(): React.JSX.Element {
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       <FlatList
         data={rankingQuery.data ?? []}
@@ -71,16 +76,20 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 12,
   },
+  tabsScroll: {
+    flexGrow: 0,
+  },
   tabs: {
     flexDirection: "row",
+    alignItems: "flex-start",
     gap: 6,
   },
   tab: {
-    flex: 1,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
     paddingVertical: 8,
+    paddingHorizontal: 14,
     alignItems: "center",
   },
   tabActivo: {
