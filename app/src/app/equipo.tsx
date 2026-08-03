@@ -3,8 +3,15 @@ import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
-import { crearEquipo, misEquipos } from "@/api/teams";
+import { crearEquipo, misEquipos, type Division } from "@/api/teams";
 import { useAuthStore } from "@/store/auth-store";
+
+const ETIQUETA_DIVISION: Record<Division, string> = {
+  ELITE: "Elite",
+  ORO: "Oro",
+  PLATA: "Plata",
+  BRONCE: "Bronce",
+};
 
 export default function Equipo(): React.JSX.Element {
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -57,6 +64,9 @@ export default function Equipo(): React.JSX.Element {
             Estado: {equipo.estado === "RANKEADO" ? "Rankeado" : "Provisional"}
           </Text>
           <Text style={styles.etiqueta}>Rating: {Math.round(equipo.rating)}</Text>
+          {equipo.division && (
+            <Text style={styles.etiqueta}>División: {ETIQUETA_DIVISION[equipo.division]}</Text>
+          )}
           <Text style={styles.etiqueta}>Fair-play: {Math.round(equipo.fairPlay)}</Text>
           <Link href="/partido" style={styles.link}>
             Ver mis partidos

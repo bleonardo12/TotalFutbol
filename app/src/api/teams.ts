@@ -1,5 +1,8 @@
 import { apiRequest } from "./client";
 
+/** De mejor a peor (concepto.md §6): corte por percentil del ranking global, no un dato guardado. */
+export type Division = "ELITE" | "ORO" | "PLATA" | "BRONCE";
+
 export interface Equipo {
   id: string;
   nombre: string;
@@ -8,6 +11,8 @@ export interface Equipo {
   rd: number;
   volatilidad: number;
   fairPlay: number;
+  /** null si el equipo es PROVISIONAL: todavia no rankea. */
+  division: Division | null;
 }
 
 export function crearEquipo(token: string, nombre: string): Promise<Equipo> {
