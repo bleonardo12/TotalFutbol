@@ -243,8 +243,12 @@ model Match {
 
   estado EstadoPartido @default(FIRMADO)
 
-  /// Codigo/QR del handshake: un lado lo genera, el otro lo consume.
-  codigoHandshake String @unique
+  /// Codigo/QR del handshake: un lado lo genera, el otro lo consume. Los
+  /// partidos de etapa 1 (presencial) lo traen desde la creacion; los de
+  /// etapa 2 (pactados a distancia, ver Challenge) nacen sin codigo y lo
+  /// reciben recien al "firmar en cancha" -- por eso es opcional.
+  codigoHandshake         String?   @unique
+  codigoHandshakeExpiraEn DateTime?
 
   /// Reporter por lado, fijado en el handshake (invariante: no se reasigna).
   reporterLocalId     String?
