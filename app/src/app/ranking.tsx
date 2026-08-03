@@ -1,15 +1,48 @@
 import { useQuery } from "@tanstack/react-query";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { obtenerRanking } from "@/api/ranking";
+import type { Division } from "@/api/teams";
+
+const OPCIONES: { valor: Division | null; etiqueta: string }[] = [
+  { valor: null, etiqueta: "Todos" },
+  { valor: "ELITE", etiqueta: "Elite" },
+  { valor: "ORO", etiqueta: "Oro" },
+  { valor: "PLATA", etiqueta: "Plata" },
+  { valor: "BRONCE", etiqueta: "Bronce" },
+];
+
+const ETIQUETA_DIVISION: Record<Division, string> = {
+  ELITE: "Elite",
+  ORO: "Oro",
+  PLATA: "Plata",
+  BRONCE: "Bronce",
+};
 
 export default function Ranking(): React.JSX.Element {
+  const [division, setDivision] = useState<Division | null>(null);
+
   const rankingQuery = useQuery({
-    queryKey: ["ranking"],
-    queryFn: obtenerRanking,
+    queryKey: ["ranking", division],
+    queryFn: () => obtenerRanking(division ?? undefined),
   });
 
   return (
     <View style={styles.container}>
+      <View style={styles.tabs}>
+        {OPCIONES.map((opcion) => (
+          <Pressable
+            key={opcion.etiqueta}
+            style={[styles.tab, division === opcion.valor && styles.tabActivo]}
+            onPress={() => setDivision(opcion.valor)}
+          >
+            <Text style={[styles.tabTexto, division === opcion.valor && styles.tabTextoActivo]}>
+              {opcion.etiqueta}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
       <FlatList
         data={rankingQuery.data ?? []}
         keyExtractor={(item) => item.id}
@@ -23,6 +56,7 @@ export default function Ranking(): React.JSX.Element {
           <View style={styles.fila}>
             <Text style={styles.posicion}>{item.posicion}</Text>
             <Text style={styles.nombre}>{item.nombre}</Text>
+            <Text style={styles.division}>{ETIQUETA_DIVISION[item.division]}</Text>
             <Text style={styles.rating}>{Math.round(item.rating)}</Text>
           </View>
         )}
@@ -35,6 +69,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+    gap: 12,
+  },
+  tabs: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  tab: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  tabActivo: {
+    backgroundColor: "#208AEF",
+    borderColor: "#208AEF",
+  },
+  tabTexto: {
+    color: "#333",
+    fontSize: 13,
+  },
+  tabTextoActivo: {
+    color: "#fff",
+    fontWeight: "600",
   },
   lista: {
     gap: 4,
@@ -56,9 +115,16 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
   },
+  division: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#208AEF",
+  },
   rating: {
     fontWeight: "700",
     fontSize: 16,
+    width: 56,
+    textAlign: "right",
   },
   vacio: {
     textAlign: "center",
