@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
@@ -89,6 +89,7 @@ export default function DetallePartido(): React.JSX.Element {
   if (partidoQuery.isLoading || usuarioQuery.isLoading) {
     return (
       <View style={styles.container}>
+        <Stack.Screen options={{ title: "Partido" }} />
         <ActivityIndicator />
       </View>
     );
@@ -100,6 +101,7 @@ export default function DetallePartido(): React.JSX.Element {
   if (!partido || !usuario) {
     return (
       <View style={styles.container}>
+        <Stack.Screen options={{ title: "Partido" }} />
         <Text style={styles.aviso}>No se pudo cargar el partido.</Text>
       </View>
     );
@@ -115,6 +117,9 @@ export default function DetallePartido(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{ title: `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}` }}
+      />
       <Text style={styles.titulo}>
         {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
       </Text>
