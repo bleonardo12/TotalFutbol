@@ -1,10 +1,11 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
+import { RankingModule } from "../ranking/ranking.module";
 import { TeamsController } from "./teams.controller";
 import { TeamsService } from "./teams.service";
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, RankingModule],
   controllers: [TeamsController],
   providers: [TeamsService],
 })

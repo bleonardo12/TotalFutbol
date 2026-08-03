@@ -1,5 +1,6 @@
+import { Division } from "@prisma/client";
 import { Type } from "class-transformer";
-import { IsInt, IsOptional, Max, Min } from "class-validator";
+import { IsEnum, IsInt, IsOptional, Max, Min } from "class-validator";
 
 export class RankingQueryDto {
   @IsOptional()
@@ -14,4 +15,8 @@ export class RankingQueryDto {
   @IsInt()
   @Min(0)
   offset?: number;
+
+  @IsOptional()
+  @IsEnum(Division)
+  division?: Division;
 }

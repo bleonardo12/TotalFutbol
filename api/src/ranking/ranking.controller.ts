@@ -8,6 +8,6 @@ export class RankingController {
 
   @Get()
   async listar(@Query() query: RankingQueryDto) {
-    return this.rankingService.listar(query.limit ?? 50, query.offset ?? 0);
+    return this.rankingService.listar(query.limit ?? 50, query.offset ?? 0, query.division);
   }
 }
