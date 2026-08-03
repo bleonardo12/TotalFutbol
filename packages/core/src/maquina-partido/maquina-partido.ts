@@ -10,9 +10,15 @@
  *
  * Hito 2 (disputas) agrega REPORTADO -> EN_DISPUTA (los reportes discrepan)
  * y EN_DISPUTA -> CONFIRMADO | VOID (arbol de disputa, concepto.md §10; el
- * admin puede resolver en cualquier capa, no solo C3). SUSPENDIDO -> VOID
- * (agresion/abandono) sigue sin cablear: depende de incidentes/fair-play,
- * que es el hito siguiente (arquitectura.md §8).
+ * admin puede resolver en cualquier capa, no solo C3).
+ *
+ * Hito 5a (desafios a distancia) agrega PACTADO -> VOID: un pacto que se
+ * cae antes de firmarse por QR (desistimiento dentro de la ventana o
+ * no-show, concepto.md §8 y §12) nunca produce resultado de rating, solo
+ * VOID -- nunca LIQUIDADO sin haber pasado por FIRMADO.
+ *
+ * SUSPENDIDO -> VOID (agresion/abandono en pleno partido) sigue sin
+ * cablear.
  */
 export type EstadoPartido =
   | "PACTADO"
@@ -29,7 +35,7 @@ export type EstadoPartido =
 export const ESTADOS_INICIALES_VALIDOS: readonly EstadoPartido[] = ["PACTADO", "FIRMADO"];
 
 const TRANSICIONES: Readonly<Record<EstadoPartido, readonly EstadoPartido[]>> = {
-  PACTADO: ["FIRMADO"],
+  PACTADO: ["FIRMADO", "VOID"],
   FIRMADO: ["EN_JUEGO"],
   EN_JUEGO: ["REPORTADO"],
   REPORTADO: ["CONFIRMADO", "EN_DISPUTA"],

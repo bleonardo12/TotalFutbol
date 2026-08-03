@@ -85,3 +85,15 @@ describe("SUSPENDIDO (pendiente hasta el hito de fair-play/incidentes)", () => {
     expect(esEstadoTerminal("SUSPENDIDO")).toBe(true);
   });
 });
+
+describe("desafios a distancia (concepto.md §8 y §12, Hito 5a)", () => {
+  it("un pacto que se cae antes de firmarse (desistimiento o no-show) va a VOID", () => {
+    expect(puedeTransicionar("PACTADO", "VOID")).toBe(true);
+    expect(transicionar("PACTADO", "VOID")).toBe("VOID");
+  });
+
+  it("PACTADO no puede saltar directo a otro estado que no sea FIRMADO o VOID", () => {
+    expect(puedeTransicionar("PACTADO", "EN_JUEGO")).toBe(false);
+    expect(puedeTransicionar("PACTADO", "LIQUIDADO")).toBe(false);
+  });
+});
