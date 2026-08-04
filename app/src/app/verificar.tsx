@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Text } from "react-native";
-import { verificarOtp } from "@/api/auth";
+import { obtenerUsuarioActual, verificarOtp } from "@/api/auth";
 import { Boton, Campo, Pantalla } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema } from "@/theme";
@@ -27,7 +27,8 @@ export default function Verificar(): React.JSX.Element {
     mutationFn: () => verificarOtp(telefono, codigo),
     onSuccess: async (tokens) => {
       await iniciarSesion(tokens);
-      router.replace("/equipo");
+      const usuario = await obtenerUsuarioActual(tokens.accessToken);
+      router.replace(usuario.apellido ? "/inicio" : "/completar-perfil");
     },
   });
 
