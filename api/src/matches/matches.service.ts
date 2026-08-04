@@ -20,6 +20,7 @@ import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
 import { ReportarResultadoDto } from "./dto/reportar-resultado.dto";
 import { ResolverDisputaDto } from "./dto/resolver-disputa.dto";
 import {
+  COLA_VENCIMIENTO_NO_SHOW,
   COLA_VENCIMIENTO_REPORTE,
   HANDSHAKE_ALFABETO,
   HANDSHAKE_CODIGO_LONGITUD,
@@ -45,6 +46,7 @@ export class MatchesService {
     private readonly disputesService: DisputesService,
     private readonly fairPlayService: FairPlayService,
     @InjectQueue(COLA_VENCIMIENTO_REPORTE) private readonly colaVencimiento: Queue,
+    @InjectQueue(COLA_VENCIMIENTO_NO_SHOW) private readonly colaVencimientoNoShow: Queue,
   ) {}
 
   async generar(
@@ -267,6 +269,113 @@ export class MatchesService {
         },
         include: INCLUIR_DETALLE,
       });
+    });
+  }
+
+  /**
+   * "El rival no aparecio" (concepto.md §12). Solo despues de que paso la
+   * ventana de desistimiento gratuito -- antes de eso, lo que corresponde
+   * es desistir, no acusar. NO transiciona a VOID todavia si es el primer
+   * flag: el partido sigue PACTADO para que (a) el equipo marcado pueda
+   * todavia aparecer y firmar (lo que vuelve el flag discutible sin efecto,
+   * ver confirmarFirma) o (b) el otro equipo pueda flaggear tambien
+   * (mutuo = ambiguo, se resuelve ya mismo sin penalidad para nadie). Si
+   * nadie contradice en VENTANA_DISPUTA_HORAS, el job
+   * (resolverNoShowSiVence) recien ahi aplica el -80 y pasa a VOID --
+   * mismo patron de "silencio=asentimiento" que ya existe para disputas.
+   */
+  async flaggearNoShow(usuarioId: string, matchId: string): Promise<void> {
+    let esPrimerFlag = false;
+
+    await this.prisma.$transaction(async (tx) => {
+      const match = await tx.match.findUnique({ where: { id: matchId } });
+      if (!match) {
+        throw new NotFoundException("Partido no encontrado");
+      }
+      if (match.estado !== "PACTADO") {
+        throw new ConflictException("Este partido no esta en un pacto pendiente de firmar");
+      }
+
+      const lado = await this.ladoDelUsuario(usuarioId, match);
+      if (!lado) {
+        throw new ForbiddenException("No sos integrante de ninguno de los dos equipos");
+      }
+
+      const limite = new Date(
+        match.createdAt.getTime() + VENTANA_DESISTIMIENTO_HORAS * 60 * 60 * 1000,
+      );
+      if (new Date() <= limite) {
+        throw new ConflictException(
+          "Todavia estas en la ventana de desistimiento, no hace falta marcar no-show",
+        );
+      }
+
+      const teamId = lado === "LOCAL" ? match.equipoLocalId : match.equipoVisitanteId;
+      try {
+        await tx.matchNoShowFlag.create({
+          data: { matchId, flaggeadoPorTeamId: teamId, flaggeadoPorUserId: usuarioId },
+        });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+          throw new ConflictException("Tu equipo ya marco que el rival no aparecio");
+        }
+        throw error;
+      }
+
+      const totalFlags = await tx.matchNoShowFlag.count({ where: { matchId } });
+      esPrimerFlag = totalFlags === 1;
+
+      if (totalFlags === 2) {
+        // Mutuo: ambos se acusan, es ambiguo -- se anula sin penalidad para nadie.
+        const estadoVoid = transicionar("PACTADO", "VOID");
+        await tx.match.update({ where: { id: matchId }, data: { estado: estadoVoid } });
+      }
+    });
+
+    if (esPrimerFlag) {
+      await this.colaVencimientoNoShow.add(
+        "vencimiento",
+        { matchId },
+        { delay: VENTANA_DISPUTA_HORAS * 60 * 60 * 1000, jobId: matchId },
+      );
+    }
+  }
+
+  /**
+   * Handler del job de vencimiento del flag de no-show. Si sigue habiendo
+   * un solo flag sin contradecir y el partido sigue PACTADO (nadie
+   * apareció a firmar mientras tanto, nadie flaggeo de vuelta), aplica el
+   * -80 al equipo marcado y recien ahi pasa a VOID. Idempotente: si ya se
+   * firmo o ya se resolvio como mutuo por otro lado, no hace nada.
+   */
+  async resolverNoShowSiVence(matchId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const flags = await tx.matchNoShowFlag.findMany({ where: { matchId } });
+      if (flags.length !== 1) {
+        return;
+      }
+
+      const match = await tx.match.findUnique({ where: { id: matchId } });
+      if (!match || match.estado !== "PACTADO") {
+        return;
+      }
+
+      const estadoVoid = transicionar("PACTADO", "VOID");
+      await tx.match.update({ where: { id: matchId }, data: { estado: estadoVoid } });
+
+      const flag = flags[0]!;
+      const equipoMarcado =
+        flag.flaggeadoPorTeamId === match.equipoLocalId
+          ? match.equipoVisitanteId
+          : match.equipoLocalId;
+
+      await this.fairPlayService.aplicar(
+        tx,
+        equipoMarcado,
+        matchId,
+        "NO_SHOW",
+        FAIR_PLAY_DELTA.NO_SHOW,
+      );
     });
   }
 

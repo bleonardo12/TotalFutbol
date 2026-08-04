@@ -36,6 +36,7 @@ model User {
   evidenciasSubidas     DisputeEvidence[]
   respuestasPoll        DisputePollRespuesta[]
   incidentesFlagged     MatchIncidentFlag[]
+  noShowsFlagged        MatchNoShowFlag[]
 
   @@map("users")
 }
@@ -93,6 +94,7 @@ model Team {
   respuestasPoll      DisputePollRespuesta[]
   eventosFairPlay     FairPlayLedger[]
   incidentesFlagged   MatchIncidentFlag[]
+  noShowsFlagged      MatchNoShowFlag[]
   campeonatos         Campeonato[]
 
   @@index([rating])
@@ -266,6 +268,7 @@ model Match {
   disputa         Dispute?
   eventosFairPlay FairPlayLedger[]
   incidentes      MatchIncidentFlag[]
+  noShowFlags     MatchNoShowFlag[]
 
   @@map("matches")
 }
@@ -399,6 +402,7 @@ enum TipoEventoFairPlay {
   REPORTE_FALSO_PROBADO
   DISPUTA_FRIVOLA
   INCIDENTE_FLAG
+  NO_SHOW
 }
 
 /// Append-only, igual que RatingLedger (arquitectura.md: "ledger append-only
@@ -441,6 +445,25 @@ model MatchIncidentFlag {
 
   @@unique([matchId, flaggeadoPorTeamId])
   @@map("match_incident_flags")
+}
+
+/// "El rival no aparecio" en un pacto a distancia (concepto.md §12,
+/// Hito 5a). El acusado es implicitamente el otro equipo del partido --
+/// cada equipo marca una sola vez (mismo patron de unicidad que
+/// MatchIncidentFlag). Ver MatchesService.flaggearNoShow/resolverNoShowSiVence.
+model MatchNoShowFlag {
+  id                 String @id @default(cuid())
+  matchId            String
+  match              Match  @relation(fields: [matchId], references: [id])
+  flaggeadoPorTeamId String
+  flaggeadoPorTeam   Team   @relation(fields: [flaggeadoPorTeamId], references: [id])
+  flaggeadoPorUserId String
+  flaggeadoPorUser   User   @relation(fields: [flaggeadoPorUserId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([matchId, flaggeadoPorTeamId])
+  @@map("match_no_show_flags")
 }
 
 /// De mejor a peor (concepto.md §6). No es un dato guardado por equipo: se

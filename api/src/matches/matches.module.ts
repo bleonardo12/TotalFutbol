@@ -4,9 +4,9 @@ import { AuthModule } from "../auth/auth.module";
 import { DisputesModule } from "../disputes/disputes.module";
 import { FairPlayModule } from "../fair-play/fair-play.module";
 import { RatingModule } from "../rating/rating.module";
-import { COLA_VENCIMIENTO_REPORTE } from "./matches.constantes";
+import { COLA_VENCIMIENTO_NO_SHOW, COLA_VENCIMIENTO_REPORTE } from "./matches.constantes";
 import { MatchesController } from "./matches.controller";
-import { VencimientoReporteProcessor } from "./matches.processor";
+import { VencimientoNoShowProcessor, VencimientoReporteProcessor } from "./matches.processor";
 import { MatchesService } from "./matches.service";
 
 @Module({
@@ -15,10 +15,13 @@ import { MatchesService } from "./matches.service";
     RatingModule,
     DisputesModule,
     FairPlayModule,
-    BullModule.registerQueue({ name: COLA_VENCIMIENTO_REPORTE }),
+    BullModule.registerQueue(
+      { name: COLA_VENCIMIENTO_REPORTE },
+      { name: COLA_VENCIMIENTO_NO_SHOW },
+    ),
   ],
   controllers: [MatchesController],
-  providers: [MatchesService, VencimientoReporteProcessor],
+  providers: [MatchesService, VencimientoReporteProcessor, VencimientoNoShowProcessor],
   exports: [MatchesService],
 })
 export class MatchesModule {}

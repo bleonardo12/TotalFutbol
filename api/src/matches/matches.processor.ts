@@ -1,7 +1,7 @@
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import type { Job } from "bullmq";
 import { MatchesService } from "./matches.service";
-import { COLA_VENCIMIENTO_REPORTE } from "./matches.constantes";
+import { COLA_VENCIMIENTO_NO_SHOW, COLA_VENCIMIENTO_REPORTE } from "./matches.constantes";
 
 interface DatosVencimientoReporte {
   matchId: string;
@@ -15,5 +15,20 @@ export class VencimientoReporteProcessor extends WorkerHost {
 
   async process(job: Job<DatosVencimientoReporte>): Promise<void> {
     await this.matchesService.aplicarSilencioAsentimiento(job.data.matchId);
+  }
+}
+
+interface DatosVencimientoNoShow {
+  matchId: string;
+}
+
+@Processor(COLA_VENCIMIENTO_NO_SHOW)
+export class VencimientoNoShowProcessor extends WorkerHost {
+  constructor(private readonly matchesService: MatchesService) {
+    super();
+  }
+
+  async process(job: Job<DatosVencimientoNoShow>): Promise<void> {
+    await this.matchesService.resolverNoShowSiVence(job.data.matchId);
   }
 }

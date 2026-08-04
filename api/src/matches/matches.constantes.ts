@@ -20,3 +20,4 @@ export const VENTANA_DISPUTA_HORAS = 24;
 export const VENTANA_DESISTIMIENTO_HORAS = 24;
 
 export const COLA_VENCIMIENTO_REPORTE = "vencimiento-reporte";
+export const COLA_VENCIMIENTO_NO_SHOW = "vencimiento-no-show";

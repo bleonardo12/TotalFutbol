@@ -76,6 +76,13 @@ export class MatchesController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post(":id/no-show")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async flaggearNoShow(@UsuarioActual() usuario: User, @Param("id") id: string): Promise<void> {
+    await this.matchesService.flaggearNoShow(usuario.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post(":id/reportar")
   async reportar(
     @UsuarioActual() usuario: User,
