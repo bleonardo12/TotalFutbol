@@ -1,8 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
-import { Text } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Text } from "react-native";
 import { verificarOtp } from "@/api/auth";
 import { Boton, Campo, Pantalla } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
@@ -15,6 +14,15 @@ export default function Verificar(): React.JSX.Element {
   const { colores, espaciado, tipografia } = useTema();
   const [codigo, setCodigo] = useState("");
 
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(anim, { toValue: 1, duration: 450, useNativeDriver: true }).start();
+  }, [anim]);
+  const estiloAnimado = {
+    opacity: anim,
+    transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  };
+
   const mutacion = useMutation({
     mutationFn: () => verificarOtp(telefono, codigo),
     onSuccess: async (tokens) => {
@@ -25,15 +33,11 @@ export default function Verificar(): React.JSX.Element {
 
   return (
     <Pantalla centrado>
-      <Animated.View entering={FadeInDown.duration(450).springify()} style={{ gap: espaciado.lg }}>
-        <Text
-          style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}
-        >
+      <Animated.View style={[estiloAnimado, { gap: espaciado.lg }]}>
+        <Text style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}>
           Verificar codigo
         </Text>
-        <Text
-          style={[tipografia.cuerpo, { color: colores.textoSecundario, textAlign: "center" }]}
-        >
+        <Text style={[tipografia.cuerpo, { color: colores.textoSecundario, textAlign: "center" }]}>
           Te enviamos un codigo a {telefono}
         </Text>
 

@@ -1,8 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Text } from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useEffect, useRef, useState } from "react";
+import { Animated, Text } from "react-native";
 import { solicitarOtp } from "@/api/auth";
 import { Boton, Campo, MarcaHero, Pantalla } from "@/components";
 import { useTema } from "@/theme";
@@ -11,6 +10,25 @@ export default function Login(): React.JSX.Element {
   const router = useRouter();
   const { colores, espaciado, tipografia } = useTema();
   const [telefono, setTelefono] = useState("");
+
+  const heroAnim = useRef(new Animated.Value(0)).current;
+  const formAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.stagger(120, [
+      Animated.timing(heroAnim, { toValue: 1, duration: 450, useNativeDriver: true }),
+      Animated.timing(formAnim, { toValue: 1, duration: 450, useNativeDriver: true }),
+    ]).start();
+  }, [heroAnim, formAnim]);
+
+  const estiloHero = {
+    opacity: heroAnim,
+    transform: [{ translateY: heroAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  };
+  const estiloForm = {
+    opacity: formAnim,
+    transform: [{ translateY: formAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
+  };
 
   const mutacion = useMutation({
     mutationFn: () => solicitarOtp(telefono),
@@ -21,13 +39,10 @@ export default function Login(): React.JSX.Element {
 
   return (
     <Pantalla centrado>
-      <Animated.View entering={FadeInDown.duration(500).springify()}>
+      <Animated.View style={estiloHero}>
         <MarcaHero />
       </Animated.View>
-      <Animated.View
-        entering={FadeInUp.delay(150).duration(500).springify()}
-        style={{ gap: espaciado.lg }}
-      >
+      <Animated.View style={[estiloForm, { gap: espaciado.lg }]}>
         <Campo
           etiqueta="Telefono (con codigo de pais)"
           placeholder="+5491122334455"
