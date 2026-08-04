@@ -149,10 +149,14 @@ export default function DetallePartido(): React.JSX.Element {
     new Date(partido.createdAt).getTime() + VENTANA_DESISTIMIENTO_HORAS * 60 * 60 * 1000;
 
   function confirmarDesistir(): void {
-    Alert.alert("Desistir del pacto", "Es gratis dentro de la ventana. ¿Confirmas?", [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Desistir", style: "destructive", onPress: () => desistirMutacion.mutate() },
-    ]);
+    Alert.alert(
+      "Desistir del pacto",
+      "No suma al rating. Tenes hasta 2 bajas por mes (contando rechazos de desafios) sin tocar tu fair-play; de la tercera en adelante resta puntos igual que rechazar. ¿Confirmas?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Desistir", style: "destructive", onPress: () => desistirMutacion.mutate() },
+      ],
+    );
   }
 
   function confirmarNoShow(): void {
@@ -201,7 +205,7 @@ export default function DetallePartido(): React.JSX.Element {
               disabled={desistirMutacion.isPending}
               onPress={confirmarDesistir}
             >
-              <Text style={styles.botonSecundarioTexto}>Desistir (gratis)</Text>
+              <Text style={styles.botonSecundarioTexto}>Desistir</Text>
             </Pressable>
           ) : (
             <Pressable
