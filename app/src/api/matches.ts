@@ -43,10 +43,12 @@ export interface Partido {
   cantidadJugadores: CantidadJugadores;
   superficie: Superficie;
   estado: EstadoPartido;
-  codigoHandshake: string;
+  /** null en un partido PACTADO a distancia hasta que alguien lo genera al firmar en cancha. */
+  codigoHandshake: string | null;
   reporterLocalId: string | null;
   reporterVisitanteId: string | null;
   outcomeFinal: OutcomePartido | null;
+  createdAt: string;
   equipoLocal: EquipoResumen;
   equipoVisitante: EquipoResumen;
   reportes: ReporteResultado[];
@@ -114,6 +116,34 @@ export function flaggearIncidente(token: string, id: string, descripcion?: strin
     token,
     body: { descripcion },
   });
+}
+
+/** Baja gratis de un pacto a distancia, solo dentro de la ventana de desistimiento (24h). */
+export function desistirPartido(token: string, id: string): Promise<void> {
+  return apiRequest(`/matches/${id}/desistir`, { method: "POST", token });
+}
+
+/** Firmar en cancha un partido pactado: un capitan genera el codigo/QR. */
+export function generarCodigoFirma(
+  token: string,
+  id: string,
+): Promise<{ codigo: string; expiraEn: string }> {
+  return apiRequest(`/matches/${id}/firmar/generar`, { method: "POST", token });
+}
+
+/** El capitan del otro equipo confirma el codigo mostrado en persona. */
+export function confirmarFirma(token: string, id: string, codigo: string): Promise<Partido> {
+  return apiRequest(`/matches/${id}/firmar/confirmar`, { method: "POST", token, body: { codigo } });
+}
+
+/**
+ * "El rival no aparecio" (concepto.md §12), solo disponible pasada la
+ * ventana de desistimiento. Si el otro equipo no lo contesta, a las 24h
+ * se aplica el golpe de fair-play; si tambien flaggea, se anula sin
+ * penalidad (mutuo, ambiguo).
+ */
+export function flaggearNoShow(token: string, id: string): Promise<void> {
+  return apiRequest(`/matches/${id}/no-show`, { method: "POST", token });
 }
 
 export function reportarResultado(

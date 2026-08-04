@@ -71,6 +71,9 @@ export default function Equipo(): React.JSX.Element {
           <Link href="/partido" style={styles.link}>
             Ver mis partidos
           </Link>
+          <Link href="/desafio" style={styles.link}>
+            Ver mis desafios
+          </Link>
           <Link href="/ranking" style={styles.link}>
             Ver ranking
           </Link>

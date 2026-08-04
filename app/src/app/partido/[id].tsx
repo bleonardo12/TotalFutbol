@@ -1,15 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
 import {
+  desistirPartido,
   flaggearIncidente,
+  flaggearNoShow,
   obtenerPartido,
   reportarResultado,
   type OutcomePartido,
 } from "@/api/matches";
+import { misEquipos } from "@/api/teams";
 import { useAuthStore } from "@/store/auth-store";
+
+/** Mismo numero que VENTANA_DESISTIMIENTO_HORAS del backend (matches.constantes.ts) -- solo para mostrar u ocultar el boton, el backend es quien manda. */
+const VENTANA_DESISTIMIENTO_HORAS = 24;
 
 type ResultadoPropio = "GANE" | "PERDI" | "EMPATE";
 
@@ -52,10 +58,31 @@ export default function DetallePartido(): React.JSX.Element {
     enabled: accessToken !== null,
   });
 
+  const equiposQuery = useQuery({
+    queryKey: ["equipos", "mios"],
+    queryFn: () => misEquipos(accessToken as string),
+    enabled: accessToken !== null,
+  });
+  const miEquipoId = equiposQuery.data?.[0]?.id;
+
   const partidoQuery = useQuery({
     queryKey: ["partidos", id],
     queryFn: () => obtenerPartido(accessToken as string, id),
     enabled: accessToken !== null && !!id,
+  });
+
+  const desistirMutacion = useMutation({
+    mutationFn: () => desistirPartido(accessToken as string, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["partidos", id] });
+    },
+  });
+
+  const noShowMutacion = useMutation({
+    mutationFn: () => flaggearNoShow(accessToken as string, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["partidos", id] });
+    },
   });
 
   const reportarMutacion = useMutation({
@@ -115,6 +142,30 @@ export default function DetallePartido(): React.JSX.Element {
     !yaReporte &&
     (partido.estado === "EN_JUEGO" || partido.estado === "REPORTADO");
 
+  const esParteDelPacto =
+    miEquipoId === partido.equipoLocalId || miEquipoId === partido.equipoVisitanteId;
+  const ventanaDesistimientoPaso =
+    Date.now() >
+    new Date(partido.createdAt).getTime() + VENTANA_DESISTIMIENTO_HORAS * 60 * 60 * 1000;
+
+  function confirmarDesistir(): void {
+    Alert.alert("Desistir del pacto", "Es gratis dentro de la ventana. ¿Confirmas?", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Desistir", style: "destructive", onPress: () => desistirMutacion.mutate() },
+    ]);
+  }
+
+  function confirmarNoShow(): void {
+    Alert.alert(
+      "El rival no aparecio",
+      "Si el otro equipo no lo contradice, a las 24hs se le aplica un golpe de fair-play. Si tambien te marca a vos, se anula sin penalidad para nadie.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Marcar no-show", style: "destructive", onPress: () => noShowMutacion.mutate() },
+      ],
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -134,6 +185,39 @@ export default function DetallePartido(): React.JSX.Element {
               ? `Gano ${partido.equipoLocal.nombre}`
               : `Gano ${partido.equipoVisitante.nombre}`}
         </Text>
+      )}
+
+      {partido.estado === "PACTADO" && esParteDelPacto && (
+        <View style={styles.pactoSeccion}>
+          <Link href={{ pathname: "/partido/firmar", params: { id } }} asChild>
+            <Pressable style={styles.boton}>
+              <Text style={styles.botonTexto}>Firmar en cancha</Text>
+            </Pressable>
+          </Link>
+
+          {!ventanaDesistimientoPaso ? (
+            <Pressable
+              style={[styles.botonSecundario, desistirMutacion.isPending && styles.botonDeshabilitado]}
+              disabled={desistirMutacion.isPending}
+              onPress={confirmarDesistir}
+            >
+              <Text style={styles.botonSecundarioTexto}>Desistir (gratis)</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={[styles.botonSecundario, noShowMutacion.isPending && styles.botonDeshabilitado]}
+              disabled={noShowMutacion.isPending}
+              onPress={confirmarNoShow}
+            >
+              <Text style={styles.botonSecundarioTexto}>El rival no aparecio</Text>
+            </Pressable>
+          )}
+
+          {desistirMutacion.isError && (
+            <Text style={styles.error}>{desistirMutacion.error.message}</Text>
+          )}
+          {noShowMutacion.isError && <Text style={styles.error}>{noShowMutacion.error.message}</Text>}
+        </View>
       )}
 
       {puedeReportar && (
@@ -346,6 +430,10 @@ const styles = StyleSheet.create({
   incidenteSeccion: {
     gap: 8,
     marginTop: 16,
+  },
+  pactoSeccion: {
+    gap: 8,
+    marginTop: 8,
   },
   botonSecundario: {
     borderWidth: 1,
