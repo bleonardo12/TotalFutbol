@@ -30,6 +30,12 @@ export {
 } from "./fair-play/constantes";
 export { calcularFairPlay, debePenalizarBaja, haypresuncion } from "./fair-play/fair-play";
 
-export type { Division } from "./temporadas/tipos";
-export { ORDEN_DIVISIONES, PARTIDOS_MINIMOS_PARA_ELITE } from "./temporadas/constantes";
+export { sonNombresParecidos } from "./equipos/nombres";
+
+export type { CategoriaFutbol, Division } from "./temporadas/tipos";
+export {
+  ORDEN_CATEGORIAS,
+  ORDEN_DIVISIONES,
+  PARTIDOS_MINIMOS_PARA_ELITE,
+} from "./temporadas/constantes";
 export { asignarDivision } from "./temporadas/temporadas";

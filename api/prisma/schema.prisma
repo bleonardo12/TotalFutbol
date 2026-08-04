@@ -78,11 +78,17 @@ enum EstadoEquipo {
 /// La unidad rankeada. rating/rd/volatilidad son la materializacion
 /// del ultimo asiento de RatingLedger; la fuente de verdad es el ledger.
 model Team {
-  id        String       @id @default(cuid())
+  id        String          @id @default(cuid())
   nombre    String
   capitanId String
-  capitan   User         @relation("CapitanDeEquipo", fields: [capitanId], references: [id])
-  estado    EstadoEquipo @default(PROVISIONAL)
+  capitan   User            @relation("CapitanDeEquipo", fields: [capitanId], references: [id])
+  estado    EstadoEquipo    @default(PROVISIONAL)
+  /// Fija al crear el equipo, nunca cambia (Hito 6c): particiona el ranking
+  /// en pools completamente separados -- un equipo no cruza contra otro de
+  /// categoria distinta ni en el ranking ni en desafios. Distinto del
+  /// "Formato" (concepto.md §5, cantidad de jugadores x superficie), que
+  /// sigue sin partir el ranking (decision bloqueada en CLAUDE.md).
+  categoria CategoriaFutbol
 
   rating      Float @default(1500)
   rd          Float @default(350)
@@ -514,6 +520,15 @@ model DeclinacionDesafio {
   @@map("declinaciones_desafio")
 }
 
+/// Particion del ranking (Hito 6c): pools completamente separados, un
+/// equipo no cruza (ni en ranking ni en desafios) contra otro de categoria
+/// distinta. Fija al crear el equipo.
+enum CategoriaFutbol {
+  MASCULINO
+  FEMENINO
+  MIXTO
+}
+
 /// De mejor a peor (concepto.md §6). No es un dato guardado por equipo: se
 /// recalcula en cualquier momento cortando por percentil el ranking global
 /// (ver RankingService.divisionDe) — no es una liga con tabla de puntos.
@@ -544,16 +559,17 @@ model Season {
 /// Palmares (concepto.md §6): 1° de cada division al cierre de temporada.
 /// El campeon de Elite es ademas el campeon del año.
 model Campeonato {
-  id               String   @id @default(cuid())
+  id               String          @id @default(cuid())
   seasonId         String
-  season           Season   @relation(fields: [seasonId], references: [id])
+  season           Season          @relation(fields: [seasonId], references: [id])
+  categoria        CategoriaFutbol
   division         Division
   teamId           String
-  team             Team     @relation(fields: [teamId], references: [id])
-  esCampeonDelAnio Boolean  @default(false)
+  team             Team            @relation(fields: [teamId], references: [id])
+  esCampeonDelAnio Boolean         @default(false)
 
   createdAt DateTime @default(now())
 
-  @@unique([seasonId, division])
+  @@unique([seasonId, categoria, division])
   @@map("campeonatos")
 }

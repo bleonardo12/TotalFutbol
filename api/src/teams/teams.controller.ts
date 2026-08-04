@@ -12,7 +12,7 @@ export class TeamsController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async crear(@UsuarioActual() usuario: User, @Body() dto: CrearEquipoDto) {
-    return this.teamsService.crear(usuario.id, dto.nombre);
+    return this.teamsService.crear(usuario.id, dto.nombre, dto.categoria);
   }
 
   @UseGuards(JwtAuthGuard)
