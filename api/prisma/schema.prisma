@@ -16,15 +16,29 @@ enum RolUsuario {
   ADMIN
 }
 
+/// Perfil personal (Hito 6b, onboarding en pasos). Valores iniciales a
+/// calibrar, no vienen de concepto.md -- decision de producto tomada con
+/// Leonardo al copiar la estructura de onboarding de Spindex.
+enum Genero {
+  MASCULINO
+  FEMENINO
+  OTRO
+  PREFIERO_NO_DECIR
+}
+
 /// Capitan/es de equipo. La identidad ancla en el telefono verificado por OTP.
 model User {
-  id        String     @id @default(cuid())
-  telefono  String     @unique
-  email     String?    @unique
-  nombre    String?
-  rol       RolUsuario @default(JUGADOR)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  telefono        String     @unique
+  email           String?    @unique
+  nombre          String?
+  apellido        String?
+  fechaNacimiento DateTime?
+  genero          Genero?
+  fotoUrl         String?
+  rol             RolUsuario @default(JUGADOR)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   equiposCapitaneados   Team[]                 @relation("CapitanDeEquipo")
   integraciones         TeamMember[]
