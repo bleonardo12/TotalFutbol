@@ -36,7 +36,8 @@
         {
           "cameraPermission": "Se usa la camara para escanear el codigo QR del partido."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

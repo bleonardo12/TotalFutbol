@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { useTema } from "@/theme";
+import { TIPOGRAFIA, useTema } from "@/theme";
 
 export default function TabsLayout(): React.JSX.Element {
   const { colores } = useTema();
@@ -11,10 +11,15 @@ export default function TabsLayout(): React.JSX.Element {
         headerTitleAlign: "center",
         headerStyle: { backgroundColor: colores.superficie },
         headerTintColor: colores.textoPrimario,
-        headerTitleStyle: { color: colores.textoPrimario },
+        headerTitleStyle: {
+          color: colores.textoPrimario,
+          fontFamily: TIPOGRAFIA.subtitulo.fontFamily,
+          fontSize: 18,
+        },
         tabBarStyle: { backgroundColor: colores.superficie, borderTopColor: colores.borde },
         tabBarActiveTintColor: colores.acento,
         tabBarInactiveTintColor: colores.textoApagado,
+        tabBarLabelStyle: { fontFamily: TIPOGRAFIA.caption.fontFamily, fontSize: 11 },
       }}
     >
       <Tabs.Screen

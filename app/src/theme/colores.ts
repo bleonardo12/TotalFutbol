@@ -2,7 +2,10 @@ export interface Paleta {
   fondo: string;
   superficie: string;
   superficieElevada: string;
+  /** Variante con tinte de acento para cards "hero" (equipo/rating) -- rompe la monotonia de grises. */
+  superficieAcento: string;
   borde: string;
+  bordeAcento: string;
   textoPrimario: string;
   textoSecundario: string;
   textoApagado: string;
@@ -14,29 +17,33 @@ export interface Paleta {
 }
 
 const oscura: Paleta = {
-  fondo: "#0B0F14",
-  superficie: "#151A21",
-  superficieElevada: "#1E252E",
-  borde: "#2A323C",
-  textoPrimario: "#F5F7FA",
-  textoSecundario: "#A8B3BF",
+  fondo: "#080A0D",
+  superficie: "#171D26",
+  superficieElevada: "#212A35",
+  superficieAcento: "#16233A",
+  borde: "#28323E",
+  bordeAcento: "#2D5C94",
+  textoPrimario: "#F7F9FC",
+  textoSecundario: "#AEB9C6",
   textoApagado: "#6B7684",
-  acento: "#3B9EFF",
-  acentoTexto: "#FFFFFF",
+  acento: "#4FACFF",
+  acentoTexto: "#08131F",
   exito: "#34C759",
   error: "#FF5A52",
   alerta: "#F5A623",
 };
 
 const clara: Paleta = {
-  fondo: "#F7F9FC",
+  fondo: "#F2F5FA",
   superficie: "#FFFFFF",
-  superficieElevada: "#EDF1F7",
+  superficieElevada: "#E7EDF6",
+  superficieAcento: "#E8F2FF",
   borde: "#DCE3EC",
-  textoPrimario: "#1A1F26",
-  textoSecundario: "#5B6572",
+  bordeAcento: "#AFD4FF",
+  textoPrimario: "#141A22",
+  textoSecundario: "#535E6C",
   textoApagado: "#8B95A1",
-  acento: "#208AEF",
+  acento: "#1878D6",
   acentoTexto: "#FFFFFF",
   exito: "#22A745",
   error: "#DC3545",
