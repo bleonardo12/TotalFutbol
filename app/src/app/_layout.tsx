@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema } from "@/theme";
 
@@ -18,31 +19,35 @@ export default function RootLayout(): React.JSX.Element {
 
   if (!hidratado) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colores.fondo,
-        }}
-      >
-        <ActivityIndicator color={colores.acento} />
-      </View>
+      <SafeAreaProvider>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: colores.fondo,
+          }}
+        >
+          <ActivityIndicator color={colores.acento} />
+        </View>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack
-        screenOptions={{
-          headerTitleAlign: "center",
-          headerStyle: { backgroundColor: colores.superficie },
-          headerTintColor: colores.textoPrimario,
-          headerTitleStyle: { color: colores.textoPrimario },
-          contentStyle: { backgroundColor: colores.fondo },
-        }}
-      />
-      <StatusBar style="auto" />
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <Stack
+          screenOptions={{
+            headerTitleAlign: "center",
+            headerStyle: { backgroundColor: colores.superficie },
+            headerTintColor: colores.textoPrimario,
+            headerTitleStyle: { color: colores.textoPrimario },
+            contentStyle: { backgroundColor: colores.fondo },
+          }}
+        />
+        <StatusBar style="auto" />
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }
