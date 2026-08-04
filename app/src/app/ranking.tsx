@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { obtenerRanking } from "@/api/ranking";
-import type { Division } from "@/api/teams";
+import { misEquipos, type Division } from "@/api/teams";
+import { useAuthStore } from "@/store/auth-store";
 
 const OPCIONES: { valor: Division | null; etiqueta: string }[] = [
   { valor: null, etiqueta: "Todos" },
@@ -21,11 +23,19 @@ const ETIQUETA_DIVISION: Record<Division, string> = {
 
 export default function Ranking(): React.JSX.Element {
   const [division, setDivision] = useState<Division | null>(null);
+  const router = useRouter();
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   const rankingQuery = useQuery({
     queryKey: ["ranking", division],
     queryFn: () => obtenerRanking(division ?? undefined),
   });
+  const equiposQuery = useQuery({
+    queryKey: ["equipos", "mios"],
+    queryFn: () => misEquipos(accessToken as string),
+    enabled: accessToken !== null,
+  });
+  const miEquipoId = equiposQuery.data?.[0]?.id;
 
   return (
     <View style={styles.container}>
@@ -57,14 +67,26 @@ export default function Ranking(): React.JSX.Element {
             <Text style={styles.vacio}>Todavia no hay equipos rankeados</Text>
           ) : null
         }
-        renderItem={({ item }) => (
-          <View style={styles.fila}>
-            <Text style={styles.posicion}>{item.posicion}</Text>
-            <Text style={styles.nombre}>{item.nombre}</Text>
-            <Text style={styles.division}>{ETIQUETA_DIVISION[item.division]}</Text>
-            <Text style={styles.rating}>{Math.round(item.rating)}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const esMiEquipo = item.id === miEquipoId;
+          return (
+            <Pressable
+              style={styles.fila}
+              disabled={esMiEquipo || !miEquipoId}
+              onPress={() =>
+                router.push({
+                  pathname: "/desafio/proponer",
+                  params: { equipoDesafiadoId: item.id, equipoDesafiadoNombre: item.nombre },
+                })
+              }
+            >
+              <Text style={styles.posicion}>{item.posicion}</Text>
+              <Text style={styles.nombre}>{item.nombre}</Text>
+              <Text style={styles.division}>{ETIQUETA_DIVISION[item.division]}</Text>
+              <Text style={styles.rating}>{Math.round(item.rating)}</Text>
+            </Pressable>
+          );
+        }}
       />
     </View>
   );
