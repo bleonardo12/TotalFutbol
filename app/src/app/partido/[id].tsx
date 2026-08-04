@@ -23,7 +23,7 @@ const ETIQUETA_ESTADO: Record<string, string> = {
   PACTADO: "Pactado",
   FIRMADO: "Firmado",
   EN_JUEGO: "En juego",
-  REPORTADO: "Esperando confirmacion",
+  REPORTADO: "Pendiente",
   CONFIRMADO: "Confirmado",
   EN_DISPUTA: "En disputa",
   LIQUIDADO: "Liquidado",
@@ -289,7 +289,7 @@ export default function DetallePartido(): React.JSX.Element {
       )}
 
       {!puedeReportar && yaReporte && !partido.outcomeFinal && (
-        <Text style={styles.aviso}>Ya reportaste. Esperando el reporte del rival.</Text>
+        <Text style={styles.aviso}>Ya reportaste. Falta el rival.</Text>
       )}
 
       {partido.estado === "EN_DISPUTA" && (
@@ -309,7 +309,7 @@ export default function DetallePartido(): React.JSX.Element {
           ) : (
             <>
               <Text style={styles.etiqueta}>
-                No hace falta decir quien tuvo la culpa, solo que paso algo en el partido.
+                No hace falta decir quien tuvo la culpa, solo reportar que paso algo.
               </Text>
               <TextInput
                 style={styles.inputGoles}
@@ -329,7 +329,7 @@ export default function DetallePartido(): React.JSX.Element {
                 {incidenteMutacion.isPending ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.botonTexto}>Enviar reporte de incidente</Text>
+                  <Text style={styles.botonTexto}>Enviar reporte</Text>
                 )}
               </Pressable>
             </>

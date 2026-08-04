@@ -27,8 +27,8 @@ const ETIQUETA_SANCION: Record<TipoSancionFairPlay, string> = {
 
 const ETIQUETA_CAPA: Record<CapaDisputa, string> = {
   C1_EVIDENCIA: "Evidencia (C1)",
-  C2_PLANTELES: "Consulta al plantel (C2)",
-  C3_ADMIN: "Decision del admin (C3)",
+  C2_PLANTELES: "Plantel (C2)",
+  C3_ADMIN: "Admin (C3)",
 };
 
 function formatearFecha(iso: string): string {

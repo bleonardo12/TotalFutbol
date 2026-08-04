@@ -8,7 +8,7 @@ const ETIQUETA_ESTADO: Record<string, string> = {
   PACTADO: "Pactado",
   FIRMADO: "Firmado",
   EN_JUEGO: "En juego",
-  REPORTADO: "Esperando confirmacion",
+  REPORTADO: "Pendiente",
   CONFIRMADO: "Confirmado",
   EN_DISPUTA: "En disputa",
   LIQUIDADO: "Liquidado",
