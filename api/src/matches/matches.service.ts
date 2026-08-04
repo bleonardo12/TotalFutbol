@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { type EstadoPartido, OutcomePartido, Prisma, type User } from "@prisma/client";
+import { type Challenge, type EstadoPartido, OutcomePartido, Prisma, type User } from "@prisma/client";
 import { esEstadoInicialValido, FAIR_PLAY_DELTA, transicionar } from "@totalfutbol/core";
 import type { Queue } from "bullmq";
 import { randomInt } from "node:crypto";
@@ -119,6 +119,33 @@ export class MatchesService {
         estado: estadoDeArranque,
         reporterLocalId: handshake.generadoPorId,
         reporterVisitanteId: usuarioId,
+      },
+      include: INCLUIR_DETALLE,
+    });
+  }
+
+  /**
+   * Nace un Match en PACTADO a partir de un Challenge recien ACEPTADO
+   * (Hito 5a, concepto.md §2 Etapa 2). Sin codigoHandshake ni reporters
+   * todavia -- eso recien se fija al firmar en cancha (generarCodigoFirma/
+   * confirmarFirma), porque el contrato vinculante se firma SOLO por QR en
+   * persona (CLAUDE.md), nunca a distancia por mas que ya se haya pactado.
+   */
+  async crearDesdeChallenge(tx: Prisma.TransactionClient, challenge: Challenge) {
+    const estadoDeArranque = esEstadoInicialValido("PACTADO") ? "PACTADO" : undefined;
+    if (!estadoDeArranque) {
+      throw new Error("PACTADO dejo de ser un estado inicial valido");
+    }
+
+    return tx.match.create({
+      data: {
+        challengeId: challenge.id,
+        equipoLocalId: challenge.desafianteId,
+        equipoVisitanteId: challenge.desafiadoId,
+        cantidadJugadores: challenge.cantidadJugadores,
+        superficie: challenge.superficie,
+        sedeId: challenge.sedeId,
+        estado: estadoDeArranque,
       },
       include: INCLUIR_DETALLE,
     });
