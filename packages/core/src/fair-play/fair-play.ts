@@ -1,4 +1,5 @@
 import {
+  BAJAS_GRATIS_POR_MES,
   FAIR_PLAY_INICIAL,
   FAIR_PLAY_MAX,
   FAIR_PLAY_MIN,
@@ -52,4 +53,16 @@ export function haypresuncion(
     return null;
   }
   return diferencial < 0 ? "A" : "B";
+}
+
+/**
+ * Cuota mensual de bajas (Hito 5a, ver BAJAS_GRATIS_POR_MES): dado el total
+ * de bajas del equipo en el mes en curso INCLUYENDO la que se esta
+ * registrando ahora mismo, indica si esta corresponde penalidad.
+ */
+export function debePenalizarBaja(
+  bajasEsteMesIncluidaEsta: number,
+  cuotaGratis: number = BAJAS_GRATIS_POR_MES,
+): boolean {
+  return bajasEsteMesIncluidaEsta > cuotaGratis;
 }

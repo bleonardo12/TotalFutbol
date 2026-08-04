@@ -156,10 +156,14 @@ export class MatchesService {
   }
 
   /**
-   * Desistimiento gratuito de un pacto a distancia (concepto.md §8/§12):
-   * dentro de VENTANA_DESISTIMIENTO_HORAS desde que se creo el Match
-   * (Challenge aceptado), cualquiera de los dos equipos se puede bajar sin
-   * penalidad. Nunca produce resultado de rating -- VOID directo.
+   * Desistimiento de un pacto a distancia (concepto.md §8/§12): dentro de
+   * VENTANA_DESISTIMIENTO_HORAS desde que se creo el Match (Challenge
+   * aceptado), cualquiera de los dos equipos se puede bajar. Nunca produce
+   * resultado de rating -- VOID directo. Cuenta para la cuota mensual de
+   * bajas junto con los rechazos de desafio (FairPlayService.
+   * registrarDeclinacionSiCorresponde) -- sin esto, aceptar y desistir
+   * gratis seria un atajo para esquivar la penalidad de rechazar
+   * directamente.
    */
   async desistir(usuarioId: string, matchId: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
@@ -182,8 +186,15 @@ export class MatchesService {
         throw new ConflictException("La ventana de desistimiento gratuito ya paso");
       }
 
+      const equipoQueDesiste = lado === "LOCAL" ? match.equipoLocalId : match.equipoVisitanteId;
       const estadoVoid = transicionar("PACTADO", "VOID");
       await tx.match.update({ where: { id: matchId }, data: { estado: estadoVoid } });
+      await this.fairPlayService.registrarDeclinacionSiCorresponde(
+        tx,
+        equipoQueDesiste,
+        "DESISTIMIENTO",
+        { matchId },
+      );
     });
   }
 

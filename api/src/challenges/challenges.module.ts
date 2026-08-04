@@ -1,6 +1,7 @@
 import { BullModule } from "@nestjs/bullmq";
 import { Module } from "@nestjs/common";
 import { AuthModule } from "../auth/auth.module";
+import { FairPlayModule } from "../fair-play/fair-play.module";
 import { MatchesModule } from "../matches/matches.module";
 import { COLA_VENCIMIENTO_DESAFIO } from "./challenges.constantes";
 import { ChallengesController } from "./challenges.controller";
@@ -11,6 +12,7 @@ import { ChallengesService } from "./challenges.service";
   imports: [
     AuthModule,
     MatchesModule,
+    FairPlayModule,
     BullModule.registerQueue({ name: COLA_VENCIMIENTO_DESAFIO }),
   ],
   controllers: [ChallengesController],

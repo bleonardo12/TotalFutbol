@@ -4,7 +4,7 @@ import {
   FAIR_PLAY_UMBRAL_PRESUNCION,
   FAIR_PLAY_VENTANA_DECAY_DIAS,
 } from "./constantes";
-import { calcularFairPlay, haypresuncion } from "./fair-play";
+import { calcularFairPlay, debePenalizarBaja, haypresuncion } from "./fair-play";
 
 const AHORA = new Date("2026-08-01T00:00:00Z");
 
@@ -85,5 +85,22 @@ describe("haypresuncion", () => {
   it("acepta un umbral custom", () => {
     expect(haypresuncion(900, 850, 40)).toBe("B");
     expect(haypresuncion(900, 850, 60)).toBeNull();
+  });
+});
+
+describe("debePenalizarBaja (Hito 5a: cuota mensual de rechazos + desistimientos)", () => {
+  it("dentro de la cuota gratis, no penaliza", () => {
+    expect(debePenalizarBaja(1)).toBe(false);
+    expect(debePenalizarBaja(2)).toBe(false);
+  });
+
+  it("al superar la cuota, penaliza", () => {
+    expect(debePenalizarBaja(3)).toBe(true);
+    expect(debePenalizarBaja(4)).toBe(true);
+  });
+
+  it("acepta una cuota custom", () => {
+    expect(debePenalizarBaja(1, 0)).toBe(true);
+    expect(debePenalizarBaja(5, 10)).toBe(false);
   });
 });

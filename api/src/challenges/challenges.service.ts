@@ -2,6 +2,7 @@ import { InjectQueue } from "@nestjs/bullmq";
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import type { Challenge } from "@prisma/client";
 import type { Queue } from "bullmq";
+import { FairPlayService } from "../fair-play/fair-play.service";
 import { MatchesService } from "../matches/matches.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { CHALLENGE_TTL_HORAS, COLA_VENCIMIENTO_DESAFIO } from "./challenges.constantes";
@@ -19,6 +20,7 @@ export class ChallengesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly matchesService: MatchesService,
+    private readonly fairPlayService: FairPlayService,
     @InjectQueue(COLA_VENCIMIENTO_DESAFIO) private readonly colaVencimiento: Queue,
   ) {}
 
@@ -73,21 +75,37 @@ export class ChallengesService {
     });
   }
 
-  /** Solo el equipo desafiado puede rechazar. */
+  /**
+   * Solo el equipo desafiado puede rechazar. Cuenta para la cuota mensual
+   * de bajas junto con los desistimientos de partidos ya pactados (ver
+   * FairPlayService.registrarDeclinacionSiCorresponde) -- mismo criterio
+   * para las dos, ninguna es "peor" que la otra.
+   */
   async rechazar(usuarioId: string, challengeId: string): Promise<Challenge> {
-    const challenge = await this.prisma.challenge.findUnique({ where: { id: challengeId } });
-    if (!challenge) {
-      throw new NotFoundException("Desafio no encontrado");
-    }
-    await this.verificarPertenencia(usuarioId, challenge.desafiadoId);
-    if (challenge.estado !== "PROPUESTO") {
-      throw new ConflictException("Este desafio ya no esta pendiente de respuesta");
-    }
+    return this.prisma.$transaction(async (tx) => {
+      const challenge = await tx.challenge.findUnique({ where: { id: challengeId } });
+      if (!challenge) {
+        throw new NotFoundException("Desafio no encontrado");
+      }
+      await this.verificarPertenencia(usuarioId, challenge.desafiadoId);
+      if (challenge.estado !== "PROPUESTO") {
+        throw new ConflictException("Este desafio ya no esta pendiente de respuesta");
+      }
 
-    return this.prisma.challenge.update({
-      where: { id: challengeId },
-      data: { estado: "RECHAZADO" },
-      include: INCLUIR_DETALLE,
+      const actualizado = await tx.challenge.update({
+        where: { id: challengeId },
+        data: { estado: "RECHAZADO" },
+        include: INCLUIR_DETALLE,
+      });
+
+      await this.fairPlayService.registrarDeclinacionSiCorresponde(
+        tx,
+        challenge.desafiadoId,
+        "RECHAZO",
+        { challengeId },
+      );
+
+      return actualizado;
     });
   }
 

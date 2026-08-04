@@ -95,6 +95,7 @@ model Team {
   eventosFairPlay     FairPlayLedger[]
   incidentesFlagged   MatchIncidentFlag[]
   noShowsFlagged      MatchNoShowFlag[]
+  declinaciones       DeclinacionDesafio[]
   campeonatos         Campeonato[]
 
   @@index([rating])
@@ -178,7 +179,8 @@ model Challenge {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  partido Match?
+  partido       Match?
+  declinaciones DeclinacionDesafio[]
 
   @@map("challenges")
 }
@@ -269,6 +271,7 @@ model Match {
   eventosFairPlay FairPlayLedger[]
   incidentes      MatchIncidentFlag[]
   noShowFlags     MatchNoShowFlag[]
+  declinaciones   DeclinacionDesafio[]
 
   @@map("matches")
 }
@@ -403,6 +406,7 @@ enum TipoEventoFairPlay {
   DISPUTA_FRIVOLA
   INCIDENTE_FLAG
   NO_SHOW
+  DECLINACION_DESAFIO
 }
 
 /// Append-only, igual que RatingLedger (arquitectura.md: "ledger append-only
@@ -464,6 +468,36 @@ model MatchNoShowFlag {
 
   @@unique([matchId, flaggeadoPorTeamId])
   @@map("match_no_show_flags")
+}
+
+enum TipoDeclinacion {
+  RECHAZO
+  DESISTIMIENTO
+}
+
+/// Cuota mensual de bajas sin penalidad (Hito 5a, ver
+/// packages/core BAJAS_GRATIS_POR_MES): un asiento por cada rechazo de
+/// desafio propuesto o desistimiento de uno ya pactado. Rechazar y
+/// desistir cuentan juntos para el mismo contador por equipo -- sin esto,
+/// aceptar y despues desistir gratis seria un atajo para esquivar
+/// cualquier penalidad de rechazar directamente. ChallengesService.rechazar
+/// y MatchesService.desistir escriben aca y consultan el conteo del mes
+/// en curso antes de decidir si corresponde FAIR_PLAY_DELTA.DECLINACION_DESAFIO.
+model DeclinacionDesafio {
+  id     String          @id @default(cuid())
+  teamId String
+  team   Team            @relation(fields: [teamId], references: [id])
+  tipo   TipoDeclinacion
+
+  challengeId String?
+  challenge   Challenge? @relation(fields: [challengeId], references: [id])
+  matchId     String?
+  match       Match?     @relation(fields: [matchId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([teamId, createdAt])
+  @@map("declinaciones_desafio")
 }
 
 /// De mejor a peor (concepto.md §6). No es un dato guardado por equipo: se
