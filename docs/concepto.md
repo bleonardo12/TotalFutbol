@@ -258,5 +258,6 @@ Las **zonas del ranking emergen** de la geolocalización de las canchas donde se
 - **Sembrado del rating inicial** de un equipo nuevo (placement / rating de arranque \+ RD).  
 - **Calibración numérica fina** — todos los pesos de fair-play, ventanas de decaimiento, costos de fichas, umbrales de presunción y de tier: valores iniciales a ajustar con datos reales.  
 - **Monetización** — sin definir; posible vía sedes/canchas como partners.  
-- **Nombre del producto.**
+- **Nombre del producto.**  
+- **Colusión entre equipos "fantasma"** (Hito 6c) — un grupo de personas de un mismo equipo real puede crear equipos descartables, declarar una goleada arreglada a favor del equipo real, y abandonar el equipo fantasma. El bloqueo directo de "un usuario no puede pertenecer a los dos equipos que se enfrentan" cierra la version mas burda (una sola persona maneja las dos puntas), pero no la version distribuida (distintos integrantes del mismo grupo social arman cada equipo fantasma) — eso requeriria una señal de fraude por agregado (equipos efímeros: pocos partidos, creados poco antes, abandonados despues) con cola de revisión de admin, en la misma línea que ya usamos para fair-play y disputas. Ninguna de las dos partes implementada todavía; a resolver cuando el volumen real de uso lo justifique.
 
