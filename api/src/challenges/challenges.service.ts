@@ -34,6 +34,7 @@ export class ChallengesService {
       throw new ConflictException("Un equipo no puede desafiarse a si mismo");
     }
     await this.verificarPertenencia(usuarioId, dto.equipoDesafianteId);
+    await this.verificarMismaCategoria(dto.equipoDesafianteId, dto.equipoDesafiadoId);
 
     const challenge = await this.prisma.challenge.create({
       data: {
@@ -142,6 +143,17 @@ export class ChallengesService {
     });
     if (!esIntegrante) {
       throw new ForbiddenException("No sos integrante de ese equipo");
+    }
+  }
+
+  /** Pools de ranking separados por categoria (Hito 6c): no se puede cruzar un desafio entre ellos. */
+  private async verificarMismaCategoria(desafianteId: string, desafiadoId: string): Promise<void> {
+    const [desafiante, desafiado] = await Promise.all([
+      this.prisma.team.findUniqueOrThrow({ where: { id: desafianteId }, select: { categoria: true } }),
+      this.prisma.team.findUniqueOrThrow({ where: { id: desafiadoId }, select: { categoria: true } }),
+    ]);
+    if (desafiante.categoria !== desafiado.categoria) {
+      throw new ConflictException("No podes desafiar a un equipo de otra categoria");
     }
   }
 }

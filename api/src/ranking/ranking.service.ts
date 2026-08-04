@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { Division } from "@prisma/client";
+import type { CategoriaFutbol, Division } from "@prisma/client";
 import { asignarDivision } from "@totalfutbol/core";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -26,22 +26,30 @@ export class RankingService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Ranking unico por equipo (concepto.md §6). Los PROVISIONAL no rankean
-   * todavia. `division` es un corte por percentil del ranking global, no
-   * un dato guardado — se recalcula siempre. Con filtro de division se
-   * escanea todo el ranking (liviano por ahora, sin optimizar
-   * prematuramente); sin filtro, pagina como siempre y calcula la
-   * division de cada fila contra el total global.
+   * Ranking unico por equipo dentro de su categoria (concepto.md §6, Hito 6c).
+   * Masculino/Femenino/Mixto son pools completamente separados: `categoria`
+   * es obligatoria, no existe una vista "todas mezcladas" porque falsearia
+   * el ranking. Los PROVISIONAL no rankean todavia. `division` es un corte
+   * por percentil del ranking de esa categoria, no un dato guardado — se
+   * recalcula siempre. Con filtro de division se escanea todo el ranking de
+   * la categoria (liviano por ahora, sin optimizar prematuramente); sin
+   * filtro, pagina como siempre y calcula la division de cada fila contra
+   * el total de la categoria.
    */
-  async listar(limit: number, offset: number, division?: Division): Promise<EntradaRanking[]> {
+  async listar(
+    limit: number,
+    offset: number,
+    categoria: CategoriaFutbol,
+    division?: Division,
+  ): Promise<EntradaRanking[]> {
     if (division) {
-      return this.listarPorDivision(division);
+      return this.listarPorDivision(categoria, division);
     }
 
     const [total, equipos] = await Promise.all([
-      this.prisma.team.count({ where: { estado: "RANKEADO" } }),
+      this.prisma.team.count({ where: { estado: "RANKEADO", categoria } }),
       this.prisma.team.findMany({
-        where: { estado: "RANKEADO" },
+        where: { estado: "RANKEADO", categoria },
         orderBy: { rating: "desc" },
         skip: offset,
         take: limit,
@@ -61,7 +69,7 @@ export class RankingService {
     );
   }
 
-  /** Division en vivo de un equipo puntual; null si todavia es PROVISIONAL. */
+  /** Division en vivo de un equipo puntual, acotada a su propia categoria; null si todavia es PROVISIONAL. */
   async divisionDe(teamId: string): Promise<Division | null> {
     const equipo = await this.prisma.team.findUnique({ where: { id: teamId } });
     if (!equipo || equipo.estado !== "RANKEADO") {
@@ -69,16 +77,21 @@ export class RankingService {
     }
 
     const [posicion, total] = await Promise.all([
-      this.prisma.team.count({ where: { estado: "RANKEADO", rating: { gt: equipo.rating } } }),
-      this.prisma.team.count({ where: { estado: "RANKEADO" } }),
+      this.prisma.team.count({
+        where: { estado: "RANKEADO", categoria: equipo.categoria, rating: { gt: equipo.rating } },
+      }),
+      this.prisma.team.count({ where: { estado: "RANKEADO", categoria: equipo.categoria } }),
     ]);
 
     return this.calcularDivision(equipo, posicion, total);
   }
 
-  private async listarPorDivision(division: Division): Promise<EntradaRanking[]> {
+  private async listarPorDivision(
+    categoria: CategoriaFutbol,
+    division: Division,
+  ): Promise<EntradaRanking[]> {
     const equipos = await this.prisma.team.findMany({
-      where: { estado: "RANKEADO" },
+      where: { estado: "RANKEADO", categoria },
       orderBy: { rating: "desc" },
       select: { id: true, nombre: true, rating: true, rd: true, volatilidad: true },
     });

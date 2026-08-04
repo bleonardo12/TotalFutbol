@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from "@nestjs/common";
 import { Prisma, type Season } from "@prisma/client";
-import { ORDEN_DIVISIONES } from "@totalfutbol/core";
+import { ORDEN_CATEGORIAS, ORDEN_DIVISIONES } from "@totalfutbol/core";
 import { PrismaService } from "../prisma/prisma.service";
 import { RankingService } from "../ranking/ranking.service";
 
@@ -51,8 +51,9 @@ export class SeasonsService {
    * Cierre de temporada (concepto.md §6): NO reasigna nada -- la division
    * de cada equipo siempre fue en vivo. Solo registra en el palmares quien
    * es el n°1 de cada division hoy (Campeonato), con el de Elite marcado
-   * como campeon del año. Irreversible: no se puede cerrar dos veces la
-   * misma temporada.
+   * como campeon del año -- de CADA categoria por separado (Hito 6c): son
+   * pools independientes, cada una corona su propio campeon del año.
+   * Irreversible: no se puede cerrar dos veces la misma temporada.
    */
   async cerrar(): Promise<Season> {
     const season = await this.obtenerOCrearActual();
@@ -61,20 +62,23 @@ export class SeasonsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      for (const division of ORDEN_DIVISIONES) {
-        const tabla = await this.rankingService.listar(1, 0, division);
-        const campeon = tabla[0];
-        if (!campeon) {
-          continue;
+      for (const categoria of ORDEN_CATEGORIAS) {
+        for (const division of ORDEN_DIVISIONES) {
+          const tabla = await this.rankingService.listar(1, 0, categoria, division);
+          const campeon = tabla[0];
+          if (!campeon) {
+            continue;
+          }
+          await tx.campeonato.create({
+            data: {
+              seasonId: season.id,
+              categoria,
+              division,
+              teamId: campeon.id,
+              esCampeonDelAnio: division === "ELITE",
+            },
+          });
         }
-        await tx.campeonato.create({
-          data: {
-            seasonId: season.id,
-            division,
-            teamId: campeon.id,
-            esCampeonDelAnio: division === "ELITE",
-          },
-        });
       }
 
       return tx.season.update({
