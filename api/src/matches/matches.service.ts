@@ -14,6 +14,7 @@ import { DisputesService } from "../disputes/disputes.service";
 import { FairPlayService } from "../fair-play/fair-play.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { RatingService } from "../rating/rating.service";
+import { ConfirmarFirmaDto } from "./dto/confirmar-firma.dto";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
 import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
 import { ReportarResultadoDto } from "./dto/reportar-resultado.dto";
@@ -23,6 +24,7 @@ import {
   HANDSHAKE_ALFABETO,
   HANDSHAKE_CODIGO_LONGITUD,
   HANDSHAKE_TTL_MINUTOS,
+  VENTANA_DESISTIMIENTO_HORAS,
   VENTANA_DISPUTA_HORAS,
 } from "./matches.constantes";
 
@@ -148,6 +150,123 @@ export class MatchesService {
         estado: estadoDeArranque,
       },
       include: INCLUIR_DETALLE,
+    });
+  }
+
+  /**
+   * Desistimiento gratuito de un pacto a distancia (concepto.md §8/§12):
+   * dentro de VENTANA_DESISTIMIENTO_HORAS desde que se creo el Match
+   * (Challenge aceptado), cualquiera de los dos equipos se puede bajar sin
+   * penalidad. Nunca produce resultado de rating -- VOID directo.
+   */
+  async desistir(usuarioId: string, matchId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const match = await tx.match.findUnique({ where: { id: matchId } });
+      if (!match) {
+        throw new NotFoundException("Partido no encontrado");
+      }
+      if (match.estado !== "PACTADO") {
+        throw new ConflictException("Este partido no esta en un pacto pendiente de firmar");
+      }
+      const lado = await this.ladoDelUsuario(usuarioId, match);
+      if (!lado) {
+        throw new ForbiddenException("No sos integrante de ninguno de los dos equipos");
+      }
+
+      const limite = new Date(
+        match.createdAt.getTime() + VENTANA_DESISTIMIENTO_HORAS * 60 * 60 * 1000,
+      );
+      if (new Date() > limite) {
+        throw new ConflictException("La ventana de desistimiento gratuito ya paso");
+      }
+
+      const estadoVoid = transicionar("PACTADO", "VOID");
+      await tx.match.update({ where: { id: matchId }, data: { estado: estadoVoid } });
+    });
+  }
+
+  /**
+   * Firmar en cancha un partido pactado a distancia (concepto.md §8,
+   * CLAUDE.md: "el contrato vinculante se firma SOLO por QR en persona").
+   * Un capitan abre esta pantalla en la cancha y genera el codigo/QR
+   * (mismo alfabeto/TTL que el handshake presencial); queda fijado como
+   * reporter de su propio lado. El capitan del otro equipo lo confirma con
+   * confirmarFirma.
+   */
+  async generarCodigoFirma(
+    usuarioId: string,
+    matchId: string,
+  ): Promise<{ codigo: string; expiraEn: Date }> {
+    const match = await this.prisma.match.findUnique({ where: { id: matchId } });
+    if (!match) {
+      throw new NotFoundException("Partido no encontrado");
+    }
+    if (match.estado !== "PACTADO") {
+      throw new ConflictException("Este partido no esta en un pacto pendiente de firmar");
+    }
+    const lado = await this.ladoDelUsuario(usuarioId, match);
+    if (!lado) {
+      throw new ForbiddenException("No sos integrante de ninguno de los dos equipos");
+    }
+
+    const codigo = this.generarCodigo();
+    const expiraEn = new Date(Date.now() + HANDSHAKE_TTL_MINUTOS * 60_000);
+
+    await this.prisma.match.update({
+      where: { id: matchId },
+      data: {
+        codigoHandshake: codigo,
+        codigoHandshakeExpiraEn: expiraEn,
+        ...(lado === "LOCAL" ? { reporterLocalId: usuarioId } : { reporterVisitanteId: usuarioId }),
+      },
+    });
+
+    return { codigo, expiraEn };
+  }
+
+  /**
+   * El capitan del otro equipo confirma el codigo mostrado en persona.
+   * Fija el reporter del segundo lado y recien ahi transiciona
+   * PACTADO -> FIRMADO -> EN_JUEGO (mismo estadoDeArranque que consumir()).
+   */
+  async confirmarFirma(usuarioId: string, matchId: string, dto: ConfirmarFirmaDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const match = await tx.match.findUnique({ where: { id: matchId } });
+      if (!match) {
+        throw new NotFoundException("Partido no encontrado");
+      }
+      if (match.estado !== "PACTADO") {
+        throw new ConflictException("Este partido no esta en un pacto pendiente de firmar");
+      }
+      if (
+        !match.codigoHandshake ||
+        match.codigoHandshake !== dto.codigo ||
+        !match.codigoHandshakeExpiraEn ||
+        match.codigoHandshakeExpiraEn < new Date()
+      ) {
+        throw new NotFoundException("Codigo invalido o vencido");
+      }
+
+      const lado = await this.ladoDelUsuario(usuarioId, match);
+      if (!lado) {
+        throw new ForbiddenException("No sos integrante de ninguno de los dos equipos");
+      }
+      const yaFijado = lado === "LOCAL" ? match.reporterLocalId : match.reporterVisitanteId;
+      if (yaFijado) {
+        throw new ConflictException("Tu equipo ya genero este codigo, esperando al otro equipo");
+      }
+
+      const firmado = transicionar("PACTADO", "FIRMADO");
+      const estadoDeArranque = transicionar(firmado, "EN_JUEGO");
+
+      return tx.match.update({
+        where: { id: matchId },
+        data: {
+          estado: estadoDeArranque,
+          ...(lado === "LOCAL" ? { reporterLocalId: usuarioId } : { reporterVisitanteId: usuarioId }),
+        },
+        include: INCLUIR_DETALLE,
+      });
     });
   }
 
@@ -466,6 +585,21 @@ export class MatchesService {
         FAIR_PLAY_DELTA.INCIDENTE_FLAG,
       );
     });
+  }
+
+  /** De que lado del partido esta el usuario (o null si no es integrante de ninguno). */
+  private async ladoDelUsuario(
+    usuarioId: string,
+    match: { equipoLocalId: string; equipoVisitanteId: string },
+  ): Promise<"LOCAL" | "VISITANTE" | null> {
+    const integrante = await this.prisma.teamMember.findFirst({
+      where: { userId: usuarioId, teamId: { in: [match.equipoLocalId, match.equipoVisitanteId] } },
+      select: { teamId: true },
+    });
+    if (!integrante) {
+      return null;
+    }
+    return integrante.teamId === match.equipoLocalId ? "LOCAL" : "VISITANTE";
   }
 
   private async verificarPertenencia(usuarioId: string, teamId: string): Promise<void> {

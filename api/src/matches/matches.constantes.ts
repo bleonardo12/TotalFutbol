@@ -12,4 +12,11 @@ export const HANDSHAKE_ALFABETO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ";
  */
 export const VENTANA_DISPUTA_HORAS = 24;
 
+/**
+ * Ventana de desistimiento gratuito de un pacto a distancia (concepto.md
+ * §8 y §12: "≤24h"). Mismo numero que VENTANA_DISPUTA_HORAS por coincidencia
+ * de calibracion inicial, pero es un reloj distinto -- constante propia.
+ */
+export const VENTANA_DESISTIMIENTO_HORAS = 24;
+
 export const COLA_VENCIMIENTO_REPORTE = "vencimiento-reporte";

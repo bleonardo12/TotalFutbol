@@ -13,6 +13,7 @@ import type { User } from "@prisma/client";
 import { AdminGuard } from "../auth/jwt/admin.guard";
 import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { UsuarioActual } from "../auth/jwt/usuario-actual.decorator";
+import { ConfirmarFirmaDto } from "./dto/confirmar-firma.dto";
 import { ConsumirHandshakeDto } from "./dto/consumir-handshake.dto";
 import { FlaggearIncidenteDto } from "./dto/flaggear-incidente.dto";
 import { GenerarHandshakeDto } from "./dto/generar-handshake.dto";
@@ -49,6 +50,29 @@ export class MatchesController {
       throw new NotFoundException("Partido no encontrado");
     }
     return match;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(":id/desistir")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async desistir(@UsuarioActual() usuario: User, @Param("id") id: string): Promise<void> {
+    await this.matchesService.desistir(usuario.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(":id/firmar/generar")
+  async generarCodigoFirma(@UsuarioActual() usuario: User, @Param("id") id: string) {
+    return this.matchesService.generarCodigoFirma(usuario.id, id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(":id/firmar/confirmar")
+  async confirmarFirma(
+    @UsuarioActual() usuario: User,
+    @Param("id") id: string,
+    @Body() dto: ConfirmarFirmaDto,
+  ) {
+    return this.matchesService.confirmarFirma(usuario.id, id, dto);
   }
 
   @UseGuards(JwtAuthGuard)
