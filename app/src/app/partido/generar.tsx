@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
@@ -41,6 +41,7 @@ export default function GenerarPartido(): React.JSX.Element {
   if (equiposQuery.isLoading) {
     return (
       <View style={styles.container}>
+        <Stack.Screen options={{ title: "Generar partido" }} />
         <ActivityIndicator />
       </View>
     );
@@ -49,6 +50,7 @@ export default function GenerarPartido(): React.JSX.Element {
   if (!equipo) {
     return (
       <View style={styles.container}>
+        <Stack.Screen options={{ title: "Generar partido" }} />
         <Text style={styles.aviso}>Primero necesitas crear un equipo.</Text>
         <Pressable style={styles.boton} onPress={() => router.push("/equipo")}>
           <Text style={styles.botonTexto}>Ir a crear equipo</Text>
@@ -60,6 +62,7 @@ export default function GenerarPartido(): React.JSX.Element {
   if (mutacion.data) {
     return (
       <View style={styles.container}>
+        <Stack.Screen options={{ title: "Generar partido" }} />
         <Text style={styles.etiqueta}>Codigo del partido</Text>
         <View style={styles.qrContenedor}>
           <QRCode value={mutacion.data.codigo} size={220} />
@@ -77,6 +80,7 @@ export default function GenerarPartido(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ title: "Generar partido" }} />
       <Text style={styles.titulo}>Generar partido para {equipo.nombre}</Text>
 
       <Text style={styles.etiqueta}>Cantidad de jugadores</Text>

@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, Text } from "react-native";
 import { obtenerRanking } from "@/api/ranking";
 import { misEquipos, type Division } from "@/api/teams";
+import { Chip, Pantalla, Tabs, type OpcionTab } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
+import { useTema, type Tema } from "@/theme";
 
-const OPCIONES: { valor: Division | null; etiqueta: string }[] = [
+const OPCIONES: OpcionTab<Division | null>[] = [
   { valor: null, etiqueta: "Todos" },
   { valor: "ELITE", etiqueta: "Elite" },
   { valor: "ORO", etiqueta: "Oro" },
@@ -21,10 +23,20 @@ const ETIQUETA_DIVISION: Record<Division, string> = {
   BRONCE: "Bronce",
 };
 
+const TONO_DIVISION: Record<Division, "exito" | "alerta" | "neutral"> = {
+  ELITE: "exito",
+  ORO: "alerta",
+  PLATA: "neutral",
+  BRONCE: "neutral",
+};
+
 export default function Ranking(): React.JSX.Element {
   const [division, setDivision] = useState<Division | null>(null);
   const router = useRouter();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const tema = useTema();
+  const { colores, espaciado, tipografia } = tema;
+  const styles = crearEstilos(tema);
 
   const rankingQuery = useQuery({
     queryKey: ["ranking", division],
@@ -38,33 +50,18 @@ export default function Ranking(): React.JSX.Element {
   const miEquipoId = equiposQuery.data?.[0]?.id;
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tabsScroll}
-        contentContainerStyle={styles.tabs}
-      >
-        {OPCIONES.map((opcion) => (
-          <Pressable
-            key={opcion.etiqueta}
-            style={[styles.tab, division === opcion.valor && styles.tabActivo]}
-            onPress={() => setDivision(opcion.valor)}
-          >
-            <Text style={[styles.tabTexto, division === opcion.valor && styles.tabTextoActivo]}>
-              {opcion.etiqueta}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+    <Pantalla>
+      <Tabs opciones={OPCIONES} valorActivo={division} onCambiar={setDivision} />
 
       <FlatList
         data={rankingQuery.data ?? []}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.lista}
+        contentContainerStyle={{ gap: espaciado.xs }}
         ListEmptyComponent={
           !rankingQuery.isLoading ? (
-            <Text style={styles.vacio}>Todavia no hay equipos rankeados</Text>
+            <Text style={[tipografia.cuerpo, { color: colores.textoApagado, textAlign: "center", marginTop: espaciado.xxl }]}>
+              Todavia no hay equipos rankeados
+            </Text>
           ) : null
         }
         renderItem={({ item }) => {
@@ -80,86 +77,45 @@ export default function Ranking(): React.JSX.Element {
                 })
               }
             >
-              <Text style={styles.posicion}>{item.posicion}</Text>
-              <Text style={styles.nombre}>{item.nombre}</Text>
-              <Text style={styles.division}>{ETIQUETA_DIVISION[item.division]}</Text>
-              <Text style={styles.rating}>{Math.round(item.rating)}</Text>
+              <Text style={[tipografia.cuerpoDestacado, styles.posicion]}>{item.posicion}</Text>
+              <Text style={[tipografia.cuerpo, styles.nombre]} numberOfLines={1}>
+                {item.nombre}
+              </Text>
+              <Chip texto={ETIQUETA_DIVISION[item.division]} tono={TONO_DIVISION[item.division]} />
+              <Text style={[tipografia.cuerpoDestacado, styles.rating]}>
+                {Math.round(item.rating)}
+              </Text>
             </Pressable>
           );
         }}
       />
-    </View>
+    </Pantalla>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    gap: 12,
-  },
-  tabsScroll: {
-    flexGrow: 0,
-  },
-  tabs: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-  },
-  tab: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    alignItems: "center",
-  },
-  tabActivo: {
-    backgroundColor: "#208AEF",
-    borderColor: "#208AEF",
-  },
-  tabTexto: {
-    color: "#333",
-    fontSize: 13,
-  },
-  tabTextoActivo: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  lista: {
-    gap: 4,
-  },
-  fila: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    gap: 12,
-  },
-  posicion: {
-    width: 28,
-    fontWeight: "700",
-    color: "#888",
-  },
-  nombre: {
-    flex: 1,
-    fontSize: 16,
-  },
-  division: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#208AEF",
-  },
-  rating: {
-    fontWeight: "700",
-    fontSize: 16,
-    width: 56,
-    textAlign: "right",
-  },
-  vacio: {
-    textAlign: "center",
-    color: "#888",
-    marginTop: 32,
-  },
-});
+function crearEstilos({ colores, espaciado, radio }: Tema) {
+  return {
+    fila: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      paddingVertical: espaciado.md,
+      paddingHorizontal: espaciado.md,
+      backgroundColor: colores.superficie,
+      borderRadius: radio.md,
+      gap: espaciado.md,
+    },
+    posicion: {
+      width: 24,
+      color: colores.textoApagado,
+    },
+    nombre: {
+      flex: 1,
+      color: colores.textoPrimario,
+    },
+    rating: {
+      color: colores.textoPrimario,
+      width: 52,
+      textAlign: "right" as const,
+    },
+  };
+}

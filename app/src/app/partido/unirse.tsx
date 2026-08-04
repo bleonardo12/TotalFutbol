@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { consumirHandshake } from "@/api/matches";
@@ -52,6 +52,7 @@ export default function UnirsePartido(): React.JSX.Element {
   if (equiposQuery.isLoading) {
     return (
       <View style={styles.container}>
+        <Stack.Screen options={{ title: "Unirme a un partido" }} />
         <ActivityIndicator />
       </View>
     );
@@ -60,6 +61,7 @@ export default function UnirsePartido(): React.JSX.Element {
   if (!equipo) {
     return (
       <View style={styles.container}>
+        <Stack.Screen options={{ title: "Unirme a un partido" }} />
         <Text style={styles.aviso}>Primero necesitas crear un equipo.</Text>
         <Pressable style={styles.boton} onPress={() => router.push("/equipo")}>
           <Text style={styles.botonTexto}>Ir a crear equipo</Text>
@@ -70,6 +72,7 @@ export default function UnirsePartido(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ title: "Unirme a un partido" }} />
       <Text style={styles.titulo}>Unirme a un partido</Text>
 
       <View style={styles.tabs}>

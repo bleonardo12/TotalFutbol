@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TotalFutbol",
-    "slug": "totalfutbol",
+    "slug": "leonado-beristain",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,7 +14,11 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -36,6 +40,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4d7fa946-e58b-4adb-80c8-80da3ec2b104"
+      }
+    },
+    "owner": "lbc-1994s-team"
   }
 }
