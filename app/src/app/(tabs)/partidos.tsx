@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, Stack } from "expo-router";
+import { Link } from "expo-router";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { misPartidos } from "@/api/matches";
 import { useAuthStore } from "@/store/auth-store";
@@ -27,7 +27,6 @@ export default function ListaPartidos(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: "Mis partidos" }} />
       <View style={styles.acciones}>
         <Link href="/partido/generar" style={styles.link}>
           Generar codigo

@@ -3,5 +3,5 @@ import { useAuthStore } from "@/store/auth-store";
 
 export default function Index(): React.JSX.Element {
   const accessToken = useAuthStore((s) => s.accessToken);
-  return <Redirect href={accessToken ? "/equipo" : "/login"} />;
+  return <Redirect href={accessToken ? "/inicio" : "/login"} />;
 }

@@ -42,7 +42,7 @@ export default function ProponerDesafio(): React.JSX.Element {
         superficie,
       ),
     onSuccess: () => {
-      router.replace("/desafio");
+      router.replace("/desafios");
     },
   });
 
@@ -58,7 +58,7 @@ export default function ProponerDesafio(): React.JSX.Element {
     return (
       <View style={styles.container}>
         <Text style={styles.aviso}>Primero necesitas crear un equipo.</Text>
-        <Pressable style={styles.boton} onPress={() => router.push("/equipo")}>
+        <Pressable style={styles.boton} onPress={() => router.push("/inicio")}>
           <Text style={styles.botonTexto}>Ir a crear equipo</Text>
         </Pressable>
       </View>

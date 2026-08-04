@@ -52,7 +52,7 @@ export default function GenerarPartido(): React.JSX.Element {
       <View style={styles.container}>
         <Stack.Screen options={{ title: "Generar partido" }} />
         <Text style={styles.aviso}>Primero necesitas crear un equipo.</Text>
-        <Pressable style={styles.boton} onPress={() => router.push("/equipo")}>
+        <Pressable style={styles.boton} onPress={() => router.push("/inicio")}>
           <Text style={styles.botonTexto}>Ir a crear equipo</Text>
         </Pressable>
       </View>
@@ -71,7 +71,7 @@ export default function GenerarPartido(): React.JSX.Element {
         <Text style={styles.aviso}>
           El rival escanea el QR (o ingresa el codigo a mano). Vence en 10 minutos.
         </Text>
-        <Pressable style={styles.boton} onPress={() => router.replace("/partido")}>
+        <Pressable style={styles.boton} onPress={() => router.replace("/partidos")}>
           <Text style={styles.botonTexto}>Ver mis partidos</Text>
         </Pressable>
       </View>

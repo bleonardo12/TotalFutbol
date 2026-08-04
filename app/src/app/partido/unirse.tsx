@@ -63,7 +63,7 @@ export default function UnirsePartido(): React.JSX.Element {
       <View style={styles.container}>
         <Stack.Screen options={{ title: "Unirme a un partido" }} />
         <Text style={styles.aviso}>Primero necesitas crear un equipo.</Text>
-        <Pressable style={styles.boton} onPress={() => router.push("/equipo")}>
+        <Pressable style={styles.boton} onPress={() => router.push("/inicio")}>
           <Text style={styles.botonTexto}>Ir a crear equipo</Text>
         </Pressable>
       </View>

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Stack } from "expo-router";
+import { Link } from "expo-router";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { aceptarDesafio, misDesafios, rechazarDesafio, type Desafio } from "@/api/challenges";
 import { misEquipos } from "@/api/teams";
@@ -46,8 +46,6 @@ export default function MisDesafios(): React.JSX.Element {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: "Mis desafios" }} />
-
       <FlatList
         data={desafiosQuery.data ?? []}
         keyExtractor={(item) => item.id}
