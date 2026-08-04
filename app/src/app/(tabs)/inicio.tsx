@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text, View } from "react-native";
-import { crearEquipo, misEquipos, type Division } from "@/api/teams";
+import { Animated, Pressable, Text, View } from "react-native";
+import { crearEquipo, misEquipos, type CategoriaFutbol, type Division } from "@/api/teams";
 import { Boton, Campo, Chip, Pantalla, Tarjeta } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
@@ -20,6 +20,18 @@ const TONO_DIVISION: Record<Division, "exito" | "alerta" | "neutral"> = {
   BRONCE: "neutral",
 };
 
+const OPCIONES_CATEGORIA: { valor: CategoriaFutbol; etiqueta: string }[] = [
+  { valor: "MASCULINO", etiqueta: "Masculino" },
+  { valor: "FEMENINO", etiqueta: "Femenino" },
+  { valor: "MIXTO", etiqueta: "Mixto" },
+];
+
+const ETIQUETA_CATEGORIA: Record<CategoriaFutbol, string> = {
+  MASCULINO: "Masculino",
+  FEMENINO: "Femenino",
+  MIXTO: "Mixto",
+};
+
 export default function Inicio(): React.JSX.Element {
   const accessToken = useAuthStore((s) => s.accessToken);
   const queryClient = useQueryClient();
@@ -27,6 +39,7 @@ export default function Inicio(): React.JSX.Element {
   const { colores, espaciado, tipografia } = tema;
   const styles = crearEstilos(tema);
   const [nombre, setNombre] = useState("");
+  const [categoria, setCategoria] = useState<CategoriaFutbol | null>(null);
 
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -44,9 +57,10 @@ export default function Inicio(): React.JSX.Element {
   });
 
   const crearMutacion = useMutation({
-    mutationFn: () => crearEquipo(accessToken as string, nombre),
+    mutationFn: () => crearEquipo(accessToken as string, nombre, categoria as CategoriaFutbol),
     onSuccess: () => {
       setNombre("");
+      setCategoria(null);
       queryClient.invalidateQueries({ queryKey: ["equipos", "mios"] });
     },
   });
@@ -61,8 +75,8 @@ export default function Inicio(): React.JSX.Element {
     <Pantalla>
       <Animated.View style={[estiloAnimado, { gap: espaciado.lg }]}>
         {equipo ? (
-          <Tarjeta style={styles.tarjetaEquipo}>
-            <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>
+          <Tarjeta destacada style={styles.tarjetaEquipo}>
+            <Text style={[tipografia.titulo, { color: colores.textoPrimario }]}>
               {equipo.nombre}
             </Text>
             <View style={styles.filaChips}>
@@ -76,6 +90,7 @@ export default function Inicio(): React.JSX.Element {
                   tono={TONO_DIVISION[equipo.division]}
                 />
               )}
+              <Chip texto={ETIQUETA_CATEGORIA[equipo.categoria]} tono="acento" />
             </View>
 
             <Text style={[tipografia.display, styles.rating]}>{Math.round(equipo.rating)}</Text>
@@ -98,6 +113,34 @@ export default function Inicio(): React.JSX.Element {
               Crear equipo
             </Text>
             <Campo placeholder="Nombre del equipo" value={nombre} onChangeText={setNombre} />
+
+            <View style={{ gap: espaciado.xs }}>
+              <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                Categoria (fija, no se puede cambiar despues)
+              </Text>
+              <View style={styles.opcionesCategoria}>
+                {OPCIONES_CATEGORIA.map((opcion) => {
+                  const activo = categoria === opcion.valor;
+                  return (
+                    <Pressable
+                      key={opcion.valor}
+                      onPress={() => setCategoria(opcion.valor)}
+                      style={[styles.opcionCategoria, activo && styles.opcionCategoriaActiva]}
+                    >
+                      <Text
+                        style={[
+                          tipografia.caption,
+                          { color: activo ? colores.acentoTexto : colores.textoSecundario },
+                        ]}
+                      >
+                        {opcion.etiqueta}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
             {crearMutacion.isError && (
               <Text style={[tipografia.caption, { color: colores.error }]}>
                 {crearMutacion.error.message}
@@ -106,7 +149,7 @@ export default function Inicio(): React.JSX.Element {
             <Boton
               onPress={() => crearMutacion.mutate()}
               cargando={crearMutacion.isPending}
-              deshabilitado={nombre.length < 2}
+              deshabilitado={nombre.length < 2 || categoria === null}
             >
               Crear
             </Boton>
@@ -117,11 +160,27 @@ export default function Inicio(): React.JSX.Element {
   );
 }
 
-function crearEstilos({ colores, espaciado }: Tema) {
+function crearEstilos({ colores, espaciado, radio }: Tema) {
   return {
     tarjetaEquipo: {
       alignItems: "center" as const,
       gap: espaciado.xs,
+    },
+    opcionesCategoria: {
+      flexDirection: "row" as const,
+      flexWrap: "wrap" as const,
+      gap: espaciado.sm,
+    },
+    opcionCategoria: {
+      borderWidth: 1,
+      borderColor: colores.borde,
+      borderRadius: radio.pill,
+      paddingVertical: espaciado.sm,
+      paddingHorizontal: espaciado.md,
+    },
+    opcionCategoriaActiva: {
+      backgroundColor: colores.acento,
+      borderColor: colores.acento,
     },
     filaChips: {
       flexDirection: "row" as const,

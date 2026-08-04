@@ -1,19 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FlatList, Pressable, Text } from "react-native";
 import { obtenerRanking } from "@/api/ranking";
-import { misEquipos, type Division } from "@/api/teams";
+import { misEquipos, type CategoriaFutbol, type Division } from "@/api/teams";
 import { Chip, Pantalla, Tabs, type OpcionTab } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
-const OPCIONES: OpcionTab<Division | null>[] = [
+const OPCIONES_DIVISION: OpcionTab<Division | null>[] = [
   { valor: null, etiqueta: "Todos" },
   { valor: "ELITE", etiqueta: "Elite" },
   { valor: "ORO", etiqueta: "Oro" },
   { valor: "PLATA", etiqueta: "Plata" },
   { valor: "BRONCE", etiqueta: "Bronce" },
+];
+
+const OPCIONES_CATEGORIA: OpcionTab<CategoriaFutbol>[] = [
+  { valor: "MASCULINO", etiqueta: "Masculino" },
+  { valor: "FEMENINO", etiqueta: "Femenino" },
+  { valor: "MIXTO", etiqueta: "Mixto" },
 ];
 
 const ETIQUETA_DIVISION: Record<Division, string> = {
@@ -32,26 +38,38 @@ const TONO_DIVISION: Record<Division, "exito" | "alerta" | "neutral"> = {
 
 export default function Ranking(): React.JSX.Element {
   const [division, setDivision] = useState<Division | null>(null);
+  const [categoria, setCategoria] = useState<CategoriaFutbol | null>(null);
   const router = useRouter();
   const accessToken = useAuthStore((s) => s.accessToken);
   const tema = useTema();
   const { colores, espaciado, tipografia } = tema;
   const styles = crearEstilos(tema);
 
-  const rankingQuery = useQuery({
-    queryKey: ["ranking", division],
-    queryFn: () => obtenerRanking(division ?? undefined),
-  });
   const equiposQuery = useQuery({
     queryKey: ["equipos", "mios"],
     queryFn: () => misEquipos(accessToken as string),
     enabled: accessToken !== null,
   });
-  const miEquipoId = equiposQuery.data?.[0]?.id;
+  const miEquipo = equiposQuery.data?.[0];
+
+  // Por defecto arranca en la categoria del equipo propio -- si todavia no cargo o no tiene equipo, Masculino.
+  useEffect(() => {
+    if (categoria === null && miEquipo) {
+      setCategoria(miEquipo.categoria);
+    }
+  }, [categoria, miEquipo]);
+  const categoriaActiva = categoria ?? miEquipo?.categoria ?? "MASCULINO";
+
+  const rankingQuery = useQuery({
+    queryKey: ["ranking", categoriaActiva, division],
+    queryFn: () => obtenerRanking(categoriaActiva, division ?? undefined),
+  });
+  const miEquipoId = miEquipo?.id;
 
   return (
     <Pantalla>
-      <Tabs opciones={OPCIONES} valorActivo={division} onCambiar={setDivision} />
+      <Tabs opciones={OPCIONES_CATEGORIA} valorActivo={categoriaActiva} onCambiar={setCategoria} />
+      <Tabs opciones={OPCIONES_DIVISION} valorActivo={division} onCambiar={setDivision} />
 
       <FlatList
         data={rankingQuery.data ?? []}
