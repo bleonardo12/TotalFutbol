@@ -21,6 +21,13 @@ export function Tarjeta({ children, style, destacada = false }: TarjetaProps): R
           borderColor: destacada ? colores.bordeAcento : colores.borde,
           padding: espaciado.lg,
           gap: espaciado.sm,
+          // Elevacion sutil (docs/design.md §4): sombra fria y neutra -- el
+          // ambar queda reservado al glow del podio, no se usa de sombra aca.
+          shadowColor: "#000000",
+          shadowOffset: { width: 0, height: destacada ? 3 : 2 },
+          shadowOpacity: destacada ? 0.3 : 0.22,
+          shadowRadius: destacada ? 10 : 6,
+          elevation: destacada ? 4 : 3,
         },
         style,
       ]}

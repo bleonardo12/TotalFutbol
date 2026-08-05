@@ -1,8 +1,8 @@
 import { Text, View } from "react-native";
-import Svg, { Circle } from "react-native-svg";
+import Svg, { Circle, Line, Polygon } from "react-native-svg";
 import { useTema } from "@/theme";
 
-/** Hero de las pantallas de arranque (login/verificar). Placeholder geometrico hasta sumar ilustracion generada. */
+/** Hero de las pantallas de arranque (login/verificar). Pelota estilizada en ambar sobre pitch (docs/design.md §6). */
 export function MarcaHero(): React.JSX.Element {
   const { colores, espaciado, tipografia } = useTema();
 
@@ -17,7 +17,7 @@ export function MarcaHero(): React.JSX.Element {
           marginBottom: espaciado.lg,
         }}
       >
-        <Svg width={120} height={120} style={{ position: "absolute" }}>
+        <Svg width={120} height={120}>
           <Circle
             cx={60}
             cy={60}
@@ -28,9 +28,22 @@ export function MarcaHero(): React.JSX.Element {
             fill="none"
             opacity={0.5}
           />
-          <Circle cx={60} cy={60} r={36} fill={colores.acento} opacity={0.15} />
+          <Circle
+            cx={60}
+            cy={60}
+            r={36}
+            fill={colores.superficieAcento}
+            stroke={colores.bordeAcento}
+            strokeWidth={1.5}
+          />
+          {/* Pelota estilizada: pentagono central + puntas, motivo de la costura clasica. */}
+          <Polygon points="60,42 71,50 67,63 53,63 49,50" fill={colores.acento} />
+          <Line x1={60} y1={42} x2={60} y2={30} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
+          <Line x1={71} y1={50} x2={82} y2={44} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
+          <Line x1={67} y1={63} x2={75} y2={75} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
+          <Line x1={53} y1={63} x2={45} y2={75} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
+          <Line x1={49} y1={50} x2={38} y2={44} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
         </Svg>
-        <Text style={{ fontSize: 44 }}>⚽</Text>
       </View>
       <Text style={[tipografia.display, { color: colores.textoPrimario }]}>TotalFutbol</Text>
       <Text
