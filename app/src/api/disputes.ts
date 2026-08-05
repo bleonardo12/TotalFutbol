@@ -6,6 +6,12 @@ import type { OutcomePartido } from "./matches";
 export type CapaDisputa = "C1_EVIDENCIA" | "C2_PLANTELES" | "C3_ADMIN";
 export type RespuestaPoll = "CONFIRMA_CAPITAN" | "CONTRADICE_CAPITAN";
 
+export const ETIQUETA_CAPA: Record<CapaDisputa, string> = {
+  C1_EVIDENCIA: "Evidencia",
+  C2_PLANTELES: "Consulta a planteles",
+  C3_ADMIN: "Admin",
+};
+
 export interface EquipoResumen {
   id: string;
   nombre: string;

@@ -1,35 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Image, ScrollView, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
-import { type CapaDisputa, obtenerDisputa } from "@/api/disputes";
+import { obtenerDisputa, ETIQUETA_CAPA } from "@/api/disputes";
 import {
   obtenerPartido,
   resolverDisputa,
   type OutcomePartido,
   type TipoSancionFairPlay,
 } from "@/api/matches";
+import { Boton, Pantalla, SelectorChips, Tarjeta } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
+import { useTema, type Tema } from "@/theme";
 
-const ETIQUETA_SANCION: Record<TipoSancionFairPlay, string> = {
-  REPORTE_FALSO_PROBADO: "Reporte falso probado",
-  DISPUTA_FRIVOLA: "Disputa frivola",
-};
-
-const ETIQUETA_CAPA: Record<CapaDisputa, string> = {
-  C1_EVIDENCIA: "Evidencia (C1)",
-  C2_PLANTELES: "Plantel (C2)",
-  C3_ADMIN: "Admin (C3)",
-};
+const OPCIONES_SANCION: { valor: TipoSancionFairPlay; etiqueta: string }[] = [
+  { valor: "REPORTE_FALSO_PROBADO", etiqueta: "Reporte falso probado" },
+  { valor: "DISPUTA_FRIVOLA", etiqueta: "Disputa frivola" },
+];
 
 function formatearFecha(iso: string): string {
   return new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
@@ -38,7 +26,11 @@ function formatearFecha(iso: string): string {
 export default function EstadoDisputa(): React.JSX.Element {
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const tema = useTema();
+  const { colores, espaciado, tipografia } = tema;
+  const styles = crearEstilos(tema);
   const [sancionTipo, setSancionTipo] = useState<TipoSancionFairPlay | null>(null);
   const [sancionEquipoId, setSancionEquipoId] = useState<string | null>(null);
 
@@ -75,349 +67,219 @@ export default function EstadoDisputa(): React.JSX.Element {
     },
   });
 
-  if (partidoQuery.isLoading || disputaQuery.isLoading) {
-    return (
-      <View style={styles.centro}>
-        <Stack.Screen options={{ title: "Disputa" }} />
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
   const partido = partidoQuery.data;
   const disputa = disputaQuery.data;
-
-  if (!partido || !disputa) {
-    return (
-      <View style={styles.centro}>
-        <Stack.Screen options={{ title: "Disputa" }} />
-        <Text style={styles.aviso}>No se pudo cargar la disputa.</Text>
-      </View>
-    );
-  }
+  const cargando = partidoQuery.isLoading || disputaQuery.isLoading;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <Pantalla centrado={cargando || !partido || !disputa}>
       <Stack.Screen options={{ title: "Disputa" }} />
-      <Text style={styles.titulo}>
-        {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
-      </Text>
 
-      {disputa.resuelta ? (
-        <View style={styles.tarjeta}>
-          <Text style={styles.etiqueta}>Disputa resuelta</Text>
-          <Text style={styles.valorGrande}>
-            {disputa.anulada
-              ? "Anulada (VOID) — resultado indeterminable"
-              : disputa.resolucion === "EMPATE"
-                ? "Empate"
-                : disputa.resolucion === "GANA_LOCAL"
-                  ? `Gano ${partido.equipoLocal.nombre}`
-                  : `Gano ${partido.equipoVisitante.nombre}`}
-          </Text>
-          <Text style={styles.detalle}>
-            {disputa.resueltaPor
-              ? `Resuelta por el admin el ${formatearFecha(disputa.resueltaEn as string)}`
-              : `Vencio sin resolucion el ${formatearFecha(disputa.resueltaEn as string)}`}
-          </Text>
-        </View>
+      {cargando ? null : !partido || !disputa ? (
+        <Text style={[tipografia.cuerpo, { color: colores.textoSecundario, textAlign: "center" }]}>
+          No se pudo cargar la disputa.
+        </Text>
       ) : (
-        <View style={styles.tarjeta}>
-          <Text style={styles.etiqueta}>Etapa actual</Text>
-          <Text style={styles.valorGrande}>{ETIQUETA_CAPA[disputa.capa]}</Text>
-          <Text style={styles.detalle}>Vence el {formatearFecha(disputa.capaExpiraEn)}</Text>
-        </View>
-      )}
-
-      {disputa.capa === "C1_EVIDENCIA" && !disputa.resuelta && (
-        <View style={styles.tarjeta}>
-          <Text style={styles.etiqueta}>Codigo para la foto de evidencia</Text>
-          <Text style={styles.nonce}>{disputa.nonce}</Text>
-          <Text style={styles.detalle}>
-            Escribilo a mano y visible en la foto que subas como evidencia.
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: espaciado.md }}>
+          <Text
+            style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}
+          >
+            {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
           </Text>
-        </View>
-      )}
 
-      {!disputa.resuelta && (
-        <>
-          <Link
-            href={{ pathname: "/disputa/[matchId]/subir-evidencia", params: { matchId } }}
-            asChild
-          >
-            <Pressable style={styles.boton}>
-              <Text style={styles.botonTexto}>Subir evidencia</Text>
-            </Pressable>
-          </Link>
-
-          <Link href={{ pathname: "/disputa/[matchId]/poll", params: { matchId } }} asChild>
-            <Pressable style={styles.botonSecundario}>
-              <Text style={styles.botonSecundarioTexto}>Responder consulta al plantel</Text>
-            </Pressable>
-          </Link>
-        </>
-      )}
-
-      {usuarioQuery.data?.rol === "ADMIN" && !disputa.resuelta && (
-        <View style={styles.seccion}>
-          <Text style={styles.subtitulo}>Resolver (admin)</Text>
-
-          {disputa.presuncionContraEquipoId && (
-            <Text style={styles.presuncion}>
-              Presuncion por diferencial de fair-play contra{" "}
-              {disputa.presuncionContraEquipoId === partido.equipoLocal.id
-                ? partido.equipoLocal.nombre
-                : partido.equipoVisitante.nombre}
-              . No decide nada por si sola.
-            </Text>
+          {disputa.resuelta ? (
+            <Tarjeta style={{ gap: espaciado.xs }}>
+              <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                Disputa resuelta
+              </Text>
+              <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+                {disputa.anulada
+                  ? "Anulada (VOID) — resultado indeterminable"
+                  : disputa.resolucion === "EMPATE"
+                    ? "Empate"
+                    : disputa.resolucion === "GANA_LOCAL"
+                      ? `Gano ${partido.equipoLocal.nombre}`
+                      : `Gano ${partido.equipoVisitante.nombre}`}
+              </Text>
+              <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                {disputa.resueltaPor
+                  ? `Resuelta por el admin el ${formatearFecha(disputa.resueltaEn as string)}`
+                  : `Vencio sin resolucion el ${formatearFecha(disputa.resueltaEn as string)}`}
+              </Text>
+            </Tarjeta>
+          ) : (
+            <Tarjeta style={{ gap: espaciado.xs }}>
+              <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                Etapa actual
+              </Text>
+              <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+                {ETIQUETA_CAPA[disputa.capa]}
+              </Text>
+              <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                Vence el {formatearFecha(disputa.capaExpiraEn)}
+              </Text>
+            </Tarjeta>
           )}
 
-          <Text style={styles.etiqueta}>Sancionar (opcional)</Text>
-          <View style={styles.opcionesSancion}>
-            {(["REPORTE_FALSO_PROBADO", "DISPUTA_FRIVOLA"] as const).map((tipo) => (
-              <Pressable
-                key={tipo}
-                style={[styles.chip, sancionTipo === tipo && styles.chipSeleccionado]}
-                onPress={() => setSancionTipo(sancionTipo === tipo ? null : tipo)}
+          {disputa.capa === "C1_EVIDENCIA" && !disputa.resuelta && (
+            <Tarjeta style={{ gap: espaciado.xs }}>
+              <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                Codigo para la foto de evidencia
+              </Text>
+              <Text
+                style={[
+                  tipografia.titulo,
+                  { color: colores.textoPrimario, letterSpacing: 4, fontVariant: ["tabular-nums"] },
+                ]}
               >
-                <Text
-                  style={[styles.chipTexto, sancionTipo === tipo && styles.chipTextoSeleccionado]}
-                >
-                  {ETIQUETA_SANCION[tipo]}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+                {disputa.nonce}
+              </Text>
+              <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                Escribilo a mano y visible en la foto que subas como evidencia.
+              </Text>
+            </Tarjeta>
+          )}
 
-          {sancionTipo && (
-            <View style={styles.opcionesSancion}>
-              <Pressable
-                style={[
-                  styles.chip,
-                  sancionEquipoId === partido.equipoLocal.id && styles.chipSeleccionado,
-                ]}
-                onPress={() => setSancionEquipoId(partido.equipoLocal.id)}
+          {!disputa.resuelta && (
+            <View style={{ gap: espaciado.sm }}>
+              <Boton
+                onPress={() =>
+                  router.push({ pathname: "/disputa/[matchId]/subir-evidencia", params: { matchId } })
+                }
               >
-                <Text
-                  style={[
-                    styles.chipTexto,
-                    sancionEquipoId === partido.equipoLocal.id && styles.chipTextoSeleccionado,
-                  ]}
-                >
-                  {partido.equipoLocal.nombre}
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[
-                  styles.chip,
-                  sancionEquipoId === partido.equipoVisitante.id && styles.chipSeleccionado,
-                ]}
-                onPress={() => setSancionEquipoId(partido.equipoVisitante.id)}
+                Subir evidencia
+              </Boton>
+              <Boton
+                variante="secundario"
+                onPress={() => router.push({ pathname: "/disputa/[matchId]/poll", params: { matchId } })}
               >
-                <Text
-                  style={[
-                    styles.chipTexto,
-                    sancionEquipoId === partido.equipoVisitante.id && styles.chipTextoSeleccionado,
-                  ]}
-                >
-                  {partido.equipoVisitante.nombre}
-                </Text>
-              </Pressable>
+                Responder consulta al plantel
+              </Boton>
             </View>
           )}
 
-          {resolverMutacion.isError && (
-            <Text style={styles.error}>{resolverMutacion.error.message}</Text>
-          )}
-          <Pressable
-            style={styles.boton}
-            disabled={resolverMutacion.isPending}
-            onPress={() => resolverMutacion.mutate("GANA_LOCAL")}
-          >
-            <Text style={styles.botonTexto}>Gano {partido.equipoLocal.nombre}</Text>
-          </Pressable>
-          <Pressable
-            style={styles.boton}
-            disabled={resolverMutacion.isPending}
-            onPress={() => resolverMutacion.mutate("EMPATE")}
-          >
-            <Text style={styles.botonTexto}>Empate</Text>
-          </Pressable>
-          <Pressable
-            style={styles.boton}
-            disabled={resolverMutacion.isPending}
-            onPress={() => resolverMutacion.mutate("GANA_VISITANTE")}
-          >
-            <Text style={styles.botonTexto}>Gano {partido.equipoVisitante.nombre}</Text>
-          </Pressable>
-          <Pressable
-            style={styles.botonSecundario}
-            disabled={resolverMutacion.isPending}
-            onPress={() => resolverMutacion.mutate(undefined)}
-          >
-            {resolverMutacion.isPending ? (
-              <ActivityIndicator color="#208AEF" />
-            ) : (
-              <Text style={styles.botonSecundarioTexto}>Anular (indeterminable)</Text>
-            )}
-          </Pressable>
-        </View>
-      )}
+          {usuarioQuery.data?.rol === "ADMIN" && !disputa.resuelta && (
+            <Tarjeta style={{ gap: espaciado.md }}>
+              <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>
+                Resolver (admin)
+              </Text>
 
-      <View style={styles.seccion}>
-        <Text style={styles.subtitulo}>Evidencia subida</Text>
-        {disputa.evidencias.length === 0 ? (
-          <Text style={styles.vacio}>Todavia no se subio evidencia.</Text>
-        ) : (
-          disputa.evidencias.map((evidencia) => (
-            <View key={evidencia.id} style={styles.evidencia}>
-              <Image source={{ uri: evidencia.url }} style={styles.miniatura} />
-              <View style={styles.evidenciaInfo}>
-                <Text style={styles.evidenciaEquipo}>{evidencia.team.nombre}</Text>
-                {evidencia.descripcion && (
-                  <Text style={styles.detalle}>{evidencia.descripcion}</Text>
-                )}
-                <Text style={styles.detalle}>{formatearFecha(evidencia.createdAt)}</Text>
+              {disputa.presuncionContraEquipoId && (
+                <Text style={[tipografia.caption, styles.presuncion]}>
+                  Presuncion por diferencial de fair-play contra{" "}
+                  {disputa.presuncionContraEquipoId === partido.equipoLocal.id
+                    ? partido.equipoLocal.nombre
+                    : partido.equipoVisitante.nombre}
+                  . No decide nada por si sola.
+                </Text>
+              )}
+
+              <View style={{ gap: espaciado.xs }}>
+                <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                  Sancionar (opcional)
+                </Text>
+                <SelectorChips
+                  opciones={OPCIONES_SANCION}
+                  valorSeleccionado={sancionTipo}
+                  onCambiar={(valor) =>
+                    setSancionTipo((actual) => (actual === valor ? null : valor))
+                  }
+                />
               </View>
-            </View>
-          ))
-        )}
-      </View>
-    </ScrollView>
+
+              {sancionTipo && (
+                <SelectorChips
+                  opciones={[
+                    { valor: partido.equipoLocal.id, etiqueta: partido.equipoLocal.nombre },
+                    { valor: partido.equipoVisitante.id, etiqueta: partido.equipoVisitante.nombre },
+                  ]}
+                  valorSeleccionado={sancionEquipoId}
+                  onCambiar={setSancionEquipoId}
+                />
+              )}
+
+              {resolverMutacion.isError && (
+                <Text style={[tipografia.caption, { color: colores.error }]}>
+                  {resolverMutacion.error.message}
+                </Text>
+              )}
+
+              <Boton
+                onPress={() => resolverMutacion.mutate("GANA_LOCAL")}
+                cargando={resolverMutacion.isPending}
+              >
+                {`Gano ${partido.equipoLocal.nombre}`}
+              </Boton>
+              <Boton
+                onPress={() => resolverMutacion.mutate("EMPATE")}
+                cargando={resolverMutacion.isPending}
+              >
+                Empate
+              </Boton>
+              <Boton
+                onPress={() => resolverMutacion.mutate("GANA_VISITANTE")}
+                cargando={resolverMutacion.isPending}
+              >
+                {`Gano ${partido.equipoVisitante.nombre}`}
+              </Boton>
+              <Boton
+                variante="secundario"
+                onPress={() => resolverMutacion.mutate(undefined)}
+                cargando={resolverMutacion.isPending}
+              >
+                Anular (indeterminable)
+              </Boton>
+            </Tarjeta>
+          )}
+
+          <View style={{ gap: espaciado.sm }}>
+            <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>
+              Evidencia subida
+            </Text>
+            {disputa.evidencias.length === 0 ? (
+              <Text style={[tipografia.cuerpo, { color: colores.textoApagado }]}>
+                Todavia no se subio evidencia.
+              </Text>
+            ) : (
+              disputa.evidencias.map((evidencia) => (
+                <Tarjeta key={evidencia.id} style={{ flexDirection: "row", gap: espaciado.md }}>
+                  <Image source={{ uri: evidencia.url }} style={styles.miniatura} />
+                  <View style={{ flex: 1, gap: 2, justifyContent: "center" }}>
+                    <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+                      {evidencia.team.nombre}
+                    </Text>
+                    {evidencia.descripcion && (
+                      <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                        {evidencia.descripcion}
+                      </Text>
+                    )}
+                    <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                      {formatearFecha(evidencia.createdAt)}
+                    </Text>
+                  </View>
+                </Tarjeta>
+              ))
+            )}
+          </View>
+        </ScrollView>
+      )}
+    </Pantalla>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 24,
-    gap: 16,
-  },
-  centro: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  titulo: {
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  tarjeta: {
-    borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 8,
-    padding: 16,
-    gap: 4,
-  },
-  etiqueta: {
-    fontSize: 13,
-    color: "#666",
-  },
-  valorGrande: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  detalle: {
-    fontSize: 13,
-    color: "#888",
-  },
-  nonce: {
-    fontSize: 28,
-    fontWeight: "700",
-    letterSpacing: 4,
-    fontVariant: ["tabular-nums"],
-  },
-  seccion: {
-    gap: 8,
-  },
-  subtitulo: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  vacio: {
-    color: "#888",
-  },
-  evidencia: {
-    flexDirection: "row",
-    gap: 12,
-    borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 8,
-    padding: 8,
-  },
-  miniatura: {
-    width: 64,
-    height: 64,
-    borderRadius: 6,
-    backgroundColor: "#f2f2f2",
-  },
-  evidenciaInfo: {
-    flex: 1,
-    gap: 2,
-    justifyContent: "center",
-  },
-  evidenciaEquipo: {
-    fontWeight: "600",
-  },
-  aviso: {
-    textAlign: "center",
-    color: "#666",
-  },
-  boton: {
-    backgroundColor: "#208AEF",
-    borderRadius: 8,
-    padding: 14,
-    alignItems: "center",
-  },
-  botonTexto: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  botonSecundario: {
-    borderWidth: 1,
-    borderColor: "#208AEF",
-    borderRadius: 8,
-    padding: 14,
-    alignItems: "center",
-  },
-  botonSecundarioTexto: {
-    color: "#208AEF",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  error: {
-    color: "#c0392b",
-    textAlign: "center",
-  },
-  presuncion: {
-    fontSize: 13,
-    color: "#a15c00",
-    backgroundColor: "#fff4e0",
-    padding: 8,
-    borderRadius: 6,
-  },
-  opcionesSancion: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  chip: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  chipSeleccionado: {
-    backgroundColor: "#a15c00",
-    borderColor: "#a15c00",
-  },
-  chipTexto: {
-    fontSize: 13,
-    color: "#333",
-  },
-  chipTextoSeleccionado: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-});
+function crearEstilos({ colores, radio }: Tema) {
+  return {
+    miniatura: {
+      width: 64,
+      height: 64,
+      borderRadius: radio.sm,
+      backgroundColor: colores.superficieElevada,
+    },
+    presuncion: {
+      color: colores.alerta,
+      backgroundColor: `${colores.alerta}26`,
+      padding: 8,
+      borderRadius: radio.sm,
+    },
+  };
+}

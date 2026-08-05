@@ -1,9 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { responderPoll, type RespuestaPoll } from "@/api/disputes";
+import { Boton, Campo, Pantalla } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
+import { useTema, type Tema } from "@/theme";
 
 const OPCIONES: { valor: RespuestaPoll; etiqueta: string }[] = [
   { valor: "CONFIRMA_CAPITAN", etiqueta: "Confirmo lo que dijo mi capitan" },
@@ -15,6 +17,9 @@ export default function PollPlantel(): React.JSX.Element {
   const accessToken = useAuthStore((s) => s.accessToken);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const tema = useTema();
+  const { colores, espaciado, tipografia } = tema;
+  const styles = crearEstilos(tema);
   const [respuesta, setRespuesta] = useState<RespuestaPoll | null>(null);
   const [comentario, setComentario] = useState("");
 
@@ -32,127 +37,77 @@ export default function PollPlantel(): React.JSX.Element {
   });
 
   return (
-    <View style={styles.container}>
+    <Pantalla>
       <Stack.Screen options={{ title: "Consulta al plantel" }} />
-      <Text style={styles.titulo}>Consulta al plantel</Text>
-      <Text style={styles.explicacion}>
+      <Text style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}>
+        Consulta al plantel
+      </Text>
+      <Text
+        style={[tipografia.caption, { color: colores.textoApagado, textAlign: "center" }]}
+      >
         Esto no decide nada por si solo: es una señal mas para que el admin resuelva la disputa.
       </Text>
 
-      <View style={styles.opciones}>
-        {OPCIONES.map((opcion) => (
-          <Pressable
-            key={opcion.valor}
-            style={[styles.opcion, respuesta === opcion.valor && styles.opcionSeleccionada]}
-            onPress={() => setRespuesta(opcion.valor)}
-          >
-            <Text
-              style={[
-                styles.opcionTexto,
-                respuesta === opcion.valor && styles.opcionTextoSeleccionado,
-              ]}
+      <View style={{ gap: espaciado.sm }}>
+        {OPCIONES.map((opcion) => {
+          const activo = respuesta === opcion.valor;
+          return (
+            <Pressable
+              key={opcion.valor}
+              onPress={() => setRespuesta(opcion.valor)}
+              style={[styles.opcion, activo && styles.opcionActiva]}
             >
-              {opcion.etiqueta}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                style={[
+                  tipografia.cuerpoDestacado,
+                  { color: activo ? colores.acentoTexto : colores.textoPrimario },
+                ]}
+              >
+                {opcion.etiqueta}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
-      <Text style={styles.etiqueta}>Comentario (opcional)</Text>
-      <TextInput
-        style={styles.input}
+      <Campo
+        etiqueta="Comentario (opcional)"
         placeholder="Contanos que viste"
         value={comentario}
         onChangeText={setComentario}
         maxLength={280}
         multiline
+        style={{ minHeight: 80, textAlignVertical: "top" }}
       />
 
-      {mutacion.isError && <Text style={styles.error}>{mutacion.error.message}</Text>}
+      {mutacion.isError && (
+        <Text style={[tipografia.caption, { color: colores.error, textAlign: "center" }]}>
+          {mutacion.error.message}
+        </Text>
+      )}
 
-      <Pressable
-        style={[styles.boton, (mutacion.isPending || !respuesta) && styles.botonDeshabilitado]}
-        disabled={mutacion.isPending || !respuesta}
+      <Boton
         onPress={() => mutacion.mutate()}
+        cargando={mutacion.isPending}
+        deshabilitado={!respuesta}
       >
-        {mutacion.isPending ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.botonTexto}>Enviar respuesta</Text>
-        )}
-      </Pressable>
-    </View>
+        Enviar respuesta
+      </Boton>
+    </Pantalla>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    gap: 12,
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  explicacion: {
-    fontSize: 13,
-    color: "#888",
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  opciones: {
-    gap: 8,
-  },
-  opcion: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 14,
-  },
-  opcionSeleccionada: {
-    backgroundColor: "#208AEF",
-    borderColor: "#208AEF",
-  },
-  opcionTexto: {
-    color: "#333",
-    fontSize: 15,
-  },
-  opcionTextoSeleccionado: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  etiqueta: {
-    fontSize: 14,
-    color: "#555",
-    marginTop: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 12,
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  boton: {
-    backgroundColor: "#208AEF",
-    borderRadius: 8,
-    padding: 14,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  botonDeshabilitado: {
-    opacity: 0.5,
-  },
-  botonTexto: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  error: {
-    color: "#c0392b",
-    textAlign: "center",
-  },
-});
+function crearEstilos({ colores, espaciado, radio }: Tema) {
+  return {
+    opcion: {
+      borderWidth: 1,
+      borderColor: colores.borde,
+      borderRadius: radio.md,
+      padding: espaciado.md,
+    },
+    opcionActiva: {
+      backgroundColor: colores.acento,
+      borderColor: colores.acento,
+    },
+  };
+}
