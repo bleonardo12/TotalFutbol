@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import type { CategoriaFutbol, Division } from "@prisma/client";
 import { asignarDivision } from "@totalfutbol/core";
 import { PrismaService } from "../prisma/prisma.service";
@@ -22,9 +22,10 @@ export interface VecinoEscalera {
 }
 
 export interface MiEntorno {
-  posicion: number;
+  /** null si el equipo todavia no esta RANKEADO (Inicio §3.1: nunca se oculta el bloque, se degrada). */
+  posicion: number | null;
   total: number;
-  /** Hasta 2 arriba y 2 abajo, incluye al propio equipo. */
+  /** Rankeado: hasta 2 arriba y 2 abajo, incluye al propio equipo. Sin rankear: top 3 de la categoria, sin el propio. */
   vecinos: VecinoEscalera[];
   /** null si el equipo nunca liquido un partido (no deberia pasar si esta RANKEADO). */
   diasInactivo: number | null;
@@ -171,16 +172,37 @@ export class RankingService {
     if (!equipo) {
       throw new NotFoundException("Equipo no encontrado");
     }
+
+    const total = await this.prisma.team.count({
+      where: { estado: "RANKEADO", categoria: equipo.categoria },
+    });
+
     if (equipo.estado !== "RANKEADO") {
-      throw new ConflictException("El equipo todavia no esta rankeado");
+      const top3 = await this.prisma.team.findMany({
+        where: { estado: "RANKEADO", categoria: equipo.categoria },
+        orderBy: { rating: "desc" },
+        take: 3,
+        select: { id: true, nombre: true, rating: true },
+      });
+      return {
+        posicion: null,
+        total,
+        vecinos: top3.map((vecino, indice) => ({
+          id: vecino.id,
+          nombre: vecino.nombre,
+          rating: vecino.rating,
+          posicion: indice + 1,
+          esPropio: false,
+        })),
+        diasInactivo: null,
+        pasadoPor: null,
+        deltaDelMes: 0,
+      };
     }
 
-    const [posicionIndice, total] = await Promise.all([
-      this.prisma.team.count({
-        where: { estado: "RANKEADO", categoria: equipo.categoria, rating: { gt: equipo.rating } },
-      }),
-      this.prisma.team.count({ where: { estado: "RANKEADO", categoria: equipo.categoria } }),
-    ]);
+    const posicionIndice = await this.prisma.team.count({
+      where: { estado: "RANKEADO", categoria: equipo.categoria, rating: { gt: equipo.rating } },
+    });
     const posicion = posicionIndice + 1;
 
     const skip = Math.max(0, posicionIndice - 2);
