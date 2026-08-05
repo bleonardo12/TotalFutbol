@@ -9,11 +9,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { ActualizarVenueDto } from "./dto/actualizar-venue.dto";
 import { CrearVenueDto } from "./dto/crear-venue.dto";
+import { VenuesCercanasQueryDto } from "./dto/venues-cercanas-query.dto";
 import { VenuesService } from "./venues.service";
 
 @Controller("venues")
@@ -23,6 +25,12 @@ export class VenuesController {
   @Get()
   async listar() {
     return this.venuesService.listar();
+  }
+
+  // Antes de ":id" -- si no, "cercanas" se interpreta como un id de cancha.
+  @Get("cercanas")
+  async cercanas(@Query() query: VenuesCercanasQueryDto) {
+    return this.venuesService.cercanas(query.lat, query.lng, query.radioKm);
   }
 
   @Get(":id")
