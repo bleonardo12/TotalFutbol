@@ -1,5 +1,6 @@
-import { useRef } from "react";
-import { ActivityIndicator, Animated, Pressable, Text } from "react-native";
+import * as Haptics from "expo-haptics";
+import { ActivityIndicator, Pressable, Text } from "react-native";
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from "react-native-reanimated";
 import { useTema } from "@/theme";
 
 type VarianteBoton = "primario" | "secundario" | "destructivo";
@@ -12,7 +13,7 @@ interface BotonProps {
   deshabilitado?: boolean;
 }
 
-/** Feedback de escala al presionar (Animated de React Native -- sin dependencia nativa extra). */
+/** Feedback de escala con Reanimated + haptic al presionar; primario suma glow ambar (docs/design.md §5-6). */
 export function Boton({
   children,
   onPress,
@@ -21,26 +22,33 @@ export function Boton({
   deshabilitado = false,
 }: BotonProps): React.JSX.Element {
   const { colores, espaciado, radio, tipografia } = useTema();
-  const escala = useRef(new Animated.Value(1)).current;
+  const escala = useSharedValue(1);
+  const reducirMovimiento = useReducedMotion();
   const inactivo = cargando || deshabilitado;
 
-  const colorFondo =
-    variante === "primario" ? colores.acento : variante === "secundario" ? "transparent" : "transparent";
+  const colorFondo = variante === "primario" ? colores.acento : "transparent";
   const colorBorde =
     variante === "primario" ? colores.acento : variante === "secundario" ? colores.borde : colores.error;
   const colorTexto =
     variante === "primario" ? colores.acentoTexto : variante === "secundario" ? colores.textoPrimario : colores.error;
 
+  const estiloAnimado = useAnimatedStyle(() => ({
+    transform: [{ scale: escala.value }],
+  }));
+
   function alPresionar(): void {
-    Animated.timing(escala, { toValue: 0.97, duration: 80, useNativeDriver: true }).start();
+    escala.value = withTiming(0.97, { duration: reducirMovimiento ? 0 : 80 });
+    if (!inactivo) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    }
   }
 
   function alSoltar(): void {
-    Animated.timing(escala, { toValue: 1, duration: 120, useNativeDriver: true }).start();
+    escala.value = withTiming(1, { duration: reducirMovimiento ? 0 : 120 });
   }
 
   return (
-    <Animated.View style={{ transform: [{ scale: escala }] }}>
+    <Animated.View style={estiloAnimado}>
       <Pressable
         onPress={inactivo ? undefined : onPress}
         onPressIn={alPresionar}
@@ -54,6 +62,15 @@ export function Boton({
           alignItems: "center",
           justifyContent: "center",
           opacity: inactivo ? 0.5 : 1,
+          ...(variante === "primario" && !inactivo
+            ? {
+                shadowColor: colores.glowPodio,
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.35,
+                shadowRadius: 8,
+                elevation: 4,
+              }
+            : null),
         }}
       >
         {cargando ? (

@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, Text } from "react-native";
-import { obtenerRanking } from "@/api/ranking";
+import { FlatList, RefreshControl, Text, View } from "react-native";
+import { obtenerRanking, type EntradaRanking } from "@/api/ranking";
 import { misEquipos, type CategoriaFutbol, type Division } from "@/api/teams";
-import { Chip, Pantalla, Tabs, type OpcionTab } from "@/components";
+import { EmptyState, FilaRanking, NumeroRating, Pantalla, Tabs, type OpcionTab, type ZonaFila } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -22,19 +22,34 @@ const OPCIONES_CATEGORIA: OpcionTab<CategoriaFutbol>[] = [
   { valor: "MIXTO", etiqueta: "Mixto" },
 ];
 
-const ETIQUETA_DIVISION: Record<Division, string> = {
-  ELITE: "Elite",
-  ORO: "Oro",
-  PLATA: "Plata",
-  BRONCE: "Bronce",
-};
+/**
+ * Zona de ascenso/descenso (docs/design.md §6): solo tiene sentido viendo
+ * "Todos" -- con un filtro de division activo no se ve el borde entre
+ * bandas, asi que no hay zona que marcar. "Ascenso" = primera fila de una
+ * banda que no sea ya Elite (la mejor de su division, mas cerca de la de
+ * arriba); "descenso" = ultima fila de una banda que no sea ya Bronce.
+ */
+function calcularZona(lista: EntradaRanking[], indice: number, filtroDivision: Division | null): ZonaFila {
+  if (filtroDivision !== null) {
+    return "neutral";
+  }
+  const actual = lista[indice];
+  if (!actual) {
+    return "neutral";
+  }
+  const anterior = lista[indice - 1];
+  const siguiente = lista[indice + 1];
+  const esPrimeraDeLaBanda = !anterior || anterior.division !== actual.division;
+  const esUltimaDeLaBanda = !siguiente || siguiente.division !== actual.division;
 
-const TONO_DIVISION: Record<Division, "exito" | "alerta" | "neutral"> = {
-  ELITE: "exito",
-  ORO: "alerta",
-  PLATA: "neutral",
-  BRONCE: "neutral",
-};
+  if (esPrimeraDeLaBanda && actual.division !== "ELITE") {
+    return "ascenso";
+  }
+  if (esUltimaDeLaBanda && actual.division !== "BRONCE") {
+    return "descenso";
+  }
+  return "neutral";
+}
 
 export default function Ranking(): React.JSX.Element {
   const [division, setDivision] = useState<Division | null>(null);
@@ -65,45 +80,59 @@ export default function Ranking(): React.JSX.Element {
     queryFn: () => obtenerRanking(categoriaActiva, division ?? undefined),
   });
   const miEquipoId = miEquipo?.id;
+  const lista = rankingQuery.data ?? [];
+  const miFilaEnLista = lista.find((item) => item.id === miEquipoId);
 
   return (
     <Pantalla>
+      {miEquipo && (
+        <View style={styles.hero}>
+          <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+            {miEquipo.nombre}
+          </Text>
+          <NumeroRating valor={miEquipo.rating} podio={miEquipo.division === "ELITE"} />
+          <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+            {miFilaEnLista ? `Puesto #${miFilaEnLista.posicion}` : "Rating"}
+          </Text>
+        </View>
+      )}
+
       <Tabs opciones={OPCIONES_CATEGORIA} valorActivo={categoriaActiva} onCambiar={setCategoria} />
       <Tabs opciones={OPCIONES_DIVISION} valorActivo={division} onCambiar={setDivision} />
 
       <FlatList
-        data={rankingQuery.data ?? []}
+        data={lista}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ gap: espaciado.xs }}
+        refreshControl={
+          <RefreshControl
+            refreshing={rankingQuery.isFetching}
+            onRefresh={() => rankingQuery.refetch()}
+            tintColor={colores.acento}
+          />
+        }
         ListEmptyComponent={
           !rankingQuery.isLoading ? (
-            <Text style={[tipografia.cuerpo, { color: colores.textoApagado, textAlign: "center", marginTop: espaciado.xxl }]}>
-              Todavia no hay equipos rankeados
-            </Text>
+            <EmptyState
+              titulo="Todavia no hay equipos rankeados"
+              descripcion="En cuanto se confirme el primer partido en esta categoria, va a aparecer aca."
+            />
           ) : null
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const esMiEquipo = item.id === miEquipoId;
           return (
-            <Pressable
-              style={styles.fila}
-              disabled={esMiEquipo || !miEquipoId}
-              onPress={() =>
-                router.push({
-                  pathname: "/desafio/proponer",
-                  params: { equipoDesafiadoId: item.id, equipoDesafiadoNombre: item.nombre },
-                })
-              }
-            >
-              <Text style={[tipografia.cuerpoDestacado, styles.posicion]}>{item.posicion}</Text>
-              <Text style={[tipografia.cuerpo, styles.nombre]} numberOfLines={1}>
-                {item.nombre}
-              </Text>
-              <Chip texto={ETIQUETA_DIVISION[item.division]} tono={TONO_DIVISION[item.division]} />
-              <Text style={[tipografia.cuerpoDestacado, styles.rating]}>
-                {Math.round(item.rating)}
-              </Text>
-            </Pressable>
+            <FilaRanking
+              posicion={item.posicion}
+              nombre={item.nombre}
+              rating={item.rating}
+              podio={item.division === "ELITE"}
+              zona={calcularZona(lista, index, division)}
+              destacada={esMiEquipo}
+              disabled={esMiEquipo}
+              indice={index}
+              onPress={() => router.push({ pathname: "/equipo/[id]", params: { id: item.id } })}
+            />
           );
         }}
       />
@@ -113,27 +142,14 @@ export default function Ranking(): React.JSX.Element {
 
 function crearEstilos({ colores, espaciado, radio }: Tema) {
   return {
-    fila: {
-      flexDirection: "row" as const,
+    hero: {
       alignItems: "center" as const,
-      paddingVertical: espaciado.md,
-      paddingHorizontal: espaciado.md,
-      backgroundColor: colores.superficie,
-      borderRadius: radio.md,
-      gap: espaciado.md,
-    },
-    posicion: {
-      width: 24,
-      color: colores.textoApagado,
-    },
-    nombre: {
-      flex: 1,
-      color: colores.textoPrimario,
-    },
-    rating: {
-      color: colores.textoPrimario,
-      width: 52,
-      textAlign: "right" as const,
+      backgroundColor: colores.superficieAcento,
+      borderRadius: radio.lg,
+      borderWidth: 1,
+      borderColor: colores.bordeAcento,
+      paddingVertical: espaciado.lg,
+      gap: espaciado.xs / 2,
     },
   };
 }
