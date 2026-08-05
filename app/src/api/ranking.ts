@@ -19,3 +19,28 @@ export function obtenerRanking(
   const query = division ? `&division=${division}` : "";
   return apiRequest(`/ranking?categoria=${categoria}${query}`);
 }
+
+export interface VecinoEscalera {
+  id: string;
+  nombre: string;
+  rating: number;
+  posicion: number;
+  esPropio: boolean;
+}
+
+export interface MiEntorno {
+  posicion: number;
+  total: number;
+  /** Hasta 2 arriba y 2 abajo, incluye al propio equipo. */
+  vecinos: VecinoEscalera[];
+  /** null si el equipo nunca liquido un partido. */
+  diasInactivo: number | null;
+  /** Aproximado: el vecino de arriba con el partido mas reciente, no tracking historico real. */
+  pasadoPor: { id: string; nombre: string } | null;
+  deltaDelMes: number;
+}
+
+/** Vecinos de escalera + posicion + inactividad, para el header y "TU ESCALERA" de Inicio (docs Guapo §3.1). */
+export function obtenerMiEntorno(teamId: string): Promise<MiEntorno> {
+  return apiRequest(`/ranking/mi-entorno?teamId=${teamId}`);
+}
