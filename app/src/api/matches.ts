@@ -61,6 +61,7 @@ export interface ReporteResultado {
   outcome: OutcomePartido;
   golesLocal: number | null;
   golesVisita: number | null;
+  createdAt: string;
 }
 
 export interface Partido {
