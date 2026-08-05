@@ -22,6 +22,23 @@ export interface Desafio {
   partido: { id: string } | null;
 }
 
+export const ETIQUETA_ESTADO_DESAFIO: Record<EstadoDesafio, string> = {
+  PROPUESTO: "Propuesto",
+  ACEPTADO: "Aceptado",
+  RECHAZADO: "Rechazado",
+  EXPIRADO: "Expirado",
+};
+
+export const TONO_ESTADO_DESAFIO: Record<
+  EstadoDesafio,
+  "neutral" | "acento" | "exito" | "error" | "alerta"
+> = {
+  PROPUESTO: "alerta",
+  ACEPTADO: "exito",
+  RECHAZADO: "error",
+  EXPIRADO: "neutral",
+};
+
 export function proponerDesafio(
   token: string,
   equipoDesafianteId: string,
