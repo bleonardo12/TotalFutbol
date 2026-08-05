@@ -14,40 +14,46 @@ export interface Paleta {
   exito: string;
   error: string;
   alerta: string;
+  /** Color de sombra/glow para el podio (top 3, Elite) -- nunca de fondo. */
+  glowPodio: string;
 }
 
+// Direccion "cancha de noche" (docs/design.md): cesped nocturno verde-negro +
+// ambar de los reflectores como acento, en vez del azul default de "app tech".
 const oscura: Paleta = {
-  fondo: "#080A0D",
-  superficie: "#171D26",
-  superficieElevada: "#212A35",
-  superficieAcento: "#16233A",
-  borde: "#28323E",
-  bordeAcento: "#2D5C94",
-  textoPrimario: "#F7F9FC",
-  textoSecundario: "#AEB9C6",
-  textoApagado: "#6B7684",
-  acento: "#4FACFF",
-  acentoTexto: "#08131F",
-  exito: "#34C759",
-  error: "#FF5A52",
-  alerta: "#F5A623",
+  fondo: "#0B1210",
+  superficie: "#131C18",
+  superficieElevada: "#1B2823",
+  superficieAcento: "#1E241A",
+  borde: "#26332C",
+  bordeAcento: "#8A6A2A",
+  textoPrimario: "#EEF2ED",
+  textoSecundario: "#9EB0A6",
+  textoApagado: "#63736A",
+  acento: "#FFB020",
+  acentoTexto: "#0B1210",
+  exito: "#2FB877",
+  error: "#E5484D",
+  alerta: "#F2A93B",
+  glowPodio: "#FFB020",
 };
 
 const clara: Paleta = {
-  fondo: "#F2F5FA",
+  fondo: "#F4F7F2",
   superficie: "#FFFFFF",
-  superficieElevada: "#E7EDF6",
-  superficieAcento: "#E8F2FF",
-  borde: "#DCE3EC",
-  bordeAcento: "#AFD4FF",
-  textoPrimario: "#141A22",
-  textoSecundario: "#535E6C",
-  textoApagado: "#8B95A1",
-  acento: "#1878D6",
+  superficieElevada: "#E9F0E5",
+  superficieAcento: "#FFF3DC",
+  borde: "#DCE6D8",
+  bordeAcento: "#F0C77A",
+  textoPrimario: "#12201A",
+  textoSecundario: "#4F6358",
+  textoApagado: "#8B9A90",
+  acento: "#D9860A",
   acentoTexto: "#FFFFFF",
-  exito: "#22A745",
-  error: "#DC3545",
-  alerta: "#D9891A",
+  exito: "#1E9E62",
+  error: "#C93B3F",
+  alerta: "#C9860B",
+  glowPodio: "#FFB020",
 };
 
 export const PALETAS = { dark: oscura, light: clara } as const;
