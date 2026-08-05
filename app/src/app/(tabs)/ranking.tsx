@@ -101,6 +101,7 @@ export default function Ranking(): React.JSX.Element {
       <Tabs opciones={OPCIONES_DIVISION} valorActivo={division} onCambiar={setDivision} />
 
       <FlatList
+        style={{ flex: 1 }}
         data={lista}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ gap: espaciado.xs }}
