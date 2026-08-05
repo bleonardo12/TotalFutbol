@@ -1,4 +1,5 @@
 import { Controller, Get, Query } from "@nestjs/common";
+import { MiEntornoQueryDto } from "./dto/mi-entorno-query.dto";
 import { RankingQueryDto } from "./dto/ranking-query.dto";
 import { RankingService } from "./ranking.service";
 
@@ -14,5 +15,10 @@ export class RankingController {
       query.categoria,
       query.division,
     );
+  }
+
+  @Get("mi-entorno")
+  async miEntorno(@Query() query: MiEntornoQueryDto) {
+    return this.rankingService.miEntorno(query.teamId);
   }
 }
