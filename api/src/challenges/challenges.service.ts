@@ -151,8 +151,10 @@ export class ChallengesService {
       );
       return {
         ...desafio,
-        deltaSiGanaDesafiante: ganaDesafiante.local,
-        deltaSiGanaDesafiado: ganaDesafiado.visitante,
+        deltaDesafianteSiGana: ganaDesafiante.local,
+        deltaDesafianteSiPierde: ganaDesafiado.local,
+        deltaDesafiadoSiGana: ganaDesafiado.visitante,
+        deltaDesafiadoSiPierde: ganaDesafiante.visitante,
       };
     });
   }

@@ -55,10 +55,10 @@ export function proponerDesafio(
 
 /** misDesafios() suma los deltas proyectados (docs Guapo §3.1) -- proponer/aceptar/rechazar no los traen. */
 export interface DesafioConDeltas extends Desafio {
-  /** Cuanto gana el desafiante si gana el partido. */
-  deltaSiGanaDesafiante: number;
-  /** Cuanto gana el desafiado si gana el partido. */
-  deltaSiGanaDesafiado: number;
+  deltaDesafianteSiGana: number;
+  deltaDesafianteSiPierde: number;
+  deltaDesafiadoSiGana: number;
+  deltaDesafiadoSiPierde: number;
 }
 
 export function misDesafios(token: string): Promise<DesafioConDeltas[]> {
