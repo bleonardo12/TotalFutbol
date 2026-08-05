@@ -14,6 +14,33 @@ export type EstadoPartido =
   | "VOID";
 export type OutcomePartido = "GANA_LOCAL" | "GANA_VISITANTE" | "EMPATE";
 
+export const ETIQUETA_ESTADO_PARTIDO: Record<EstadoPartido, string> = {
+  PACTADO: "Pactado",
+  FIRMADO: "Firmado",
+  EN_JUEGO: "En juego",
+  REPORTADO: "Pendiente",
+  CONFIRMADO: "Confirmado",
+  EN_DISPUTA: "En disputa",
+  LIQUIDADO: "Liquidado",
+  SUSPENDIDO: "Suspendido",
+  VOID: "Anulado",
+};
+
+export const TONO_ESTADO_PARTIDO: Record<
+  EstadoPartido,
+  "neutral" | "acento" | "exito" | "error" | "alerta"
+> = {
+  PACTADO: "neutral",
+  FIRMADO: "acento",
+  EN_JUEGO: "acento",
+  REPORTADO: "alerta",
+  CONFIRMADO: "exito",
+  EN_DISPUTA: "error",
+  LIQUIDADO: "exito",
+  SUSPENDIDO: "alerta",
+  VOID: "neutral",
+};
+
 export interface EquipoResumen {
   id: string;
   nombre: string;

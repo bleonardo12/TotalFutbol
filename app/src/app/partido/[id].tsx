@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
 import {
   desistirPartido,
@@ -9,27 +9,25 @@ import {
   flaggearNoShow,
   obtenerPartido,
   reportarResultado,
+  ETIQUETA_ESTADO_PARTIDO,
+  TONO_ESTADO_PARTIDO,
   type OutcomePartido,
 } from "@/api/matches";
 import { misEquipos } from "@/api/teams";
+import { Boton, Campo, Chip, Pantalla, SelectorChips, Tarjeta } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
+import { useTema } from "@/theme";
 
 /** Mismo numero que VENTANA_DESISTIMIENTO_HORAS del backend (matches.constantes.ts) -- solo para mostrar u ocultar el boton, el backend es quien manda. */
 const VENTANA_DESISTIMIENTO_HORAS = 24;
 
 type ResultadoPropio = "GANE" | "PERDI" | "EMPATE";
 
-const ETIQUETA_ESTADO: Record<string, string> = {
-  PACTADO: "Pactado",
-  FIRMADO: "Firmado",
-  EN_JUEGO: "En juego",
-  REPORTADO: "Pendiente",
-  CONFIRMADO: "Confirmado",
-  EN_DISPUTA: "En disputa",
-  LIQUIDADO: "Liquidado",
-  SUSPENDIDO: "Suspendido",
-  VOID: "Anulado",
-};
+const OPCIONES_RESULTADO: { valor: ResultadoPropio; etiqueta: string }[] = [
+  { valor: "GANE", etiqueta: "Gane" },
+  { valor: "EMPATE", etiqueta: "Empate" },
+  { valor: "PERDI", etiqueta: "Perdi" },
+];
 
 /** El usuario reporta desde su propia perspectiva; el outcome de la API es absoluto (local/visitante). */
 function mapearResultadoPropio(resultado: ResultadoPropio, esLocal: boolean): OutcomePartido {
@@ -45,7 +43,9 @@ function mapearResultadoPropio(resultado: ResultadoPropio, esLocal: boolean): Ou
 export default function DetallePartido(): React.JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const { colores, espaciado, tipografia } = useTema();
   const [resultado, setResultado] = useState<ResultadoPropio | null>(null);
   const [golesPropios, setGolesPropios] = useState("");
   const [golesRival, setGolesRival] = useState("");
@@ -113,40 +113,25 @@ export default function DetallePartido(): React.JSX.Element {
     },
   });
 
-  if (partidoQuery.isLoading || usuarioQuery.isLoading) {
-    return (
-      <View style={styles.container}>
-        <Stack.Screen options={{ title: "Partido" }} />
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
   const partido = partidoQuery.data;
   const usuario = usuarioQuery.data;
+  const cargando = partidoQuery.isLoading || usuarioQuery.isLoading;
 
-  if (!partido || !usuario) {
-    return (
-      <View style={styles.container}>
-        <Stack.Screen options={{ title: "Partido" }} />
-        <Text style={styles.aviso}>No se pudo cargar el partido.</Text>
-      </View>
-    );
-  }
-
-  const esLocal = partido.reporterLocalId === usuario.id;
-  const esVisitante = partido.reporterVisitanteId === usuario.id;
-  const yaReporte = partido.reportes.some((reporte) => reporte.reporterId === usuario.id);
+  const esLocal = partido?.reporterLocalId === usuario?.id;
+  const esVisitante = partido?.reporterVisitanteId === usuario?.id;
+  const yaReporte = partido?.reportes.some((reporte) => reporte.reporterId === usuario?.id) ?? false;
   const puedeReportar =
+    !!partido &&
     (esLocal || esVisitante) &&
     !yaReporte &&
     (partido.estado === "EN_JUEGO" || partido.estado === "REPORTADO");
 
   const esParteDelPacto =
-    miEquipoId === partido.equipoLocalId || miEquipoId === partido.equipoVisitanteId;
+    !!partido && (miEquipoId === partido.equipoLocalId || miEquipoId === partido.equipoVisitanteId);
   const ventanaDesistimientoPaso =
+    !!partido &&
     Date.now() >
-    new Date(partido.createdAt).getTime() + VENTANA_DESISTIMIENTO_HORAS * 60 * 60 * 1000;
+      new Date(partido.createdAt).getTime() + VENTANA_DESISTIMIENTO_HORAS * 60 * 60 * 1000;
 
   function confirmarDesistir(): void {
     Alert.alert(
@@ -171,284 +156,173 @@ export default function DetallePartido(): React.JSX.Element {
   }
 
   return (
-    <View style={styles.container}>
+    <Pantalla centrado={cargando || !partido || !usuario}>
       <Stack.Screen
-        options={{ title: `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}` }}
+        options={{ title: partido ? `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}` : "Partido" }}
       />
-      <Text style={styles.titulo}>
-        {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
-      </Text>
-      <Text style={styles.estado}>{ETIQUETA_ESTADO[partido.estado] ?? partido.estado}</Text>
 
-      {partido.outcomeFinal && (
-        <Text style={styles.resultado}>
-          Resultado:{" "}
-          {partido.outcomeFinal === "EMPATE"
-            ? "Empate"
-            : partido.outcomeFinal === "GANA_LOCAL"
-              ? `Gano ${partido.equipoLocal.nombre}`
-              : `Gano ${partido.equipoVisitante.nombre}`}
+      {cargando ? null : !partido || !usuario ? (
+        <Text style={[tipografia.cuerpo, { color: colores.textoSecundario, textAlign: "center" }]}>
+          No se pudo cargar el partido.
         </Text>
-      )}
-
-      {partido.estado === "PACTADO" && esParteDelPacto && (
-        <View style={styles.pactoSeccion}>
-          <Link href={{ pathname: "/partido/firmar", params: { id } }} asChild>
-            <Pressable style={styles.boton}>
-              <Text style={styles.botonTexto}>Firmar en cancha</Text>
-            </Pressable>
-          </Link>
-
-          {!ventanaDesistimientoPaso ? (
-            <Pressable
-              style={[styles.botonSecundario, desistirMutacion.isPending && styles.botonDeshabilitado]}
-              disabled={desistirMutacion.isPending}
-              onPress={confirmarDesistir}
+      ) : (
+        <>
+          <View style={{ alignItems: "center", gap: espaciado.xs }}>
+            <Text
+              style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}
             >
-              <Text style={styles.botonSecundarioTexto}>Desistir</Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              style={[styles.botonSecundario, noShowMutacion.isPending && styles.botonDeshabilitado]}
-              disabled={noShowMutacion.isPending}
-              onPress={confirmarNoShow}
-            >
-              <Text style={styles.botonSecundarioTexto}>El rival no aparecio</Text>
-            </Pressable>
-          )}
-
-          {desistirMutacion.isError && (
-            <Text style={styles.error}>{desistirMutacion.error.message}</Text>
-          )}
-          {noShowMutacion.isError && <Text style={styles.error}>{noShowMutacion.error.message}</Text>}
-        </View>
-      )}
-
-      {puedeReportar && (
-        <View style={styles.formulario}>
-          <Text style={styles.etiqueta}>Como salio para tu equipo?</Text>
-          <View style={styles.opciones}>
-            {(["GANE", "EMPATE", "PERDI"] as ResultadoPropio[]).map((opcion) => (
-              <Pressable
-                key={opcion}
-                style={[styles.opcion, resultado === opcion && styles.opcionSeleccionada]}
-                onPress={() => setResultado(opcion)}
-              >
-                <Text
-                  style={[
-                    styles.opcionTexto,
-                    resultado === opcion && styles.opcionTextoSeleccionado,
-                  ]}
-                >
-                  {opcion === "GANE" ? "Gane" : opcion === "PERDI" ? "Perdi" : "Empate"}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <View style={styles.golesFila}>
-            <View style={styles.golesCampo}>
-              <Text style={styles.etiqueta}>Goles propios</Text>
-              <TextInput
-                style={styles.inputGoles}
-                keyboardType="number-pad"
-                value={golesPropios}
-                onChangeText={setGolesPropios}
-              />
-            </View>
-            <View style={styles.golesCampo}>
-              <Text style={styles.etiqueta}>Goles rival</Text>
-              <TextInput
-                style={styles.inputGoles}
-                keyboardType="number-pad"
-                value={golesRival}
-                onChangeText={setGolesRival}
-              />
-            </View>
-          </View>
-
-          {reportarMutacion.isError && (
-            <Text style={styles.error}>{reportarMutacion.error.message}</Text>
-          )}
-
-          <Pressable
-            style={[
-              styles.boton,
-              (reportarMutacion.isPending || !resultado) && styles.botonDeshabilitado,
-            ]}
-            disabled={reportarMutacion.isPending || !resultado}
-            onPress={() => reportarMutacion.mutate()}
-          >
-            {reportarMutacion.isPending ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.botonTexto}>Reportar resultado</Text>
-            )}
-          </Pressable>
-        </View>
-      )}
-
-      {!puedeReportar && yaReporte && !partido.outcomeFinal && (
-        <Text style={styles.aviso}>Ya reportaste. Falta el rival.</Text>
-      )}
-
-      {partido.estado === "EN_DISPUTA" && (
-        <Link href={{ pathname: "/disputa/[matchId]", params: { matchId: id } }} asChild>
-          <Pressable style={styles.boton}>
-            <Text style={styles.botonTexto}>Ver disputa</Text>
-          </Pressable>
-        </Link>
-      )}
-
-      {(esLocal || esVisitante) && (
-        <View style={styles.incidenteSeccion}>
-          {!mostrarIncidente ? (
-            <Pressable style={styles.botonSecundario} onPress={() => setMostrarIncidente(true)}>
-              <Text style={styles.botonSecundarioTexto}>Reportar incidente</Text>
-            </Pressable>
-          ) : (
-            <>
-              <Text style={styles.etiqueta}>
-                No hace falta decir quien tuvo la culpa, solo reportar que paso algo.
+              {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
+            </Text>
+            <Chip
+              texto={ETIQUETA_ESTADO_PARTIDO[partido.estado]}
+              tono={TONO_ESTADO_PARTIDO[partido.estado]}
+            />
+            {partido.outcomeFinal && (
+              <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+                {partido.outcomeFinal === "EMPATE"
+                  ? "Empate"
+                  : partido.outcomeFinal === "GANA_LOCAL"
+                    ? `Gano ${partido.equipoLocal.nombre}`
+                    : `Gano ${partido.equipoVisitante.nombre}`}
               </Text>
-              <TextInput
-                style={styles.inputGoles}
-                placeholder="Descripcion (opcional)"
-                value={descripcionIncidente}
-                onChangeText={setDescripcionIncidente}
-                maxLength={280}
-              />
-              {incidenteMutacion.isError && (
-                <Text style={styles.error}>{incidenteMutacion.error.message}</Text>
+            )}
+          </View>
+
+          {partido.estado === "PACTADO" && esParteDelPacto && (
+            <Tarjeta style={{ gap: espaciado.sm }}>
+              <Boton onPress={() => router.push({ pathname: "/partido/firmar", params: { id } })}>
+                Firmar en cancha
+              </Boton>
+
+              {!ventanaDesistimientoPaso ? (
+                <Boton
+                  variante="destructivo"
+                  onPress={confirmarDesistir}
+                  cargando={desistirMutacion.isPending}
+                >
+                  Desistir
+                </Boton>
+              ) : (
+                <Boton
+                  variante="destructivo"
+                  onPress={confirmarNoShow}
+                  cargando={noShowMutacion.isPending}
+                >
+                  El rival no aparecio
+                </Boton>
               )}
-              <Pressable
-                style={[styles.boton, incidenteMutacion.isPending && styles.botonDeshabilitado]}
-                disabled={incidenteMutacion.isPending}
-                onPress={() => incidenteMutacion.mutate()}
-              >
-                {incidenteMutacion.isPending ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.botonTexto}>Enviar reporte</Text>
-                )}
-              </Pressable>
-            </>
+
+              {desistirMutacion.isError && (
+                <Text style={[tipografia.caption, { color: colores.error }]}>
+                  {desistirMutacion.error.message}
+                </Text>
+              )}
+              {noShowMutacion.isError && (
+                <Text style={[tipografia.caption, { color: colores.error }]}>
+                  {noShowMutacion.error.message}
+                </Text>
+              )}
+            </Tarjeta>
           )}
-        </View>
+
+          {puedeReportar && (
+            <Tarjeta style={{ gap: espaciado.md }}>
+              <View style={{ gap: espaciado.xs }}>
+                <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                  Como salio para tu equipo?
+                </Text>
+                <SelectorChips
+                  opciones={OPCIONES_RESULTADO}
+                  valorSeleccionado={resultado}
+                  onCambiar={setResultado}
+                />
+              </View>
+
+              <View style={{ flexDirection: "row", gap: espaciado.md }}>
+                <View style={{ flex: 1 }}>
+                  <Campo
+                    etiqueta="Goles propios"
+                    keyboardType="number-pad"
+                    value={golesPropios}
+                    onChangeText={setGolesPropios}
+                    style={{ textAlign: "center" }}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Campo
+                    etiqueta="Goles rival"
+                    keyboardType="number-pad"
+                    value={golesRival}
+                    onChangeText={setGolesRival}
+                    style={{ textAlign: "center" }}
+                  />
+                </View>
+              </View>
+
+              {reportarMutacion.isError && (
+                <Text style={[tipografia.caption, { color: colores.error }]}>
+                  {reportarMutacion.error.message}
+                </Text>
+              )}
+
+              <Boton
+                onPress={() => reportarMutacion.mutate()}
+                cargando={reportarMutacion.isPending}
+                deshabilitado={!resultado}
+              >
+                Reportar resultado
+              </Boton>
+            </Tarjeta>
+          )}
+
+          {!puedeReportar && yaReporte && !partido.outcomeFinal && (
+            <Text style={[tipografia.cuerpo, { color: colores.textoSecundario, textAlign: "center" }]}>
+              Ya reportaste. Falta el rival.
+            </Text>
+          )}
+
+          {partido.estado === "EN_DISPUTA" && (
+            <Boton onPress={() => router.push({ pathname: "/disputa/[matchId]", params: { matchId: id } })}>
+              Ver disputa
+            </Boton>
+          )}
+
+          {(esLocal || esVisitante) && (
+            <View style={{ gap: espaciado.sm }}>
+              {!mostrarIncidente ? (
+                <Boton variante="secundario" onPress={() => setMostrarIncidente(true)}>
+                  Reportar incidente
+                </Boton>
+              ) : (
+                <Tarjeta style={{ gap: espaciado.md }}>
+                  <Text
+                    style={[tipografia.cuerpo, { color: colores.textoSecundario }]}
+                  >
+                    No hace falta decir quien tuvo la culpa, solo reportar que paso algo.
+                  </Text>
+                  <Campo
+                    placeholder="Descripcion (opcional)"
+                    value={descripcionIncidente}
+                    onChangeText={setDescripcionIncidente}
+                    maxLength={280}
+                  />
+                  {incidenteMutacion.isError && (
+                    <Text style={[tipografia.caption, { color: colores.error }]}>
+                      {incidenteMutacion.error.message}
+                    </Text>
+                  )}
+                  <Boton
+                    onPress={() => incidenteMutacion.mutate()}
+                    cargando={incidenteMutacion.isPending}
+                  >
+                    Enviar reporte
+                  </Boton>
+                </Tarjeta>
+              )}
+            </View>
+          )}
+        </>
       )}
-    </View>
+    </Pantalla>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    gap: 8,
-  },
-  titulo: {
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  estado: {
-    textAlign: "center",
-    color: "#666",
-    marginBottom: 8,
-  },
-  resultado: {
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  formulario: {
-    gap: 12,
-    marginTop: 16,
-  },
-  etiqueta: {
-    fontSize: 14,
-    color: "#555",
-  },
-  opciones: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  opcion: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  opcionSeleccionada: {
-    backgroundColor: "#208AEF",
-    borderColor: "#208AEF",
-  },
-  opcionTexto: {
-    color: "#333",
-  },
-  opcionTextoSeleccionado: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  golesFila: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  golesCampo: {
-    flex: 1,
-    gap: 4,
-  },
-  inputGoles: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    textAlign: "center",
-  },
-  boton: {
-    backgroundColor: "#208AEF",
-    borderRadius: 8,
-    padding: 14,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  botonDeshabilitado: {
-    opacity: 0.5,
-  },
-  botonTexto: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  error: {
-    color: "#c0392b",
-  },
-  aviso: {
-    textAlign: "center",
-    color: "#666",
-    marginTop: 16,
-  },
-  incidenteSeccion: {
-    gap: 8,
-    marginTop: 16,
-  },
-  pactoSeccion: {
-    gap: 8,
-    marginTop: 8,
-  },
-  botonSecundario: {
-    borderWidth: 1,
-    borderColor: "#c0392b",
-    borderRadius: 8,
-    padding: 14,
-    alignItems: "center",
-  },
-  botonSecundarioTexto: {
-    color: "#c0392b",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-});
