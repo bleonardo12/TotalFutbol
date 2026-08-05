@@ -1,7 +1,10 @@
+export { BarraAccion } from "./BarraAccion";
 export { Boton } from "./Boton";
 export { Campo } from "./Campo";
-export { Chip } from "./Chip";
+export { Chip, type TonoChip } from "./Chip";
 export { EmptyState } from "./EmptyState";
+export { EtiquetaSeccion } from "./EtiquetaSeccion";
+export { FilaEscalera } from "./FilaEscalera";
 export { FilaRanking, type ZonaFila } from "./FilaRanking";
 export { MarcaHero } from "./MarcaHero";
 export { NumeroRating } from "./NumeroRating";
