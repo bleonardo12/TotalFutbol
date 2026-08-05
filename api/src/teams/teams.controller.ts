@@ -29,4 +29,9 @@ export class TeamsController {
     }
     return equipo;
   }
+
+  @Get(":id/forma")
+  async forma(@Param("id") id: string) {
+    return this.teamsService.forma(id);
+  }
 }
