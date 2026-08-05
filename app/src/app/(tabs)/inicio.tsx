@@ -275,24 +275,29 @@ export default function Inicio(): React.JSX.Element {
   return (
     <Pantalla style={{ padding: 0 }}>
       <View style={styles.header}>
-        <View style={styles.escudo}>
-          <Text style={styles.escudoTexto}>{iniciales(equipo.nombre)}</Text>
-        </View>
-        <View style={{ flex: 1, gap: 3 }}>
-          <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>{equipo.nombre}</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: espaciado.xs }}>
-            {rankeado && equipo.division ? (
-              <Chip texto={ETIQUETA_DIVISION[equipo.division]} tono={TONO_DIVISION[equipo.division]} />
-            ) : (
-              <Chip texto="Sin rankear" tono="neutral" />
-            )}
-            <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
-              {miEntorno
-                ? `${miEntorno.posicion !== null ? `#${miEntorno.posicion}` : "—"} de ${miEntorno.total}`
-                : "—"}
-            </Text>
+        <Pressable
+          onPress={() => router.push({ pathname: "/equipo/[id]", params: { id: equipo.id } })}
+          style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: espaciado.md }}
+        >
+          <View style={styles.escudo}>
+            <Text style={styles.escudoTexto}>{iniciales(equipo.nombre)}</Text>
           </View>
-        </View>
+          <View style={{ flex: 1, gap: 3 }}>
+            <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>{equipo.nombre}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: espaciado.xs }}>
+              {rankeado && equipo.division ? (
+                <Chip texto={ETIQUETA_DIVISION[equipo.division]} tono={TONO_DIVISION[equipo.division]} />
+              ) : (
+                <Chip texto="Sin rankear" tono="neutral" />
+              )}
+              <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                {miEntorno
+                  ? `${miEntorno.posicion !== null ? `#${miEntorno.posicion}` : "—"} de ${miEntorno.total}`
+                  : "—"}
+              </Text>
+            </View>
+          </View>
+        </Pressable>
         <View style={{ alignItems: "flex-end" }}>
           <Text
             style={[tipografia.numero, { color: rankeado ? colores.textoPrimario : colores.textoApagado }]}

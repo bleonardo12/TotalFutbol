@@ -83,7 +83,11 @@ export function Tabs<T>({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={[{ flexGrow: 0 }, style]}
+      // Alto explicito: un ScrollView horizontal sin altura fija puede medir 0 dentro de una
+      // columna flex en Android, aunque su contenido se siga pintando -- el hermano siguiente
+      // (la lista) queda superpuesto por encima. Alto = padding vertical del pill + su borde +
+      // el lineHeight de `caption` (17).
+      style={[{ flexGrow: 0, height: 35 }, style]}
       contentContainerStyle={{
         flexDirection: "row",
         alignItems: "flex-start",
