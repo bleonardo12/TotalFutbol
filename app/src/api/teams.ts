@@ -30,3 +30,8 @@ export function crearEquipo(
 export function misEquipos(token: string): Promise<Equipo[]> {
   return apiRequest("/teams/mios", { token });
 }
+
+/** Publico (sin token): perfil de cualquier equipo, para verificar contra quien se juega. */
+export function obtenerEquipoPorId(id: string): Promise<Equipo> {
+  return apiRequest(`/teams/${id}`);
+}
