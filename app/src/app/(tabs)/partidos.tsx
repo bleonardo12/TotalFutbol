@@ -1,23 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "expo-router";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { misPartidos } from "@/api/matches";
+import { useRouter } from "expo-router";
+import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import { misPartidos, ETIQUETA_ESTADO_PARTIDO, TONO_ESTADO_PARTIDO } from "@/api/matches";
+import { Boton, Chip, EmptyState, Pantalla } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
-
-const ETIQUETA_ESTADO: Record<string, string> = {
-  PACTADO: "Pactado",
-  FIRMADO: "Firmado",
-  EN_JUEGO: "En juego",
-  REPORTADO: "Pendiente",
-  CONFIRMADO: "Confirmado",
-  EN_DISPUTA: "En disputa",
-  LIQUIDADO: "Liquidado",
-  SUSPENDIDO: "Suspendido",
-  VOID: "Anulado",
-};
+import { useTema, type Tema } from "@/theme";
 
 export default function ListaPartidos(): React.JSX.Element {
   const accessToken = useAuthStore((s) => s.accessToken);
+  const router = useRouter();
+  const tema = useTema();
+  const { colores, espaciado, tipografia } = tema;
+  const styles = crearEstilos(tema);
 
   const partidosQuery = useQuery({
     queryKey: ["partidos", "mios"],
@@ -26,75 +20,57 @@ export default function ListaPartidos(): React.JSX.Element {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.acciones}>
-        <Link href="/partido/generar" style={styles.link}>
-          Generar codigo
-        </Link>
-        <Link href="/partido/unirse" style={styles.link}>
-          Unirme con codigo
-        </Link>
+    <Pantalla>
+      <View style={{ flexDirection: "row", gap: espaciado.sm }}>
+        <View style={{ flex: 1 }}>
+          <Boton variante="secundario" onPress={() => router.push("/partido/generar")}>
+            Generar codigo
+          </Boton>
+        </View>
+        <View style={{ flex: 1 }}>
+          <Boton variante="secundario" onPress={() => router.push("/partido/unirse")}>
+            Unirme con codigo
+          </Boton>
+        </View>
       </View>
 
       <FlatList
         data={partidosQuery.data ?? []}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.lista}
+        contentContainerStyle={{ gap: espaciado.xs }}
+        refreshControl={
+          <RefreshControl
+            refreshing={partidosQuery.isFetching}
+            onRefresh={() => partidosQuery.refetch()}
+            tintColor={colores.acento}
+          />
+        }
         ListEmptyComponent={
-          !partidosQuery.isLoading ? (
-            <Text style={styles.vacio}>Todavia no tenes partidos</Text>
-          ) : null
+          !partidosQuery.isLoading ? <EmptyState titulo="Todavia no tenes partidos" /> : null
         }
         renderItem={({ item }) => (
-          <Link href={{ pathname: "/partido/[id]", params: { id: item.id } }} asChild>
-            <Pressable style={styles.item}>
-              <Text style={styles.itemTitulo}>
-                {item.equipoLocal.nombre} vs {item.equipoVisitante.nombre}
-              </Text>
-              <Text style={styles.itemEstado}>{ETIQUETA_ESTADO[item.estado] ?? item.estado}</Text>
-            </Pressable>
-          </Link>
+          <Pressable
+            style={styles.item}
+            onPress={() => router.push({ pathname: "/partido/[id]", params: { id: item.id } })}
+          >
+            <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+              {item.equipoLocal.nombre} vs {item.equipoVisitante.nombre}
+            </Text>
+            <Chip texto={ETIQUETA_ESTADO_PARTIDO[item.estado]} tono={TONO_ESTADO_PARTIDO[item.estado]} />
+          </Pressable>
         )}
       />
-    </View>
+    </Pantalla>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    gap: 16,
-  },
-  acciones: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  link: {
-    color: "#208AEF",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  lista: {
-    gap: 8,
-  },
-  item: {
-    borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 8,
-    padding: 12,
-    gap: 4,
-  },
-  itemTitulo: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  itemEstado: {
-    color: "#666",
-  },
-  vacio: {
-    textAlign: "center",
-    color: "#888",
-    marginTop: 32,
-  },
-});
+function crearEstilos({ colores, espaciado, radio }: Tema) {
+  return {
+    item: {
+      backgroundColor: colores.superficie,
+      borderRadius: radio.md,
+      padding: espaciado.md,
+      gap: espaciado.xs,
+    },
+  };
+}
