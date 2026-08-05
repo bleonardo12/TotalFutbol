@@ -1,23 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Stack } from "expo-router";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { type CapaDisputa, listarDisputasPendientes } from "@/api/disputes";
+import { Stack, useRouter } from "expo-router";
+import { Alert, FlatList, Pressable, RefreshControl, Text } from "react-native";
+import { listarDisputasPendientes, ETIQUETA_CAPA } from "@/api/disputes";
 import { cerrarTemporada, obtenerTemporadaActual } from "@/api/seasons";
+import { Boton, Chip, EmptyState, Pantalla, Tarjeta } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
-
-const ETIQUETA_CAPA: Record<CapaDisputa, string> = {
-  C1_EVIDENCIA: "Evidencia (C1)",
-  C2_PLANTELES: "Plantel (C2)",
-  C3_ADMIN: "Admin (C3)",
-};
+import { useTema, type Tema } from "@/theme";
 
 function formatearFecha(iso: string): string {
   return new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
@@ -25,7 +13,11 @@ function formatearFecha(iso: string): string {
 
 export default function PanelAdmin(): React.JSX.Element {
   const accessToken = useAuthStore((s) => s.accessToken);
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const tema = useTema();
+  const { colores, espaciado, tipografia } = tema;
+  const styles = crearEstilos(tema);
 
   const disputasQuery = useQuery({
     queryKey: ["disputas", "pendientes"],
@@ -61,135 +53,79 @@ export default function PanelAdmin(): React.JSX.Element {
   }
 
   return (
-    <View style={styles.container}>
+    <Pantalla>
       <Stack.Screen options={{ title: "Panel de admin" }} />
 
       {temporadaQuery.data && (
-        <View style={styles.tarjeta}>
-          <Text style={styles.tarjetaTitulo}>Temporada {temporadaQuery.data.anio}</Text>
+        <Tarjeta style={{ alignItems: "center", gap: espaciado.sm }}>
+          <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>
+            {`Temporada ${temporadaQuery.data.anio}`}
+          </Text>
           {temporadaQuery.data.cerrada ? (
-            <Text style={styles.tarjetaTexto}>Cerrada</Text>
+            <Text style={[tipografia.cuerpo, { color: colores.textoApagado }]}>Cerrada</Text>
           ) : (
-            <Pressable
-              style={[styles.botonPeligro, cerrarMutacion.isPending && styles.botonDeshabilitado]}
-              disabled={cerrarMutacion.isPending}
+            <Boton
+              variante="destructivo"
               onPress={confirmarCierre}
+              cargando={cerrarMutacion.isPending}
             >
-              {cerrarMutacion.isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.botonPeligroTexto}>Cerrar temporada</Text>
-              )}
-            </Pressable>
+              Cerrar temporada
+            </Boton>
           )}
           {cerrarMutacion.isError && (
-            <Text style={styles.error}>{cerrarMutacion.error.message}</Text>
+            <Text style={[tipografia.caption, { color: colores.error }]}>
+              {cerrarMutacion.error.message}
+            </Text>
           )}
-        </View>
+        </Tarjeta>
       )}
 
-      <Text style={styles.titulo}>Disputas pendientes</Text>
+      <Text style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}>
+        Disputas pendientes
+      </Text>
 
       <FlatList
         data={disputasQuery.data ?? []}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.lista}
+        contentContainerStyle={{ gap: espaciado.xs }}
+        refreshControl={
+          <RefreshControl
+            refreshing={disputasQuery.isFetching}
+            onRefresh={() => disputasQuery.refetch()}
+            tintColor={colores.acento}
+          />
+        }
         ListEmptyComponent={
-          !disputasQuery.isLoading ? (
-            <Text style={styles.vacio}>No hay disputas pendientes.</Text>
-          ) : null
+          !disputasQuery.isLoading ? <EmptyState titulo="No hay disputas pendientes." /> : null
         }
         renderItem={({ item }) => (
-          <Link
-            href={{ pathname: "/disputa/[matchId]", params: { matchId: item.matchId } }}
-            asChild
+          <Pressable
+            style={styles.item}
+            onPress={() =>
+              router.push({ pathname: "/disputa/[matchId]", params: { matchId: item.matchId } })
+            }
           >
-            <Pressable style={styles.item}>
-              <Text style={styles.itemTitulo}>
-                {item.match.equipoLocal.nombre} vs {item.match.equipoVisitante.nombre}
-              </Text>
-              <Text style={styles.itemCapa}>{ETIQUETA_CAPA[item.capa]}</Text>
-              <Text style={styles.itemVencimiento}>
-                Vence el {formatearFecha(item.capaExpiraEn)}
-              </Text>
-            </Pressable>
-          </Link>
+            <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+              {item.match.equipoLocal.nombre} vs {item.match.equipoVisitante.nombre}
+            </Text>
+            <Chip texto={ETIQUETA_CAPA[item.capa]} tono="acento" />
+            <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+              {`Vence el ${formatearFecha(item.capaExpiraEn)}`}
+            </Text>
+          </Pressable>
         )}
       />
-    </View>
+    </Pantalla>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    gap: 16,
-  },
-  titulo: {
-    fontSize: 22,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  lista: {
-    gap: 8,
-  },
-  item: {
-    borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 8,
-    padding: 12,
-    gap: 4,
-  },
-  itemTitulo: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  itemCapa: {
-    color: "#208AEF",
-    fontWeight: "600",
-  },
-  itemVencimiento: {
-    color: "#888",
-    fontSize: 13,
-  },
-  vacio: {
-    textAlign: "center",
-    color: "#888",
-    marginTop: 32,
-  },
-  tarjeta: {
-    borderWidth: 1,
-    borderColor: "#eee",
-    borderRadius: 8,
-    padding: 16,
-    gap: 8,
-  },
-  tarjetaTitulo: {
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  tarjetaTexto: {
-    textAlign: "center",
-    color: "#888",
-  },
-  botonPeligro: {
-    backgroundColor: "#c0392b",
-    borderRadius: 8,
-    padding: 14,
-    alignItems: "center",
-  },
-  botonPeligroTexto: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  botonDeshabilitado: {
-    opacity: 0.5,
-  },
-  error: {
-    color: "#c0392b",
-    textAlign: "center",
-  },
-});
+function crearEstilos({ colores, espaciado, radio }: Tema) {
+  return {
+    item: {
+      backgroundColor: colores.superficie,
+      borderRadius: radio.md,
+      padding: espaciado.md,
+      gap: espaciado.xs,
+    },
+  };
+}
