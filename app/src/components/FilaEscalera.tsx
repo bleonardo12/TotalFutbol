@@ -7,7 +7,8 @@ interface AccionFilaEscalera {
 }
 
 interface FilaEscaleraProps {
-  posicion: number;
+  /** "—" para la fila propia cuando el equipo todavia no tiene posicion (sin rankear). */
+  posicion: number | string;
   nombre: string;
   rating: number;
   /** Resalta la fila del equipo propio: fondo y borde en acento. */

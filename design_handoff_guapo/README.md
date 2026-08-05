@@ -197,17 +197,43 @@ disputa/admin → arranque/cuenta**. Inicio es la pantalla estrella y define cas
 ### 3.1 Inicio — `app/src/app/(tabs)/inicio.tsx`
 
 Es la pantalla más importante y la que más cambia: hoy es una tarjeta suelta, ahora es un scroll con
-secciones. **Tres estados** según los datos.
+secciones.
 
-**Header fijo** (no es el header de Expo Router — es parte de la pantalla, y el header nativo se
-oculta con `headerShown: false`):
-fila de 42 px de alto, padding `10px 20px 14px`, borde inferior `#17261E`.
+> **Regla dura: Inicio tiene SIEMPRE la misma estructura.** Los mismos bloques, en el mismo orden,
+> pase lo que pase con el ranking. Un equipo sin rankear no ve una pantalla "más simple" — ve la misma
+> pantalla con los bloques degradados: valores en gris, guiones, ceros, y una línea que dice por qué
+> está así. **Ningún bloque se oculta por falta de datos** (única excepción: fichas de desafío si el
+> backend todavía no las tiene, ver §5). Esto es a propósito: el usuario nuevo tiene que ver desde el
+> día uno la forma completa del producto y entender qué se desbloquea.
+
+**Orden fijo de bloques**, siempre:
+
+```
+header  ·  TE TOCA A VOS  ·  TU ESCALERA  ·  fichas  ·  TU FORMA  ·  LO ÚLTIMO  ·  barra de acción
+```
+
+**Header** (no es el header de Expo Router — es parte de la pantalla, `headerShown: false`):
+fila de 42 px, padding `10px 20px 14px`, borde inferior `#17261E`.
 Escudo 42×42 radio 12 (`#16241D`, borde `#1F3128`, iniciales en `Archivo_900 17px #B8F03C`) ·
 nombre del equipo `subtitulo` · debajo chip de división + `#12 de 340` en `caption #5E7268` ·
-a la derecha rating en `numero` y debajo el delta del mes en `JetBrainsMono_700 11px` (verde acento
-si es positivo, `#5E7268` si es cero).
+a la derecha rating en `numero` y debajo el delta del mes en `JetBrainsMono_700 11px`.
 
-**Estado A — con pendientes** (hay partidos por confirmar o desafíos por responder):
+**Bloque por bloque, con y sin ranking:**
+
+| Bloque | Rankeado | Sin rankear |
+| --- | --- | --- |
+| Rating (header) | `1483` en `#EEF4EC`, delta `+24 ↑` en acento | el provisorio `1500` en `#5E7268` + label "provisorio" — **nunca vacío ni oculto** |
+| Chip de división | ORO (color de división) | `SIN RANKEAR`, chip neutro |
+| Posición | `#12 de 340` | `— de 340` |
+| TE TOCA A VOS | confirmaciones y desafíos pendientes | una sola card: "Te falta un partido para tener número" + contador `1 de 1`, con Generar código / Me pasaron uno |
+| TU ESCALERA | 2 arriba (con RETAR) · **tu fila** · 2 abajo; bandas "A TIRO — 2 PARA EL TOP 10" y "TE RESPIRAN EN LA NUCA" | top 3 del ranking + **tu fila con `—` de posición y "todavía afuera"**; bandas "ARRIBA DE TODO — A DÓNDE QUERÉS LLEGAR" y "ENTRÁS CON EL PRIMER PARTIDO CONFIRMADO" |
+| Fichas | puntos llenos en acento + próxima regeneración | puntos en `#2A3E34` + "se habilitan cuando tengas número" |
+| TU FORMA | 10 barras (últimas 3 en acento), pie con "pico 1520", celdas G-E-P / UPSET / FAIR-PLAY | barras de 3 px en `#1F3128` sobre línea punteada, nota "Sin partidos todavía…", celdas `0-0-0` / `—` / `1000` |
+| Bloque extra | — | `CÓMO FUNCIONA`: 3 pasos numerados (el 1 lleno en acento). Solo mientras no hay número; es el único bloque que se agrega, no reemplaza a ninguno |
+| LO ÚLTIMO | deltas de rating y novedades de la zona | fila de plantel ("1 de 11" + Sumar) y novedades de la zona |
+| Barra de acción | fija abajo: **Estoy en la cancha** (primario, flex 1) + botón cuadrado de 58 px para escanear | idéntica, siempre presente |
+
+**Detalles del estado rankeado con pendientes:**
 
 1. `TE TOCA A VOS` + badge contador (píldora `#B8F03C`, texto `#0A1A05`, `JetBrainsMono_800 11px`).
 2. **Tarjeta de confirmación** (borde `#2F4A26`): título "Deportivo Aldao dice que ganó 3–2"
@@ -215,38 +241,24 @@ si es positivo, `#5E7268` si es cero).
    ("Si no decís nada, se liquida así. Perderías 19 puntos."); dos botones al 50%:
    **Fue así** (primario) / **No fue así** (secundario). El copy evita "confirmar/disputar" a
    propósito: es más humano y deja claro que negar abre disputa.
-3. **Tarjeta de desafío recibido**: nombre del rival, reloj de vencimiento, chips de formato,
-   la línea de puntos en juego ("Ganarles vale **+41**. Perder, apenas −7."), y
-   **Aceptar** / **Achicarse**.
-4. `TU ESCALERA` + link "Ver todo" (`Archivo_600 12px #B8F03C`). Tarjeta con overflow hidden:
-   banda superior `#0C1712` con "A TIRO — 2 PARA EL TOP 10", dos filas por encima con botón RETAR,
-   **la fila propia** con fondo `#131F0C` y bordes `#2F4A26` arriba y abajo (posición y rating en
-   acento, nombre reemplazado por **VOS**), dos filas por debajo en texto `#93A79B`, y banda
-   inferior "TE RESPIRAN EN LA NUCA".
-5. **Fichas de desafío**: título + subtítulo de regeneración a la izquierda; a la derecha un punto de
-   15 px por ficha (lleno `#B8F03C`, vacío borde `#2A3E34`).
-6. `TU FORMA`: mini gráfico de barras de 56 px de alto, 10 barras con gap 4 — las viejas `#1F3128`,
-   las medias `#2A3E34`, las 3 últimas `#B8F03C`. Debajo, tres celdas `#0C1712` radio 11 con
-   G-E-P / UPSET / FAIR-PLAY.
-7. `LO ÚLTIMO`: tarjetas chicas radio 14; la de rating ganado lleva el delta en acento a la izquierda.
-8. **Barra de acción fija** al fondo: **Estoy en la cancha** (primario, flex 1) + botón cuadrado de
-   58 px con el ícono de escanear (borde `#2A3E34`).
+3. **Tarjeta de desafío recibido**: rival, reloj de vencimiento, chips de formato, la línea de puntos
+   en juego ("Ganarles vale **+41**. Perder, apenas −7."), y **Aceptar** / **Achicarse**.
+4. `TU ESCALERA` + link "Ver todo" (`Archivo_600 12px #B8F03C`). Tarjeta con overflow hidden: banda
+   superior `#0C1712`, dos filas arriba con botón RETAR, **la fila propia** con fondo `#131F0C` y
+   bordes `#2F4A26` (posición y rating en acento, nombre reemplazado por **VOS**), dos filas abajo en
+   `#93A79B`, banda inferior.
+5. **Fichas**: título + regeneración a la izquierda; a la derecha un punto de 15 px por ficha.
+6. `TU FORMA`: barras de 56 px de alto, gap 4 — viejas `#1F3128`, medias `#2A3E34`, últimas 3
+   `#B8F03C`. Debajo tres celdas `#0C1712` radio 11.
+7. `LO ÚLTIMO`: tarjetas radio 14; la de rating ganado lleva el delta en acento a la izquierda.
 
-**Estado B — sin nada pendiente** (el más frecuente): desaparecen las tarjetas de acción y la barra
-fija; arriba va una **tarjeta hero de inactividad** (radio 20, borde `#2F4A26`, rayado de cancha):
-"11 días sin pisar la cancha" en `display`, subtítulo con la consecuencia concreta ("Racing de Boedo
-te pasó mientras tanto"), CTA primario y la línea "o retá a alguien de arriba ↓". Debajo: escalera
-recortada (2 filas + la propia), fichas, y `LO ÚLTIMO EN TU ZONA`.
-El número de días y el equipo que lo pasó salen de datos reales; si hace menos de ~5 días que jugó,
-mostrar en su lugar la escalera directamente.
+**Cuando no hay nada pendiente** (el caso más frecuente en un equipo rankeado): la sección
+`TE TOCA A VOS` **no desaparece** — muestra una sola card de empuje con la consecuencia concreta:
+"11 días sin pisar la cancha / Racing de Boedo te pasó mientras tanto", con el CTA primario. Si hace
+menos de ~5 días que jugó, la card dice el próximo objetivo en lugar del reproche
+("Faltan 2 para el top 10"). Nunca queda un hueco.
 
-**Estado C — equipo provisional**: escudo con borde punteado, chip PROVISIONAL, rating reemplazado
-por un guion `#2A3E34`. Hero: círculo de 64 px con borde `#2F4A26`, "Todavía no sos nadie" en
-`display`, explicación, y dos CTA (Generar código / Me pasaron uno). Debajo, tarjeta **CÓMO FUNCIONA**
-con tres pasos numerados (el paso 1 con el círculo lleno en acento, los otros con borde) y una fila
-de plantel.
-
-**Estado D — sin equipo**: es la pantalla de crear equipo, ver 3.5.
+**Sin equipo** — ahí sí es otra pantalla: la de crear equipo (ver 3.5).
 
 ### 3.2 El partido
 
@@ -442,17 +454,9 @@ design_handoff_guapo/
 └── diseno/
     ├── Guapo.dc.html            LAS 20 PANTALLAS EN ALTA FIDELIDAD — fuente de verdad
     ├── Wireframes.dc.html       wireframes previos y alternativas descartadas
-    ├── support.js               runtime que necesitan los dos HTML para abrirse
-    └── capturas/                PNG de cada seccion, para mirar rapido
-        ├── 01-inicio.png
-        ├── 02-el-partido.png
-        ├── 03-ranking-desafios.png
-        ├── 04-cuando-se-rompe.png
-        └── 05-arranque-cuenta.png
+    └── support.js               runtime que necesitan los dos HTML para abrirse
 ```
 
-Las capturas sirven para ver todo de un vistazo, pero **el HTML es la fuente de verdad**: ahi se
-pueden inspeccionar los valores exactos de color, tamano y espaciado con las devtools del navegador.
-
-Abrí `diseno/Guapo.dc.html` en el navegador y trabajá contra eso. Está agrupado en cinco secciones
-que siguen el mismo orden que la sección 3 de este README.
+Abrí `diseno/Guapo.dc.html` en el navegador y trabajá contra eso: con las devtools se inspeccionan
+los valores exactos de color, tamaño y espaciado. Está agrupado en cinco secciones que siguen el
+mismo orden que la sección 3 de este README.

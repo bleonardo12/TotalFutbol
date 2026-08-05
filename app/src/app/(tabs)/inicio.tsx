@@ -30,8 +30,9 @@ import { useTema, type Tema } from "@/theme";
 
 const VENTANA_DISPUTA_HORAS = 24;
 const CHALLENGE_TTL_HORAS = 48;
-/** Si jugo hace menos de esto, Estado B muestra la escalera directamente en vez del hero de inactividad. */
+/** Si jugo hace menos de esto, la card de "sin pendientes" muestra el proximo objetivo en vez del reproche. */
 const DIAS_ACTIVIDAD_RECIENTE = 5;
+const TOPE_BARRAS_FORMA_VACIA = 10;
 
 const ETIQUETA_DIVISION: Record<Division, string> = {
   ELITE: "Elite",
@@ -51,6 +52,12 @@ const OPCIONES_CATEGORIA: { valor: CategoriaFutbol; etiqueta: string }[] = [
   { valor: "MASCULINO", etiqueta: "Masculino" },
   { valor: "FEMENINO", etiqueta: "Femenino" },
   { valor: "MIXTO", etiqueta: "Mixto" },
+];
+
+const PASOS_COMO_FUNCIONA = [
+  "Se juntan en la cancha y escanean el QR. Eso firma el contrato.",
+  "Juegan. Cada capitán carga quién ganó.",
+  "Si coinciden, listo: entrás al ranking.",
 ];
 
 function iniciales(nombre: string): string {
@@ -119,16 +126,18 @@ export default function Inicio(): React.JSX.Element {
   const equipo: Equipo | undefined = equiposQuery.data?.[0];
   const rankeado = equipo?.estado === "RANKEADO";
 
+  // mi-entorno y forma se degradan (no tiran error) para un equipo sin rankear -- Inicio nunca
+  // oculta un bloque, siempre pide los dos apenas hay equipo (docs Guapo §3.1).
   const miEntornoQuery = useQuery({
     queryKey: ["ranking", "mi-entorno", equipo?.id],
     queryFn: () => obtenerMiEntorno((equipo as Equipo).id),
-    enabled: rankeado,
+    enabled: !!equipo,
   });
 
   const formaQuery = useQuery({
     queryKey: ["equipos", "forma", equipo?.id],
     queryFn: () => obtenerForma((equipo as Equipo).id),
-    enabled: rankeado,
+    enabled: !!equipo,
   });
 
   const partidosQuery = useQuery({
@@ -192,13 +201,14 @@ export default function Inicio(): React.JSX.Element {
     !!equipo &&
     (partidosQuery.isLoading ||
       desafiosQuery.isLoading ||
-      (rankeado && (miEntornoQuery.isLoading || formaQuery.isLoading)));
+      miEntornoQuery.isLoading ||
+      formaQuery.isLoading);
 
   if (cargandoBase || cargandoActivo) {
     return <Pantalla centrado />;
   }
 
-  // Estado D: sin equipo -- formulario de alta.
+  // Sin equipo: unica pantalla realmente distinta (docs Guapo §3.1, "ahi si es otra pantalla").
   if (!equipo) {
     return (
       <Pantalla centrado>
@@ -237,13 +247,14 @@ export default function Inicio(): React.JSX.Element {
   const usuario = usuarioQuery.data;
   const miEntorno: MiEntorno | undefined = miEntornoQuery.data;
   const forma = formaQuery.data;
+  const tieneForma = !!forma && forma.barras.length > 0;
 
-  const partidosPendientes = (partidosQuery.data ?? []).filter(
-    (p) => usuario && puedeConfirmar(p, usuario.id, equipo.id),
-  );
-  const desafiosPendientes = (desafiosQuery.data ?? []).filter(
-    (d) => d.estado === "PROPUESTO" && d.desafiadoId === equipo.id,
-  );
+  const partidosPendientes = rankeado
+    ? (partidosQuery.data ?? []).filter((p) => usuario && puedeConfirmar(p, usuario.id, equipo.id))
+    : [];
+  const desafiosPendientes = rankeado
+    ? (desafiosQuery.data ?? []).filter((d) => d.estado === "PROPUESTO" && d.desafiadoId === equipo.id)
+    : [];
   const totalPendientes = partidosPendientes.length + desafiosPendientes.length;
 
   const ultimosPartidos = (partidosQuery.data ?? [])
@@ -251,32 +262,44 @@ export default function Inicio(): React.JSX.Element {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 2);
 
-  const header = (
-    <View style={styles.header}>
-      <View style={styles.escudo}>
-        <Text style={styles.escudoTexto}>{iniciales(equipo.nombre)}</Text>
-      </View>
-      <View style={{ flex: 1, gap: 3 }}>
-        <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>{equipo.nombre}</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: espaciado.xs }}>
-          {rankeado && equipo.division ? (
-            <Chip texto={ETIQUETA_DIVISION[equipo.division]} tono={TONO_DIVISION[equipo.division]} />
-          ) : (
-            <Chip texto="Provisional" tono="neutral" />
-          )}
-          {miEntorno && (
-            <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
-              {`#${miEntorno.posicion} de ${miEntorno.total}`}
-            </Text>
-          )}
+  const posicion = miEntorno?.posicion ?? 0;
+  const vecinosVisibles =
+    totalPendientes > 0
+      ? (miEntorno?.vecinos ?? [])
+      : (miEntorno?.vecinos ?? []).filter((v) => v.posicion <= posicion);
+  const hayVecinosAbajo = (miEntorno?.vecinos ?? []).some((v) => v.posicion > posicion);
+
+  // Regla dura (docs Guapo §3.1): Inicio SIEMPRE tiene la misma estructura de bloques. Un equipo
+  // sin rankear no ve una pantalla mas simple -- ve la misma pantalla con los bloques degradados
+  // (valores en gris, guiones, ceros). La unica pantalla realmente distinta es "sin equipo" arriba.
+  return (
+    <Pantalla style={{ padding: 0 }}>
+      <View style={styles.header}>
+        <View style={styles.escudo}>
+          <Text style={styles.escudoTexto}>{iniciales(equipo.nombre)}</Text>
         </View>
-      </View>
-      <View style={{ alignItems: "flex-end" }}>
-        {rankeado ? (
-          <>
-            <Text style={[tipografia.numero, { color: colores.textoPrimario }]}>
-              {Math.round(equipo.rating)}
+        <View style={{ flex: 1, gap: 3 }}>
+          <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>{equipo.nombre}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: espaciado.xs }}>
+            {rankeado && equipo.division ? (
+              <Chip texto={ETIQUETA_DIVISION[equipo.division]} tono={TONO_DIVISION[equipo.division]} />
+            ) : (
+              <Chip texto="Sin rankear" tono="neutral" />
+            )}
+            <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+              {miEntorno
+                ? `${miEntorno.posicion !== null ? `#${miEntorno.posicion}` : "—"} de ${miEntorno.total}`
+                : "—"}
             </Text>
+          </View>
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <Text
+            style={[tipografia.numero, { color: rankeado ? colores.textoPrimario : colores.textoApagado }]}
+          >
+            {Math.round(equipo.rating)}
+          </Text>
+          {rankeado ? (
             <Text
               style={[
                 tipografia.numeroChico,
@@ -287,132 +310,44 @@ export default function Inicio(): React.JSX.Element {
                 ? `${miEntorno.deltaDelMes > 0 ? "+" : ""}${Math.round(miEntorno.deltaDelMes)}${miEntorno.deltaDelMes > 0 ? " ↑" : ""}`
                 : "−0"}
             </Text>
-          </>
-        ) : (
-          <Text style={[tipografia.numero, { color: colores.textoFantasma }]}>—</Text>
-        )}
-      </View>
-    </View>
-  );
-
-  // Estado C: provisional.
-  if (!rankeado) {
-    return (
-      <Pantalla style={{ padding: 0 }}>
-        {header}
-        <View style={{ padding: espaciado.lg, gap: espaciado.lg }}>
-          <Tarjeta destacada style={{ alignItems: "center", gap: espaciado.sm }}>
-            <View
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 999,
-                borderWidth: 3,
-                borderColor: colores.bordeAcento,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <View
-                style={{ width: 26, height: 26, borderRadius: 7, borderWidth: 3, borderColor: colores.acento }}
-              />
-            </View>
-            <Text
-              style={[tipografia.display, { color: colores.textoPrimario, textAlign: "center" }]}
-            >
-              Todavía no sos nadie
-            </Text>
-            <Text
-              style={[
-                tipografia.cuerpo,
-                { color: colores.textoSecundario, textAlign: "center", maxWidth: 290 },
-              ]}
-            >
-              Jugá un partido, firmalo con el QR en la cancha y que el rival lo confirme. Ahí entrás
-              a la escalera con un número real.
-            </Text>
-            <View style={{ width: "100%", gap: espaciado.sm, marginTop: espaciado.xs }}>
-              <Boton onPress={() => router.push("/partido/generar")}>Generar código</Boton>
-              <Boton variante="secundario" onPress={() => router.push("/partido/unirse")}>
-                Me pasaron uno
-              </Boton>
-            </View>
-          </Tarjeta>
-
-          <Tarjeta style={{ gap: espaciado.md }}>
-            <EtiquetaSeccion>Cómo funciona</EtiquetaSeccion>
-            {[
-              "Se juntan en la cancha y escanean el QR. Eso firma el contrato.",
-              "Juegan. Cada capitán carga quién ganó.",
-              "Si coinciden, listo: entrás al ranking.",
-            ].map((paso, indice) => (
-              <View key={paso} style={{ flexDirection: "row", gap: espaciado.md, alignItems: "flex-start" }}>
-                <View
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 999,
-                    backgroundColor: indice === 0 ? colores.acento : "transparent",
-                    borderWidth: indice === 0 ? 0 : 1.5,
-                    borderColor: colores.bordeControl,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "JetBrainsMono_800ExtraBold",
-                      fontSize: 12,
-                      color: indice === 0 ? colores.acentoTexto : colores.textoSecundario,
-                    }}
-                  >
-                    {indice + 1}
-                  </Text>
-                </View>
-                <Text style={[tipografia.cuerpo, { flex: 1, color: colores.textoSecundario }]}>
-                  {paso}
-                </Text>
-              </View>
-            ))}
-          </Tarjeta>
-
-          <Tarjeta style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <View>
-              <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>Plantel</Text>
-              <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
-                1 de 11 · lo cargás cuando quieras
-              </Text>
-            </View>
-            <View style={styles.botonChico}>
-              <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>Sumar</Text>
-            </View>
-          </Tarjeta>
+          ) : (
+            <Text style={[tipografia.numeroChico, { color: colores.textoApagado }]}>provisorio</Text>
+          )}
         </View>
-      </Pantalla>
-    );
-  }
+      </View>
 
-  const posicion = miEntorno?.posicion ?? 0;
-  const vecinosVisibles = totalPendientes > 0
-    ? (miEntorno?.vecinos ?? [])
-    : (miEntorno?.vecinos ?? []).filter((v) => v.posicion <= posicion);
-  const hayVecinosAbajo = (miEntorno?.vecinos ?? []).some((v) => v.posicion > posicion);
-  const mostrarHeroInactividad = totalPendientes === 0 && (miEntorno?.diasInactivo ?? 0) >= DIAS_ACTIVIDAD_RECIENTE;
-
-  return (
-    <Pantalla style={{ padding: 0 }}>
-      {header}
       <View style={{ flex: 1, padding: espaciado.lg, gap: espaciado.lg }}>
-        {totalPendientes > 0 && (
-          <View style={{ gap: espaciado.md }}>
-            <View style={styles.filaEtiquetaConBadge}>
-              <EtiquetaSeccion>Te toca a vos</EtiquetaSeccion>
+        {/* TE TOCA A VOS -- nunca se oculta, siempre hay al menos una card. */}
+        <View style={{ gap: espaciado.md }}>
+          <View style={styles.filaEtiquetaConBadge}>
+            <EtiquetaSeccion>Te toca a vos</EtiquetaSeccion>
+            {(!rankeado || totalPendientes > 0) && (
               <View style={styles.badge}>
-                <Text style={styles.badgeTexto}>{totalPendientes}</Text>
+                <Text style={styles.badgeTexto}>{rankeado ? totalPendientes : 1}</Text>
               </View>
-            </View>
+            )}
+          </View>
 
-            {partidosPendientes.map((partido) => {
+          {!rankeado && (
+            <Tarjeta style={{ gap: espaciado.md }}>
+              <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+                Te falta un partido para tener número
+              </Text>
+              <View style={{ flexDirection: "row", gap: espaciado.sm }}>
+                <View style={{ flex: 1 }}>
+                  <Boton onPress={() => router.push("/partido/generar")}>Generar código</Boton>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Boton variante="secundario" onPress={() => router.push("/partido/unirse")}>
+                    Me pasaron uno
+                  </Boton>
+                </View>
+              </View>
+            </Tarjeta>
+          )}
+
+          {rankeado &&
+            partidosPendientes.map((partido) => {
               const otro = otroReporte(partido, equipo.id);
               const rival = rivalDe(partido, equipo.id);
               return (
@@ -458,7 +393,8 @@ export default function Inicio(): React.JSX.Element {
               );
             })}
 
-            {desafiosPendientes.map((desafio: DesafioConDeltas) => (
+          {rankeado &&
+            desafiosPendientes.map((desafio: DesafioConDeltas) => (
               <Tarjeta key={desafio.id} style={{ gap: espaciado.md }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", gap: espaciado.sm }}>
                   <Text style={[tipografia.cuerpoDestacado, { flex: 1, color: colores.textoPrimario }]}>
@@ -504,159 +440,282 @@ export default function Inicio(): React.JSX.Element {
                 </View>
               </Tarjeta>
             ))}
-          </View>
-        )}
 
-        {mostrarHeroInactividad && (
-          <Tarjeta destacada style={{ alignItems: "center", gap: espaciado.sm }}>
-            <Text style={[tipografia.display, { color: colores.textoPrimario, textAlign: "center" }]}>
-              {`${miEntorno?.diasInactivo} días sin\npisar la cancha`}
-            </Text>
-            <Text
-              style={[
-                tipografia.cuerpo,
-                { color: colores.textoSecundario, textAlign: "center", maxWidth: 280 },
-              ]}
-            >
-              {miEntorno?.pasadoPor
-                ? `${miEntorno.pasadoPor.nombre} te pasó mientras tanto. Cuanto más esperás, menos confiable es tu número.`
-                : "Cuanto más esperás, menos confiable es tu número."}
-            </Text>
-            <View style={{ marginTop: espaciado.xs, alignSelf: "stretch" }}>
-              <Boton onPress={() => router.push("/partido/generar")}>Estoy en la cancha</Boton>
-            </View>
-            <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
-              o retá a alguien de arriba ↓
-            </Text>
-          </Tarjeta>
-        )}
-
-        {vecinosVisibles.length > 0 && (
-          <View style={{ gap: espaciado.sm }}>
-            <View style={styles.filaEtiquetaConBadge}>
-              <EtiquetaSeccion>Tu escalera</EtiquetaSeccion>
-              <Pressable onPress={() => router.push("/ranking")}>
-                <Text style={{ fontFamily: "Archivo_600SemiBold", fontSize: 12, color: colores.acento }}>
-                  Ver todo
-                </Text>
-              </Pressable>
-            </View>
-            <Tarjeta style={{ padding: 0, gap: 0, overflow: "hidden" }}>
-              <View style={styles.bandaEscalera}>
-                <Text style={styles.bandaEscaleraTexto}>
-                  {posicion > 10
-                    ? `A TIRO — ${posicion - 10} PARA EL TOP 10`
-                    : "YA ESTÁS EN EL TOP 10"}
-                </Text>
-              </View>
-              {vecinosVisibles.map((vecino) => (
-                <FilaEscalera
-                  key={vecino.id}
-                  posicion={vecino.posicion}
-                  nombre={vecino.esPropio ? "VOS" : vecino.nombre}
-                  rating={vecino.rating}
-                  esMio={vecino.esPropio}
-                  accion={
-                    !vecino.esPropio && vecino.posicion < posicion
-                      ? {
-                          etiqueta: "RETAR",
-                          onPress: () =>
-                            router.push({
-                              pathname: "/desafio/proponer",
-                              params: { equipoDesafiadoId: vecino.id, equipoDesafiadoNombre: vecino.nombre },
-                            }),
-                        }
-                      : undefined
-                  }
-                />
-              ))}
-              {totalPendientes > 0 && hayVecinosAbajo && (
-                <View style={styles.bandaEscalera}>
-                  <Text style={styles.bandaEscaleraTexto}>TE RESPIRAN EN LA NUCA</Text>
-                </View>
-              )}
-            </Tarjeta>
-          </View>
-        )}
-
-        {forma && (
-          <View style={{ gap: espaciado.sm }}>
-            <EtiquetaSeccion>Tu forma</EtiquetaSeccion>
-            <Tarjeta style={{ gap: espaciado.md }}>
-              {forma.barras.length > 0 && (
+          {rankeado && totalPendientes === 0 && (
+            <Tarjeta destacada style={{ alignItems: "center", gap: espaciado.sm }}>
+              {(miEntorno?.diasInactivo ?? 0) >= DIAS_ACTIVIDAD_RECIENTE ? (
                 <>
-                  <View style={{ flexDirection: "row", alignItems: "flex-end", gap: espaciado.xs, height: 56 }}>
-                    {forma.barras.map((valor, indice) => {
-                      const desdeElFinal = forma.barras.length - indice;
-                      const color =
-                        desdeElFinal <= 3
-                          ? colores.acento
-                          : desdeElFinal <= 6
-                            ? colores.bordeControl
-                            : colores.borde;
-                      return (
-                        <View
-                          key={indice}
-                          style={{
-                            flex: 1,
-                            height: `${Math.max(6, valor * 100)}%`,
-                            backgroundColor: color,
-                            borderRadius: 3,
-                          }}
-                        />
-                      );
-                    })}
-                  </View>
-                  <Text style={[tipografia.numeroChico, { color: colores.textoApagado, textAlign: "right" }]}>
-                    {`pico ${Math.round(forma.pico)}`}
+                  <Text style={[tipografia.display, { color: colores.textoPrimario, textAlign: "center" }]}>
+                    {`${miEntorno?.diasInactivo} días sin\npisar la cancha`}
+                  </Text>
+                  <Text
+                    style={[
+                      tipografia.cuerpo,
+                      { color: colores.textoSecundario, textAlign: "center", maxWidth: 280 },
+                    ]}
+                  >
+                    {miEntorno?.pasadoPor
+                      ? `${miEntorno.pasadoPor.nombre} te pasó mientras tanto. Cuanto más esperás, menos confiable es tu número.`
+                      : "Cuanto más esperás, menos confiable es tu número."}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text style={[tipografia.display, { color: colores.textoPrimario, textAlign: "center" }]}>
+                    {posicion > 10 ? `Faltan ${posicion - 10}\npara el top 10` : "Ya estás\nen el top 10"}
+                  </Text>
+                  <Text
+                    style={[
+                      tipografia.cuerpo,
+                      { color: colores.textoSecundario, textAlign: "center", maxWidth: 280 },
+                    ]}
+                  >
+                    Retá a alguien de arriba para acortar la distancia.
                   </Text>
                 </>
               )}
-              <View style={{ flexDirection: "row", gap: espaciado.sm }}>
-                <View style={styles.celdaStat}>
-                  <Text style={styles.celdaStatValor}>
-                    {`${forma.gEP.g}-${forma.gEP.e}-${forma.gEP.p}`}
-                  </Text>
-                  <EtiquetaSeccion>G-E-P</EtiquetaSeccion>
-                </View>
-                <View style={styles.celdaStat}>
-                  <Text style={[styles.celdaStatValor, { color: colores.acento }]}>
-                    {`${forma.upsetPorcentaje}%`}
-                  </Text>
-                  <EtiquetaSeccion>Upset</EtiquetaSeccion>
-                </View>
-                <View style={styles.celdaStat}>
-                  <Text style={styles.celdaStatValor}>{Math.round(equipo.fairPlay)}</Text>
-                  <EtiquetaSeccion>Fair-play</EtiquetaSeccion>
-                </View>
+              <View style={{ marginTop: espaciado.xs, alignSelf: "stretch" }}>
+                <Boton onPress={() => router.push("/partido/generar")}>Estoy en la cancha</Boton>
               </View>
+              <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                o retá a alguien de arriba ↓
+              </Text>
             </Tarjeta>
+          )}
+        </View>
+
+        {/* TU ESCALERA -- nunca se oculta: top 3 + fila propia "todavia afuera" si no rankea. */}
+        <View style={{ gap: espaciado.sm }}>
+          <View style={styles.filaEtiquetaConBadge}>
+            <EtiquetaSeccion>Tu escalera</EtiquetaSeccion>
+            <Pressable onPress={() => router.push("/ranking")}>
+              <Text style={{ fontFamily: "Archivo_600SemiBold", fontSize: 12, color: colores.acento }}>
+                Ver todo
+              </Text>
+            </Pressable>
           </View>
+          <Tarjeta style={{ padding: 0, gap: 0, overflow: "hidden" }}>
+            {rankeado ? (
+              <>
+                <View style={styles.bandaEscalera}>
+                  <Text style={styles.bandaEscaleraTexto}>
+                    {posicion > 10 ? `A TIRO — ${posicion - 10} PARA EL TOP 10` : "YA ESTÁS EN EL TOP 10"}
+                  </Text>
+                </View>
+                {vecinosVisibles.map((vecino) => (
+                  <FilaEscalera
+                    key={vecino.id}
+                    posicion={vecino.posicion}
+                    nombre={vecino.esPropio ? "VOS" : vecino.nombre}
+                    rating={vecino.rating}
+                    esMio={vecino.esPropio}
+                    accion={
+                      !vecino.esPropio && vecino.posicion < posicion
+                        ? {
+                            etiqueta: "RETAR",
+                            onPress: () =>
+                              router.push({
+                                pathname: "/desafio/proponer",
+                                params: { equipoDesafiadoId: vecino.id, equipoDesafiadoNombre: vecino.nombre },
+                              }),
+                          }
+                        : undefined
+                    }
+                  />
+                ))}
+                {totalPendientes > 0 && hayVecinosAbajo && (
+                  <View style={styles.bandaEscalera}>
+                    <Text style={styles.bandaEscaleraTexto}>TE RESPIRAN EN LA NUCA</Text>
+                  </View>
+                )}
+              </>
+            ) : (
+              <>
+                <View style={styles.bandaEscalera}>
+                  <Text style={styles.bandaEscaleraTexto}>ARRIBA DE TODO — A DÓNDE QUERÉS LLEGAR</Text>
+                </View>
+                {(miEntorno?.vecinos ?? []).map((vecino) => (
+                  <FilaEscalera
+                    key={vecino.id}
+                    posicion={vecino.posicion}
+                    nombre={vecino.nombre}
+                    rating={vecino.rating}
+                  />
+                ))}
+                <FilaEscalera posicion="—" nombre="VOS" rating={equipo.rating} esMio metadato="todavía afuera" />
+                <View style={styles.bandaEscalera}>
+                  <Text style={styles.bandaEscaleraTexto}>ENTRÁS CON EL PRIMER PARTIDO CONFIRMADO</Text>
+                </View>
+              </>
+            )}
+          </Tarjeta>
+        </View>
+
+        {/* Fichas de desafio: unico bloque que si se oculta -- no existen en el backend todavia (§5). */}
+
+        {/* TU FORMA -- nunca se oculta: barras y celdas en cero/guion sin partidos. */}
+        <View style={{ gap: espaciado.sm }}>
+          <EtiquetaSeccion>Tu forma</EtiquetaSeccion>
+          <Tarjeta style={{ gap: espaciado.md }}>
+            {tieneForma ? (
+              <>
+                <View style={{ flexDirection: "row", alignItems: "flex-end", gap: espaciado.xs, height: 56 }}>
+                  {(forma as NonNullable<typeof forma>).barras.map((valor, indice, barras) => {
+                    const desdeElFinal = barras.length - indice;
+                    const color =
+                      desdeElFinal <= 3
+                        ? colores.acento
+                        : desdeElFinal <= 6
+                          ? colores.bordeControl
+                          : colores.borde;
+                    return (
+                      <View
+                        key={indice}
+                        style={{
+                          flex: 1,
+                          height: `${Math.max(6, valor * 100)}%`,
+                          backgroundColor: color,
+                          borderRadius: 3,
+                        }}
+                      />
+                    );
+                  })}
+                </View>
+                <Text style={[tipografia.numeroChico, { color: colores.textoApagado, textAlign: "right" }]}>
+                  {`pico ${Math.round((forma as NonNullable<typeof forma>).pico)}`}
+                </Text>
+              </>
+            ) : (
+              <>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "flex-end",
+                    gap: espaciado.xs,
+                    height: 56,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colores.borde,
+                    borderStyle: "dashed",
+                    paddingBottom: espaciado.xs,
+                  }}
+                >
+                  {Array.from({ length: TOPE_BARRAS_FORMA_VACIA }).map((_, indice) => (
+                    <View
+                      key={indice}
+                      style={{ flex: 1, height: 3, borderRadius: 2, backgroundColor: colores.borde }}
+                    />
+                  ))}
+                </View>
+                <Text style={[tipografia.caption, { color: colores.textoApagado, textAlign: "center" }]}>
+                  Sin partidos todavía…
+                </Text>
+              </>
+            )}
+            <View style={{ flexDirection: "row", gap: espaciado.sm }}>
+              <View style={styles.celdaStat}>
+                <Text style={styles.celdaStatValor}>
+                  {tieneForma
+                    ? `${(forma as NonNullable<typeof forma>).gEP.g}-${(forma as NonNullable<typeof forma>).gEP.e}-${(forma as NonNullable<typeof forma>).gEP.p}`
+                    : "0-0-0"}
+                </Text>
+                <EtiquetaSeccion>G-E-P</EtiquetaSeccion>
+              </View>
+              <View style={styles.celdaStat}>
+                <Text
+                  style={[
+                    styles.celdaStatValor,
+                    { color: tieneForma ? colores.acento : colores.textoApagado },
+                  ]}
+                >
+                  {tieneForma ? `${(forma as NonNullable<typeof forma>).upsetPorcentaje}%` : "—"}
+                </Text>
+                <EtiquetaSeccion>Upset</EtiquetaSeccion>
+              </View>
+              <View style={styles.celdaStat}>
+                <Text style={styles.celdaStatValor}>{Math.round(equipo.fairPlay)}</Text>
+                <EtiquetaSeccion>Fair-play</EtiquetaSeccion>
+              </View>
+            </View>
+          </Tarjeta>
+        </View>
+
+        {/* Bloque extra: solo mientras no hay numero -- se agrega, no reemplaza a ningun otro bloque. */}
+        {!rankeado && (
+          <Tarjeta style={{ gap: espaciado.md }}>
+            <EtiquetaSeccion>Cómo funciona</EtiquetaSeccion>
+            {PASOS_COMO_FUNCIONA.map((paso, indice) => (
+              <View key={paso} style={{ flexDirection: "row", gap: espaciado.md, alignItems: "flex-start" }}>
+                <View
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 999,
+                    backgroundColor: indice === 0 ? colores.acento : "transparent",
+                    borderWidth: indice === 0 ? 0 : 1.5,
+                    borderColor: colores.bordeControl,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "JetBrainsMono_800ExtraBold",
+                      fontSize: 12,
+                      color: indice === 0 ? colores.acentoTexto : colores.textoSecundario,
+                    }}
+                  >
+                    {indice + 1}
+                  </Text>
+                </View>
+                <Text style={[tipografia.cuerpo, { flex: 1, color: colores.textoSecundario }]}>{paso}</Text>
+              </View>
+            ))}
+          </Tarjeta>
         )}
 
-        {ultimosPartidos.length > 0 && (
-          <View style={{ gap: espaciado.sm }}>
-            <EtiquetaSeccion>Lo último</EtiquetaSeccion>
+        {/* LO ULTIMO -- nunca se oculta: deltas propios si rankea, plantel si todavia no. */}
+        <View style={{ gap: espaciado.sm }}>
+          <EtiquetaSeccion>Lo último</EtiquetaSeccion>
+          {rankeado ? (
             <View style={{ gap: espaciado.sm }}>
-              {ultimosPartidos.map((partido) => (
-                <Tarjeta key={partido.id} style={{ paddingVertical: espaciado.md }}>
-                  <Text style={[tipografia.cuerpo, { color: colores.textoPrimario }]}>
-                    {textoUltimoPartido(partido, equipo.id)}
+              {ultimosPartidos.length > 0 ? (
+                ultimosPartidos.map((partido) => (
+                  <Tarjeta key={partido.id} style={{ paddingVertical: espaciado.md }}>
+                    <Text style={[tipografia.cuerpo, { color: colores.textoPrimario }]}>
+                      {textoUltimoPartido(partido, equipo.id)}
+                    </Text>
+                  </Tarjeta>
+                ))
+              ) : (
+                <Tarjeta style={{ paddingVertical: espaciado.md }}>
+                  <Text style={[tipografia.cuerpo, { color: colores.textoApagado }]}>
+                    Sin actividad todavía.
                   </Text>
                 </Tarjeta>
-              ))}
+              )}
             </View>
-          </View>
-        )}
+          ) : (
+            <Tarjeta style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              <View>
+                <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>Plantel</Text>
+                <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                  1 de 11 · lo cargás cuando quieras
+                </Text>
+              </View>
+              <View style={styles.botonChico}>
+                <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>Sumar</Text>
+              </View>
+            </Tarjeta>
+          )}
+        </View>
       </View>
 
-      {totalPendientes > 0 && (
-        <BarraAccion
-          etiqueta="Estoy en la cancha"
-          onPress={() => router.push("/partido/generar")}
-          onEscanear={() => router.push("/partido/unirse")}
-        />
-      )}
+      {/* Barra de accion -- siempre presente, rankeado o no (docs Guapo §3.1). */}
+      <BarraAccion
+        etiqueta="Estoy en la cancha"
+        onPress={() => router.push("/partido/generar")}
+        onEscanear={() => router.push("/partido/unirse")}
+      />
     </Pantalla>
   );
 }
