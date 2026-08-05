@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, Text, View } from "react-native";
 import { crearEquipo, misEquipos, type CategoriaFutbol, type Division } from "@/api/teams";
-import { Boton, Campo, Chip, Pantalla, Tarjeta } from "@/components";
+import { Boton, Campo, Chip, NumeroRating, Pantalla, Tarjeta } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -93,7 +93,11 @@ export default function Inicio(): React.JSX.Element {
               <Chip texto={ETIQUETA_CATEGORIA[equipo.categoria]} tono="acento" />
             </View>
 
-            <Text style={[tipografia.display, styles.rating]}>{Math.round(equipo.rating)}</Text>
+            <NumeroRating
+              valor={equipo.rating}
+              podio={equipo.division === "ELITE"}
+              style={styles.rating}
+            />
             <Text style={[tipografia.caption, styles.ratingEtiqueta]}>Rating</Text>
 
             <View style={styles.statFairPlay}>
@@ -188,7 +192,6 @@ function crearEstilos({ colores, espaciado, radio }: Tema) {
       marginBottom: espaciado.sm,
     },
     rating: {
-      color: colores.acento,
       marginTop: espaciado.sm,
     },
     ratingEtiqueta: {
