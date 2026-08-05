@@ -88,6 +88,7 @@ export function Tabs<T>({
         flexDirection: "row",
         alignItems: "flex-start",
         gap: 7,
+        paddingRight: espaciado.lg,
       }}
     >
       {opciones.map((opcion) => {

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
 import { aceptarDesafio, misDesafios, rechazarDesafio, type DesafioConDeltas } from "@/api/challenges";
 import { misPartidos, reportarResultado, type Partido } from "@/api/matches";
@@ -316,7 +316,11 @@ export default function Inicio(): React.JSX.Element {
         </View>
       </View>
 
-      <View style={{ flex: 1, padding: espaciado.lg, gap: espaciado.lg }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: espaciado.lg, gap: espaciado.lg }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* TE TOCA A VOS -- nunca se oculta, siempre hay al menos una card. */}
         <View style={{ gap: espaciado.md }}>
           <View style={styles.filaEtiquetaConBadge}>
@@ -708,7 +712,7 @@ export default function Inicio(): React.JSX.Element {
             </Tarjeta>
           )}
         </View>
-      </View>
+      </ScrollView>
 
       {/* Barra de accion -- siempre presente, rankeado o no (docs Guapo §3.1). */}
       <BarraAccion
