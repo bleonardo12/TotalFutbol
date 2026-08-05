@@ -1,33 +1,49 @@
 import type { PropsWithChildren } from "react";
 import { View, type ViewStyle } from "react-native";
-import { useTema } from "@/theme";
+import { PADDING_CARD, useTema } from "@/theme";
+
+type VarianteTarjeta = "normal" | "destacada" | "peligro";
 
 interface TarjetaProps extends PropsWithChildren {
   style?: ViewStyle;
-  /** Variante con tinte de acento para la card protagonista de la pantalla (ej. equipo/rating). */
+  /** Card protagonista de la pantalla (hero de rating, fila propia del ranking). */
   destacada?: boolean;
+  /** Card de estado de error (ej. disputa). */
+  peligro?: boolean;
 }
 
-export function Tarjeta({ children, style, destacada = false }: TarjetaProps): React.JSX.Element {
+/** Sin sombras (docs Guapo §1) -- la jerarquia sale del color de superficie y del borde. */
+export function Tarjeta({
+  children,
+  style,
+  destacada = false,
+  peligro = false,
+}: TarjetaProps): React.JSX.Element {
   const { colores, espaciado, radio } = useTema();
+  const variante: VarianteTarjeta = peligro ? "peligro" : destacada ? "destacada" : "normal";
+
+  const porVariante: Record<VarianteTarjeta, { fondo: string; borde: string; radio: number; padding: number }> = {
+    normal: { fondo: colores.superficie, borde: colores.borde, radio: radio.xl, padding: PADDING_CARD.normal },
+    destacada: {
+      fondo: colores.superficieAcento,
+      borde: colores.bordeAcento,
+      radio: radio.xxl,
+      padding: PADDING_CARD.hero,
+    },
+    peligro: { fondo: colores.errorFondo, borde: colores.errorBorde, radio: radio.xl, padding: PADDING_CARD.normal },
+  };
+  const { fondo, borde, radio: radioCard, padding } = porVariante[variante];
 
   return (
     <View
       style={[
         {
-          backgroundColor: destacada ? colores.superficieAcento : colores.superficie,
-          borderRadius: radio.lg,
+          backgroundColor: fondo,
+          borderRadius: radioCard,
           borderWidth: 1,
-          borderColor: destacada ? colores.bordeAcento : colores.borde,
-          padding: espaciado.lg,
-          gap: espaciado.sm,
-          // Elevacion sutil (docs/design.md §4): sombra fria y neutra -- el
-          // ambar queda reservado al glow del podio, no se usa de sombra aca.
-          shadowColor: "#000000",
-          shadowOffset: { width: 0, height: destacada ? 3 : 2 },
-          shadowOpacity: destacada ? 0.3 : 0.22,
-          shadowRadius: destacada ? 10 : 6,
-          elevation: destacada ? 4 : 3,
+          borderColor: borde,
+          padding,
+          gap: espaciado.md,
         },
         style,
       ]}

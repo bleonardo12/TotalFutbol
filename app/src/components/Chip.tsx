@@ -1,37 +1,49 @@
 import { Text, View } from "react-native";
 import { useTema } from "@/theme";
 
-type TonoChip = "neutral" | "acento" | "exito" | "error" | "alerta";
+export type TonoChip = "elite" | "oro" | "neutral" | "alerta" | "error";
 
 interface ChipProps {
   texto: string;
   tono?: TonoChip;
 }
 
-/** Insignia para division/estado. El fondo es el color del tono al ~15% de opacidad (sufijo hex). */
+/** Insignia de division/estado -- pares fondo/borde explicitos, siempre en mayuscula (docs Guapo §2). */
 export function Chip({ texto, tono = "neutral" }: ChipProps): React.JSX.Element {
-  const { colores, espaciado, radio, tipografia } = useTema();
+  const { colores, radio } = useTema();
 
-  const colorPorTono: Record<TonoChip, string> = {
-    neutral: colores.textoSecundario,
-    acento: colores.acento,
-    exito: colores.exito,
-    error: colores.error,
-    alerta: colores.alerta,
+  const porTono: Record<TonoChip, { fondo: string; borde: string; texto: string }> = {
+    elite: { fondo: colores.superficieAcento, borde: colores.bordeAcento, texto: colores.acento },
+    oro: { fondo: colores.alertaFondo, borde: colores.alertaBorde, texto: colores.oro },
+    neutral: { fondo: "transparent", borde: colores.bordeControl, texto: colores.textoSecundario },
+    alerta: { fondo: colores.alertaFondo, borde: colores.alertaBorde, texto: colores.alerta },
+    error: { fondo: colores.errorFondo, borde: colores.errorBorde, texto: colores.error },
   };
-  const color = colorPorTono[tono];
+  const { fondo, borde, texto: colorTexto } = porTono[tono];
 
   return (
     <View
       style={{
         alignSelf: "flex-start",
-        backgroundColor: `${color}26`,
+        backgroundColor: fondo,
+        borderWidth: 1,
+        borderColor: borde,
         borderRadius: radio.pill,
-        paddingHorizontal: espaciado.md,
-        paddingVertical: espaciado.xs,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
       }}
     >
-      <Text style={[tipografia.caption, { color, fontWeight: "700" }]}>{texto}</Text>
+      <Text
+        style={{
+          fontFamily: "Archivo_800ExtraBold",
+          fontSize: 10,
+          letterSpacing: 0.6,
+          color: colorTexto,
+          textTransform: "uppercase",
+        }}
+      >
+        {texto}
+      </Text>
     </View>
   );
 }

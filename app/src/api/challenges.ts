@@ -31,10 +31,10 @@ export const ETIQUETA_ESTADO_DESAFIO: Record<EstadoDesafio, string> = {
 
 export const TONO_ESTADO_DESAFIO: Record<
   EstadoDesafio,
-  "neutral" | "acento" | "exito" | "error" | "alerta"
+  "neutral" | "elite" | "error" | "alerta"
 > = {
   PROPUESTO: "alerta",
-  ACEPTADO: "exito",
+  ACEPTADO: "elite",
   RECHAZADO: "error",
   EXPIRADO: "neutral",
 };

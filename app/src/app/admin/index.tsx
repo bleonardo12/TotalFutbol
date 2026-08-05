@@ -108,7 +108,7 @@ export default function PanelAdmin(): React.JSX.Element {
             <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
               {item.match.equipoLocal.nombre} vs {item.match.equipoVisitante.nombre}
             </Text>
-            <Chip texto={ETIQUETA_CAPA[item.capa]} tono="acento" />
+            <Chip texto={ETIQUETA_CAPA[item.capa]} tono="elite" />
             <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
               {`Vence el ${formatearFecha(item.capaExpiraEn)}`}
             </Text>

@@ -16,10 +16,10 @@ export default function TabsLayout(): React.JSX.Element {
           fontFamily: TIPOGRAFIA.subtitulo.fontFamily,
           fontSize: 18,
         },
-        tabBarStyle: { backgroundColor: colores.superficie, borderTopColor: colores.borde },
+        tabBarStyle: { backgroundColor: colores.barra, borderTopColor: colores.bordeSutil },
         tabBarActiveTintColor: colores.acento,
         tabBarInactiveTintColor: colores.textoApagado,
-        tabBarLabelStyle: { fontFamily: TIPOGRAFIA.caption.fontFamily, fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: "Archivo_600SemiBold", fontSize: 10 },
       }}
     >
       <Tabs.Screen

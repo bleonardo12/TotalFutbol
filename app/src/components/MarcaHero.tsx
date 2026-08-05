@@ -1,58 +1,59 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { Text, View } from "react-native";
-import Svg, { Circle, Line, Polygon } from "react-native-svg";
 import { useTema } from "@/theme";
 
-/** Hero de las pantallas de arranque (login/verificar). Pelota estilizada en ambar sobre pitch (docs/design.md §6). */
+/** Hero de las pantallas de arranque (login/verificar): wordmark GUAPO (docs Guapo §2, §7). */
 export function MarcaHero(): React.JSX.Element {
-  const { colores, espaciado, tipografia } = useTema();
+  const { colores, espaciado } = useTema();
 
   return (
     <View style={{ alignItems: "center", marginBottom: espaciado.xl }}>
+      <LinearGradient
+        colors={["rgba(184,240,60,0.11)", "transparent"]}
+        locations={[0, 0.6]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: -80,
+          right: -80,
+          height: 260,
+        }}
+      />
+
       <View
         style={{
-          width: 120,
-          height: 120,
-          alignItems: "center",
-          justifyContent: "center",
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          borderWidth: 6,
+          borderColor: colores.acento,
           marginBottom: espaciado.lg,
         }}
-      >
-        <Svg width={120} height={120}>
-          <Circle
-            cx={60}
-            cy={60}
-            r={54}
-            stroke={colores.acento}
-            strokeWidth={2}
-            strokeDasharray="6 8"
-            fill="none"
-            opacity={0.5}
-          />
-          <Circle
-            cx={60}
-            cy={60}
-            r={36}
-            fill={colores.superficieAcento}
-            stroke={colores.bordeAcento}
-            strokeWidth={1.5}
-          />
-          {/* Pelota estilizada: pentagono central + puntas, motivo de la costura clasica. */}
-          <Polygon points="60,42 71,50 67,63 53,63 49,50" fill={colores.acento} />
-          <Line x1={60} y1={42} x2={60} y2={30} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
-          <Line x1={71} y1={50} x2={82} y2={44} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
-          <Line x1={67} y1={63} x2={75} y2={75} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
-          <Line x1={53} y1={63} x2={45} y2={75} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
-          <Line x1={49} y1={50} x2={38} y2={44} stroke={colores.acento} strokeWidth={2} strokeLinecap="round" />
-        </Svg>
-      </View>
-      <Text style={[tipografia.display, { color: colores.textoPrimario }]}>TotalFutbol</Text>
+      />
+
       <Text
-        style={[
-          tipografia.cuerpo,
-          { color: colores.textoSecundario, marginTop: espaciado.xs, textAlign: "center" },
-        ]}
+        style={{
+          fontFamily: "Archivo_900Black",
+          fontSize: 62,
+          letterSpacing: -3,
+          color: colores.textoPrimario,
+        }}
       >
-        El ranking de tu equipo, partido a partido.
+        GUAPO
+      </Text>
+      <Text
+        style={{
+          fontFamily: "Archivo_600SemiBold",
+          fontSize: 16,
+          color: colores.textoSecundario,
+          textAlign: "center",
+          maxWidth: 250,
+          marginTop: espaciado.xs,
+        }}
+      >
+        Que se sepa quién se la banca.
       </Text>
     </View>
   );

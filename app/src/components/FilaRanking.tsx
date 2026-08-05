@@ -92,9 +92,6 @@ export function FilaRanking({
               width: 60,
               textAlign: "right",
               color: podio ? colores.acento : colores.textoPrimario,
-              textShadowColor: podio ? colores.glowPodio : "transparent",
-              textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: podio ? 8 : 0,
             },
           ]}
         >

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Archivo+Black&display=swap" rel="stylesheet"><style>
+body{margin:0;background:#f0eee9;font-family:system-ui,sans-serif}
+a{color:#2a78d6}a:hover{color:#1a5aa8}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55);max-width:340px}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}
+</style></helmet>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Inicio combinado — <a class="dv-oid" href="#1a">1a</a> + <a class="dv-oid" href="#1b">1b</a> + <a class="dv-oid" href="#1c">1c</a> en una sola pantalla scrolleable. La línea punteada marca el fold del celular.</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>"Acción primero" — arriba lo que tenés que hacer hoy; la gloria se gana bajando. Barra de acción fija abajo.</div>
+<div class="dv-card" style="width:340px;border:2px solid #1a1a1a;border-radius:22px;display:flex;flex-direction:column;font-family:Caveat,cursive">
+<div style="display:flex;justify-content:space-between;padding:6px 14px;background:#efece5;font:600 11px ui-monospace,monospace;color:#8a857c"><span>9:41</span><span>▮▮▮</span></div>
+
+<div style="padding:9px 14px;border-bottom:1.5px solid #1a1a1a;display:flex;align-items:center;gap:9px;background:#fff">
+<div style="width:28px;height:28px;border:1.5px solid #1a1a1a;border-radius:99px"></div>
+<div style="flex:1;display:flex;flex-direction:column"><span style="font:700 15px Caveat,cursive">Los Pibes del 9</span><span style="font:600 11px Caveat,cursive;color:#8a857c">Oro · #12 de 340 · fair-play 912</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end"><span style="font:700 17px ui-monospace,monospace">1483</span><span style="font:600 10px Caveat,cursive;color:#8a857c">▲ 24</span></div>
+</div>
+
+<div style="padding:13px 14px;display:flex;flex-direction:column;gap:11px;background:#fbfaf7">
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c">Te toca a vos · 2</div>
+<div style="border:2px solid #1a1a1a;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px">
+<span style="font:600 15px Caveat,cursive">Deportivo Aldao dice que ganó 3-2</span>
+<div style="display:flex;gap:7px"><span style="border:1.5px solid #1a1a1a;border-radius:8px;padding:4px 13px;font:700 13px Caveat,cursive">Confirmar</span><span style="border:1.5px dashed #1a1a1a;border-radius:8px;padding:4px 13px;font:700 13px Caveat,cursive">No fue así</span></div>
+<span style="font:600 11px Caveat,cursive;color:#8a857c">quedan 14 h · el silencio cuenta como sí</span>
+</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:5px">
+<span style="font:600 15px Caveat,cursive">Villa Crespo FC te desafió · F7 pasto</span>
+<span style="font:600 11px Caveat,cursive;color:#8a857c">están #4. Ganales y saltás al top 10.</span>
+<div style="display:flex;gap:7px"><span style="border:1.5px solid #1a1a1a;border-radius:8px;padding:4px 13px;font:700 13px Caveat,cursive">Aceptar</span><span style="border:1.5px dashed #1a1a1a;border-radius:8px;padding:4px 13px;font:700 13px Caveat,cursive">Achicarse</span></div>
+</div>
+
+<div style="border-top:1.5px dashed #c25b2a;margin:3px 0;position:relative"><span style="position:absolute;right:0;top:-8px;background:#fbfaf7;padding:0 5px;font:600 10px Caveat,cursive;color:#c25b2a">fold</span></div>
+
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:700 15px Caveat,cursive;color:#8a857c">Tu escalera</span><span style="font:600 12px Caveat,cursive;color:#8a857c">ver todo ›</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:11px;overflow:hidden;background:#fff">
+<div style="padding:4px 11px;background:#f2f0eb;font:600 11px Caveat,cursive;color:#8a857c;border-bottom:1px solid #e3dfd6">A tiro — 2 para el top 10</div>
+<div style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-bottom:1px dashed #ddd8ce"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:20px">10</span><span style="flex:1;font:600 14px Caveat,cursive">Atlético Saavedra</span><span style="font:700 12px ui-monospace,monospace">1512</span><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:1px 8px;font:700 12px Caveat,cursive">Desafiar</span></div>
+<div style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-bottom:1px dashed #ddd8ce"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:20px">11</span><span style="flex:1;font:600 14px Caveat,cursive">Racing de Boedo</span><span style="font:700 12px ui-monospace,monospace">1497</span><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:1px 8px;font:700 12px Caveat,cursive">Desafiar</span></div>
+<div style="display:flex;align-items:center;gap:9px;padding:10px 11px;background:#efece5;border-top:1.5px solid #1a1a1a;border-bottom:1.5px solid #1a1a1a"><span style="font:700 12px ui-monospace,monospace;width:20px">12</span><span style="flex:1;font:700 15px Caveat,cursive">VOS</span><span style="font:700 13px ui-monospace,monospace">1483</span></div>
+<div style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-bottom:1px dashed #ddd8ce"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:20px">13</span><span style="flex:1;font:600 14px Caveat,cursive">Deportivo Aldao</span><span style="font:700 12px ui-monospace,monospace">1470</span></div>
+<div style="display:flex;align-items:center;gap:9px;padding:8px 11px"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:20px">14</span><span style="flex:1;font:600 14px Caveat,cursive">Náutico Barracas</span><span style="font:700 12px ui-monospace,monospace">1461</span></div>
+<div style="padding:4px 11px;background:#f2f0eb;font:600 11px Caveat,cursive;color:#8a857c;border-top:1px solid #e3dfd6">te respiran en la nuca</div>
+</div>
+
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center;background:#fff">
+<div style="display:flex;flex-direction:column"><span style="font:600 14px Caveat,cursive">2 fichas de desafío</span><span style="font:600 11px Caveat,cursive;color:#8a857c">la próxima en 3 días</span></div>
+<div style="display:flex;gap:4px"><div style="width:13px;height:13px;border:2px solid #1a1a1a;border-radius:99px"></div><div style="width:13px;height:13px;border:2px solid #1a1a1a;border-radius:99px"></div><div style="width:13px;height:13px;border:1.5px dashed #b5b0a6;border-radius:99px"></div></div>
+</div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c;margin-top:2px">Tu forma</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:11px;padding:11px;background:#fff;display:flex;flex-direction:column;gap:8px">
+<div style="height:46px;border:1.5px dashed #b5b0a6;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 12px Caveat,cursive;color:#8a857c">evolución del rating · pico 1520</div>
+<div style="display:flex;gap:5px">
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">18-4-6</div><div style="font:600 10px Caveat,cursive;color:#8a857c">G-E-P</div></div>
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">31%</div><div style="font:600 10px Caveat,cursive;color:#8a857c">upset</div></div>
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">W4</div><div style="font:600 10px Caveat,cursive;color:#8a857c">racha</div></div>
+</div>
+</div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c;margin-top:2px">Lo último</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:9px;font:600 14px Caveat,cursive;background:#fff">+18 de rating por el 2-1 a Náutico Barracas</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:9px;font:600 14px Caveat,cursive;background:#fff">Estrella de Maipú le ganó al #2. Se movió todo arriba.</div>
+</div>
+
+<div style="border-top:1.5px solid #1a1a1a;background:#fff;padding:9px 14px;display:flex;gap:9px">
+<div style="flex:1;border:2px solid #1a1a1a;border-radius:10px;padding:10px;text-align:center;font:700 15px Caveat,cursive">Estoy en la cancha</div>
+<div style="width:52px;border:1.5px dashed #1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;font:600 11px Caveat,cursive;color:#8a857c">scan</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1.5px solid #1a1a1a;background:#f2f0eb">
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0"><div style="width:15px;height:15px;border:2px solid #1a1a1a;border-radius:4px"></div><span style="font:700 11px Caveat,cursive">Inicio</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Ranking</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Desafíos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Partidos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Perfil</span></div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>"Gloria primero" — abrís y ves tu número. Lo pendiente entra como banda de alerta arriba, no como lista.</div>
+<div class="dv-card" style="width:340px;border:2px solid #1a1a1a;border-radius:22px;display:flex;flex-direction:column;font-family:Caveat,cursive">
+<div style="display:flex;justify-content:space-between;padding:6px 14px;background:#efece5;font:600 11px ui-monospace,monospace;color:#8a857c"><span>9:41</span><span>▮▮▮</span></div>
+<div style="padding:9px 14px;border-bottom:1.5px solid #1a1a1a;display:flex;justify-content:space-between;align-items:center;background:#fff"><span style="font:700 17px Caveat,cursive">Guapo</span><div style="width:20px;height:20px;border:1.5px solid #1a1a1a;border-radius:5px"></div></div>
+
+<div style="padding:8px 14px;background:#1a1a1a;display:flex;justify-content:space-between;align-items:center">
+<span style="font:700 14px Caveat,cursive;color:#fff">2 cosas esperan por vos</span>
+<span style="border:1.5px solid #fff;border-radius:99px;padding:1px 10px;font:700 12px Caveat,cursive;color:#fff">Ver</span>
+</div>
+
+<div style="padding:13px 14px;display:flex;flex-direction:column;gap:11px;background:#fbfaf7">
+
+<div style="border:2px solid #1a1a1a;border-radius:13px;padding:15px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:5px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+<span style="border:1.2px solid #1a1a1a;border-radius:99px;padding:1px 9px;font:600 12px Caveat,cursive">Oro</span>
+<span style="border:1.2px solid #b5b0a6;border-radius:99px;padding:1px 9px;font:600 12px Caveat,cursive;color:#8a857c">Rankeado</span>
+</div>
+<div style="font:700 22px Caveat,cursive">Los Pibes del 9</div>
+<div style="font:700 50px/1 ui-monospace,monospace;letter-spacing:-2px">1483</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">#12 de 340 · ▲ 24 este mes</div>
+<div style="width:100%;height:44px;border:1.5px dashed #b5b0a6;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px Caveat,cursive;color:#8a857c;margin-top:6px">evolución · pico 1520</div>
+<div style="width:100%;display:flex;gap:5px;margin-top:2px">
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">18-4-6</div><div style="font:600 10px Caveat,cursive;color:#8a857c">G-E-P</div></div>
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">31%</div><div style="font:600 10px Caveat,cursive;color:#8a857c">upset</div></div>
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">912</div><div style="font:600 10px Caveat,cursive;color:#8a857c">fair-play</div></div>
+</div>
+</div>
+
+<div style="border:1.5px solid #1a1a1a;border-radius:10px;padding:11px;text-align:center;font:700 16px Caveat,cursive;background:#fff">Estoy en la cancha — generar QR</div>
+
+<div style="border-top:1.5px dashed #c25b2a;margin:3px 0;position:relative"><span style="position:absolute;right:0;top:-8px;background:#fbfaf7;padding:0 5px;font:600 10px Caveat,cursive;color:#c25b2a">fold</span></div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c">Te toca a vos</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:6px">
+<span style="font:600 15px Caveat,cursive">Deportivo Aldao dice que ganó 3-2</span>
+<div style="display:flex;gap:7px"><span style="border:1.5px solid #1a1a1a;border-radius:8px;padding:4px 13px;font:700 13px Caveat,cursive">Confirmar</span><span style="border:1.5px dashed #1a1a1a;border-radius:8px;padding:4px 13px;font:700 13px Caveat,cursive">No fue así</span></div>
+<span style="font:600 11px Caveat,cursive;color:#8a857c">quedan 14 h · el silencio cuenta como sí</span>
+</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:10px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:5px">
+<span style="font:600 15px Caveat,cursive">Villa Crespo FC te desafió · F7 pasto</span>
+<div style="display:flex;gap:7px"><span style="border:1.5px solid #1a1a1a;border-radius:8px;padding:4px 13px;font:700 13px Caveat,cursive">Aceptar</span><span style="border:1.5px dashed #1a1a1a;border-radius:8px;padding:4px 13px;font:700 13px Caveat,cursive">Achicarse</span></div>
+</div>
+
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:2px"><span style="font:700 15px Caveat,cursive;color:#8a857c">A quién podés pasar</span><span style="font:600 12px Caveat,cursive;color:#8a857c">ver todo ›</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:11px;overflow:hidden;background:#fff">
+<div style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-bottom:1px dashed #ddd8ce"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:20px">10</span><span style="flex:1;font:600 14px Caveat,cursive">Atlético Saavedra</span><span style="font:700 12px ui-monospace,monospace">1512</span><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:1px 8px;font:700 12px Caveat,cursive">Desafiar</span></div>
+<div style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-bottom:1px dashed #ddd8ce"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:20px">11</span><span style="flex:1;font:600 14px Caveat,cursive">Racing de Boedo</span><span style="font:700 12px ui-monospace,monospace">1497</span><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:1px 8px;font:700 12px Caveat,cursive">Desafiar</span></div>
+<div style="display:flex;align-items:center;gap:9px;padding:10px 11px;background:#efece5;border-top:1.5px solid #1a1a1a"><span style="font:700 12px ui-monospace,monospace;width:20px">12</span><span style="flex:1;font:700 15px Caveat,cursive">VOS</span><span style="font:700 13px ui-monospace,monospace">1483</span></div>
+</div>
+
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center;background:#fff">
+<span style="font:600 14px Caveat,cursive">2 fichas de desafío</span>
+<div style="display:flex;gap:4px"><div style="width:13px;height:13px;border:2px solid #1a1a1a;border-radius:99px"></div><div style="width:13px;height:13px;border:2px solid #1a1a1a;border-radius:99px"></div><div style="width:13px;height:13px;border:1.5px dashed #b5b0a6;border-radius:99px"></div></div>
+</div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c;margin-top:2px">Lo último</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:9px;font:600 14px Caveat,cursive;background:#fff">+18 por el 2-1 a Náutico Barracas</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:9px;font:600 14px Caveat,cursive;background:#fff">Estrella de Maipú le ganó al #2</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1.5px solid #1a1a1a;background:#f2f0eb">
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0"><div style="width:15px;height:15px;border:2px solid #1a1a1a;border-radius:4px"></div><span style="font:700 11px Caveat,cursive">Inicio</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Ranking</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Desafíos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Partidos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Perfil</span></div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="2c">
+<div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>La misma pantalla cuando no hay nada pendiente — el caso más frecuente. Sin lo pendiente, ¿qué queda arriba?</div>
+<div class="dv-card" style="width:340px;border:2px solid #1a1a1a;border-radius:22px;display:flex;flex-direction:column;font-family:Caveat,cursive">
+<div style="display:flex;justify-content:space-between;padding:6px 14px;background:#efece5;font:600 11px ui-monospace,monospace;color:#8a857c"><span>9:41</span><span>▮▮▮</span></div>
+<div style="padding:9px 14px;border-bottom:1.5px solid #1a1a1a;display:flex;align-items:center;gap:9px;background:#fff">
+<div style="width:28px;height:28px;border:1.5px solid #1a1a1a;border-radius:99px"></div>
+<div style="flex:1;display:flex;flex-direction:column"><span style="font:700 15px Caveat,cursive">Los Pibes del 9</span><span style="font:600 11px Caveat,cursive;color:#8a857c">Oro · #12 de 340</span></div>
+<span style="font:700 17px ui-monospace,monospace">1483</span>
+</div>
+<div style="padding:13px 14px;display:flex;flex-direction:column;gap:11px;background:#fbfaf7">
+
+<div style="border:2px solid #1a1a1a;border-radius:13px;padding:16px;background:#fff;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center">
+<div style="font:700 19px Caveat,cursive">Hace 11 días que no jugás</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">Mientras tanto Racing de Boedo te pasó. Tu número se vuelve menos confiable cuanto más esperás.</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:9px;padding:9px 18px;font:700 15px Caveat,cursive;margin-top:3px">Estoy en la cancha</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">o desafiá a alguien de arriba ↓</div>
+</div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c">A tiro — 2 para el top 10</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:11px;overflow:hidden;background:#fff">
+<div style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-bottom:1px dashed #ddd8ce"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:20px">10</span><span style="flex:1;font:600 14px Caveat,cursive">Atlético Saavedra</span><span style="font:700 12px ui-monospace,monospace">1512</span><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:1px 8px;font:700 12px Caveat,cursive">Desafiar</span></div>
+<div style="display:flex;align-items:center;gap:9px;padding:8px 11px;border-bottom:1px dashed #ddd8ce"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:20px">11</span><span style="flex:1;font:600 14px Caveat,cursive">Racing de Boedo</span><span style="font:700 12px ui-monospace,monospace">1497</span><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:1px 8px;font:700 12px Caveat,cursive">Desafiar</span></div>
+<div style="display:flex;align-items:center;gap:9px;padding:10px 11px;background:#efece5;border-top:1.5px solid #1a1a1a"><span style="font:700 12px ui-monospace,monospace;width:20px">12</span><span style="flex:1;font:700 15px Caveat,cursive">VOS</span><span style="font:700 13px ui-monospace,monospace">1483</span></div>
+</div>
+
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center;background:#fff">
+<span style="font:600 14px Caveat,cursive">3 fichas de desafío</span>
+<div style="display:flex;gap:4px"><div style="width:13px;height:13px;border:2px solid #1a1a1a;border-radius:99px"></div><div style="width:13px;height:13px;border:2px solid #1a1a1a;border-radius:99px"></div><div style="width:13px;height:13px;border:2px solid #1a1a1a;border-radius:99px"></div></div>
+</div>
+
+<div style="border-top:1.5px dashed #c25b2a;margin:3px 0;position:relative"><span style="position:absolute;right:0;top:-8px;background:#fbfaf7;padding:0 5px;font:600 10px Caveat,cursive;color:#c25b2a">fold</span></div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c">Tu forma</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:11px;padding:11px;background:#fff;display:flex;flex-direction:column;gap:8px">
+<div style="height:46px;border:1.5px dashed #b5b0a6;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 12px Caveat,cursive;color:#8a857c">evolución · pico 1520</div>
+<div style="display:flex;gap:5px">
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">18-4-6</div><div style="font:600 10px Caveat,cursive;color:#8a857c">G-E-P</div></div>
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">31%</div><div style="font:600 10px Caveat,cursive;color:#8a857c">upset</div></div>
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:7px;padding:6px;text-align:center"><div style="font:700 14px ui-monospace,monospace">912</div><div style="font:600 10px Caveat,cursive;color:#8a857c">fair-play</div></div>
+</div>
+</div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c">Lo último en tu zona</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:9px;font:600 14px Caveat,cursive;background:#fff">Estrella de Maipú le ganó al #2. Se movió todo arriba.</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:9px;font:600 14px Caveat,cursive;background:#fff">Fénix de Lanús viene de 6 al hilo</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1.5px solid #1a1a1a;background:#f2f0eb">
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0"><div style="width:15px;height:15px;border:2px solid #1a1a1a;border-radius:4px"></div><span style="font:700 11px Caveat,cursive">Inicio</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Ranking</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Desafíos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Partidos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Perfil</span></div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Para seguir: "va <a class="dv-oid" href="#2a">2a</a>, pasalo a hi-fi" · "el hero de <a class="dv-oid" href="#2b">2b</a> arriba pero el resto de <a class="dv-oid" href="#2a">2a</a>" · "sumá el mapa de canchas cerca"</p>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Wireframes — estructura de Inicio, mapa de pantallas y nombre</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Inicio · "Vitrina" — el rating es el protagonista, como hoy pero con contexto</div>
+<div class="dv-card" style="width:340px;border:2px solid #1a1a1a;border-radius:22px;display:flex;flex-direction:column;font-family:Caveat,cursive">
+<div style="display:flex;justify-content:space-between;padding:6px 14px;background:#efece5;font:600 11px ui-monospace,monospace;color:#8a857c"><span>9:41</span><span>▮▮▮</span></div>
+<div style="padding:10px 14px;border-bottom:1.5px solid #1a1a1a;font:700 18px Caveat,cursive">Inicio</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:12px;background:#fbfaf7">
+
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;background:#fff">
+<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+<span style="border:1.2px solid #1a1a1a;border-radius:99px;padding:1px 9px;font:600 12px Caveat,cursive">Rankeado</span>
+<span style="border:1.2px solid #1a1a1a;border-radius:99px;padding:1px 9px;font:600 12px Caveat,cursive">Oro</span>
+<span style="border:1.2px solid #b5b0a6;border-radius:99px;padding:1px 9px;font:600 12px Caveat,cursive;color:#8a857c">F5 · Masculino</span>
+</div>
+<div style="font:700 24px Caveat,cursive;margin-top:2px">Los Pibes del 9</div>
+<div style="font:700 46px/1 ui-monospace,monospace;letter-spacing:-2px">1483</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">rating · <span style="color:#1a1a1a">▲ 24</span> este mes</div>
+<div style="width:100%;height:44px;border:1.5px dashed #b5b0a6;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 13px Caveat,cursive;color:#8a857c;margin-top:6px">sparkline de evolución</div>
+<div style="width:100%;display:flex;justify-content:space-between;border-top:1.5px solid #e3dfd6;padding-top:8px;margin-top:4px;font:600 14px Caveat,cursive"><span style="color:#8a857c">Fair-play</span><span>912</span></div>
+</div>
+
+<div style="display:flex;gap:10px">
+<div style="flex:1;border:1.5px solid #1a1a1a;border-radius:10px;padding:10px;text-align:center;font:700 15px Caveat,cursive">Generar QR</div>
+<div style="flex:1;border:1.5px dashed #1a1a1a;border-radius:10px;padding:10px;text-align:center;font:700 15px Caveat,cursive">Escanear</div>
+</div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c;margin-top:2px">Te toca a vos</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px">
+<span style="font:600 15px Caveat,cursive">Confirmá el resultado vs Deportivo Aldao</span>
+<span style="font:600 12px Caveat,cursive;color:#8a857c">vence en 14 h · silencio = aceptás</span>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px">
+<span style="font:600 15px Caveat,cursive">Villa Crespo FC te desafió</span>
+<span style="font:600 12px Caveat,cursive;color:#8a857c">F7 pasto · responde en 48 h</span>
+</div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c;margin-top:2px">Tu lugar</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;display:flex;justify-content:space-between;font:600 15px Caveat,cursive"><span>#12 de 340 · Oro</span><span style="color:#8a857c">ver ranking ›</span></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1.5px solid #1a1a1a;background:#f2f0eb">
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0"><div style="width:15px;height:15px;border:2px solid #1a1a1a;border-radius:4px"></div><span style="font:700 11px Caveat,cursive">Inicio</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Ranking</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Desafíos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Partidos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Perfil</span></div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Inicio · "Escalera viva" — abrís y ves a quién podés pasar y quién te persigue</div>
+<div class="dv-card" style="width:340px;border:2px solid #1a1a1a;border-radius:22px;display:flex;flex-direction:column;font-family:Caveat,cursive">
+<div style="display:flex;justify-content:space-between;padding:6px 14px;background:#efece5;font:600 11px ui-monospace,monospace;color:#8a857c"><span>9:41</span><span>▮▮▮</span></div>
+<div style="padding:10px 14px;border-bottom:1.5px solid #1a1a1a;display:flex;justify-content:space-between;align-items:baseline"><span style="font:700 18px Caveat,cursive">Los Pibes del 9</span><span style="font:700 15px ui-monospace,monospace">1483</span></div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:10px;background:#fbfaf7">
+
+<div style="font:700 16px Caveat,cursive">Estás #12 de 340. Faltan 2 para el top 10.</div>
+
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;overflow:hidden;background:#fff">
+<div style="padding:5px 12px;background:#f2f0eb;font:600 12px Caveat,cursive;color:#8a857c;border-bottom:1.5px solid #e3dfd6">A tiro</div>
+<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px dashed #ddd8ce"><span style="font:700 13px ui-monospace,monospace;color:#8a857c;width:22px">10</span><span style="flex:1;font:600 15px Caveat,cursive">Atlético Saavedra</span><span style="font:700 13px ui-monospace,monospace">1512</span><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:1px 8px;font:700 12px Caveat,cursive">Desafiar</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px dashed #ddd8ce"><span style="font:700 13px ui-monospace,monospace;color:#8a857c;width:22px">11</span><span style="flex:1;font:600 15px Caveat,cursive">Racing de Boedo</span><span style="font:700 13px ui-monospace,monospace">1497</span><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:1px 8px;font:700 12px Caveat,cursive">Desafiar</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;background:#efece5;border-top:1.5px solid #1a1a1a;border-bottom:1.5px solid #1a1a1a"><span style="font:700 13px ui-monospace,monospace;width:22px">12</span><span style="flex:1;font:700 16px Caveat,cursive">VOS</span><span style="font:700 14px ui-monospace,monospace">1483</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px dashed #ddd8ce"><span style="font:700 13px ui-monospace,monospace;color:#8a857c;width:22px">13</span><span style="flex:1;font:600 15px Caveat,cursive">Deportivo Aldao</span><span style="font:700 13px ui-monospace,monospace">1470</span></div>
+<div style="display:flex;align-items:center;gap:10px;padding:9px 12px"><span style="font:700 13px ui-monospace,monospace;color:#8a857c;width:22px">14</span><span style="flex:1;font:600 15px Caveat,cursive">Náutico Barracas</span><span style="font:700 13px ui-monospace,monospace">1461</span></div>
+<div style="padding:5px 12px;background:#f2f0eb;font:600 12px Caveat,cursive;color:#8a857c;border-top:1.5px solid #e3dfd6">Te vienen respirando en la nuca</div>
+</div>
+
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;flex-direction:column"><span style="font:600 15px Caveat,cursive">2 fichas de desafío</span><span style="font:600 12px Caveat,cursive;color:#8a857c">la próxima en 3 días</span></div>
+<div style="display:flex;gap:4px"><div style="width:14px;height:14px;border:2px solid #1a1a1a;border-radius:99px"></div><div style="width:14px;height:14px;border:2px solid #1a1a1a;border-radius:99px"></div><div style="width:14px;height:14px;border:1.5px dashed #b5b0a6;border-radius:99px"></div></div>
+</div>
+
+<div style="border:1.5px solid #1a1a1a;border-radius:10px;padding:11px;text-align:center;font:700 16px Caveat,cursive">Jugar ahora — generar QR</div>
+
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;font:600 14px Caveat,cursive">⚠ Confirmá el resultado vs Deportivo Aldao · 14 h</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1.5px solid #1a1a1a;background:#f2f0eb">
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0"><div style="width:15px;height:15px;border:2px solid #1a1a1a;border-radius:4px"></div><span style="font:700 11px Caveat,cursive">Inicio</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Ranking</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Desafíos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Partidos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Perfil</span></div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Inicio · "Cancha" — un solo botón manda; el resto es el diario del equipo</div>
+<div class="dv-card" style="width:340px;border:2px solid #1a1a1a;border-radius:22px;display:flex;flex-direction:column;font-family:Caveat,cursive">
+<div style="display:flex;justify-content:space-between;padding:6px 14px;background:#efece5;font:600 11px ui-monospace,monospace;color:#8a857c"><span>9:41</span><span>▮▮▮</span></div>
+<div style="padding:9px 14px;border-bottom:1.5px solid #1a1a1a;display:flex;align-items:center;gap:9px">
+<div style="width:26px;height:26px;border:1.5px solid #1a1a1a;border-radius:99px"></div>
+<div style="flex:1;display:flex;flex-direction:column"><span style="font:700 15px Caveat,cursive">Los Pibes del 9</span><span style="font:600 11px Caveat,cursive;color:#8a857c">Oro · #12</span></div>
+<span style="font:700 16px ui-monospace,monospace">1483</span>
+</div>
+
+<div style="padding:16px 14px;display:flex;flex-direction:column;gap:12px;background:#fbfaf7">
+<div style="border:2px solid #1a1a1a;border-radius:14px;padding:22px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;background:#fff">
+<div style="width:78px;height:78px;border:1.5px dashed #b5b0a6;border-radius:10px;display:flex;align-items:center;justify-content:center;font:600 12px Caveat,cursive;color:#8a857c;text-align:center">ícono<br>QR</div>
+<div style="font:700 22px Caveat,cursive">Estoy en la cancha</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c;text-align:center">Generá el código y que el rival lo escanee.<br>Sin QR firmado no hay rating.</div>
+</div>
+<div style="border:1.5px dashed #1a1a1a;border-radius:10px;padding:9px;text-align:center;font:700 15px Caveat,cursive">Me pasaron un código</div>
+
+<div style="height:1.5px;background:#e3dfd6;margin:2px 0"></div>
+
+<div style="font:700 15px Caveat,cursive;color:#8a857c">Lo último</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:10px;padding:10px;display:flex;gap:9px;align-items:flex-start">
+<div style="width:16px;height:16px;border:1.5px solid #1a1a1a;border-radius:4px;margin-top:2px"></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:5px">
+<span style="font:600 15px Caveat,cursive">Deportivo Aldao dice que ganó 3-2</span>
+<div style="display:flex;gap:7px"><span style="border:1.5px solid #1a1a1a;border-radius:8px;padding:3px 12px;font:700 13px Caveat,cursive">Confirmar</span><span style="border:1.5px dashed #1a1a1a;border-radius:8px;padding:3px 12px;font:700 13px Caveat,cursive">No fue así</span></div>
+<span style="font:600 11px Caveat,cursive;color:#8a857c">si no respondés en 14 h, se da por aceptado</span>
+</div>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:3px">
+<span style="font:600 15px Caveat,cursive">Villa Crespo FC te desafió · F7 pasto</span>
+<span style="font:600 11px Caveat,cursive;color:#8a857c">están 8 puestos arriba. Ganales y saltás al top 10.</span>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;font:600 15px Caveat,cursive">+18 de rating por el 2-1 a Náutico Barracas</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(5,1fr);border-top:1.5px solid #1a1a1a;background:#f2f0eb">
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0"><div style="width:15px;height:15px;border:2px solid #1a1a1a;border-radius:4px"></div><span style="font:700 11px Caveat,cursive">Inicio</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Ranking</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Desafíos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Partidos</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;opacity:.45"><div style="width:15px;height:15px;border:1.5px solid #1a1a1a;border-radius:4px"></div><span style="font:600 11px Caveat,cursive">Perfil</span></div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Mapa de pantallas — todo el flujo que ya existe en el código, más los estados difíciles</div>
+<div class="dv-card" style="width:1180px;padding:22px;background:#fbfaf7;font-family:Caveat,cursive">
+<div style="display:flex;flex-wrap:wrap;gap:18px">
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">01 · Login (OTP)</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff;min-height:250px">
+<div style="width:56px;height:56px;border:1.5px dashed #b5b0a6;border-radius:99px;align-self:center;margin-top:16px"></div>
+<div style="font:700 20px Caveat,cursive;text-align:center">[nombre]</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c;text-align:center">El ranking de tu equipo,<br>partido a partido.</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;font:600 14px Caveat,cursive;color:#8a857c;margin-top:auto">+54 9 11 ...</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:8px;text-align:center;font:700 14px Caveat,cursive">Mandame el código</div>
+<div style="text-align:center;font:600 13px Caveat,cursive;color:#8a857c">o entrar con Google</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">02 · Verificar código</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fff;min-height:250px">
+<div style="font:700 17px Caveat,cursive;margin-top:24px">Te mandamos 6 dígitos</div>
+<div style="display:flex;gap:6px">
+<div style="flex:1;height:40px;border:1.5px solid #1a1a1a;border-radius:6px"></div><div style="flex:1;height:40px;border:1.5px solid #1a1a1a;border-radius:6px"></div><div style="flex:1;height:40px;border:1.5px dashed #b5b0a6;border-radius:6px"></div><div style="flex:1;height:40px;border:1.5px dashed #b5b0a6;border-radius:6px"></div><div style="flex:1;height:40px;border:1.5px dashed #b5b0a6;border-radius:6px"></div><div style="flex:1;height:40px;border:1.5px dashed #b5b0a6;border-radius:6px"></div>
+</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">Reenviar en 0:42</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:8px;text-align:center;font:700 14px Caveat,cursive;margin-top:auto">Entrar</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">03 · Crear equipo <span style="color:#c25b2a">(estado vacío)</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="font:700 18px Caveat,cursive">Todavía no tenés equipo</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">Nombre y capitán. El plantel lo cargás después.</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;font:600 14px Caveat,cursive;color:#8a857c">Nombre del equipo</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">Categoría (no se cambia después)</div>
+<div style="display:flex;gap:6px"><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:3px 11px;font:700 13px Caveat,cursive">Masculino</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:3px 11px;font:600 13px Caveat,cursive;color:#8a857c">Femenino</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:3px 11px;font:600 13px Caveat,cursive;color:#8a857c">Mixto</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:8px;text-align:center;font:700 14px Caveat,cursive;margin-top:auto">Crear</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c;text-align:center">Entrás provisional. Rankeás con tu primer partido confirmado.</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">04 · Inicio <span style="color:#c25b2a">(provisional)</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="border:1.5px solid #1a1a1a;border-radius:10px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px">
+<span style="border:1.5px dashed #1a1a1a;border-radius:99px;padding:1px 9px;font:700 12px Caveat,cursive">Provisional</span>
+<span style="font:700 18px Caveat,cursive">Los Pibes del 9</span>
+<span style="font:700 34px/1 ui-monospace,monospace;color:#b5b0a6">– – –</span>
+<span style="font:600 12px Caveat,cursive;color:#8a857c;text-align:center">Sin rating todavía</span>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:10px;padding:10px;font:600 14px Caveat,cursive">Jugá y firmá un partido con el QR. Ahí entrás a la escalera.</div>
+<div style="display:flex;gap:8px;margin-top:auto"><div style="flex:1;border:1.5px solid #1a1a1a;border-radius:8px;padding:8px;text-align:center;font:700 14px Caveat,cursive">Generar QR</div><div style="flex:1;border:1.5px dashed #1a1a1a;border-radius:8px;padding:8px;text-align:center;font:700 14px Caveat,cursive">Escanear</div></div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">05 · Ranking</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff;min-height:250px">
+<div style="display:flex;gap:5px"><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:2px 10px;font:700 12px Caveat,cursive">Masculino</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:2px 10px;font:600 12px Caveat,cursive;color:#8a857c">Femenino</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:2px 10px;font:600 12px Caveat,cursive;color:#8a857c">Mixto</span></div>
+<div style="display:flex;gap:5px;flex-wrap:wrap"><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:2px 9px;font:700 12px Caveat,cursive">Todos</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:2px 9px;font:600 12px Caveat,cursive;color:#8a857c">Elite</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:2px 9px;font:600 12px Caveat,cursive;color:#8a857c">Oro</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:2px 9px;font:600 12px Caveat,cursive;color:#8a857c">Plata</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:2px 9px;font:600 12px Caveat,cursive;color:#8a857c">Bronce</span></div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;align-items:center;gap:8px;border:1.5px solid #e3dfd6;border-radius:8px;padding:7px 9px"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:16px">1</span><span style="flex:1;font:600 14px Caveat,cursive">Estrella de Maipú</span><span style="font:700 12px ui-monospace,monospace">1712</span></div>
+<div style="display:flex;align-items:center;gap:8px;border:1.5px solid #e3dfd6;border-radius:8px;padding:7px 9px"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:16px">2</span><span style="flex:1;font:600 14px Caveat,cursive">Barrio Rivadavia</span><span style="font:700 12px ui-monospace,monospace">1688</span></div>
+<div style="display:flex;align-items:center;gap:8px;border:1.5px solid #e3dfd6;border-radius:8px;padding:7px 9px"><span style="font:700 12px ui-monospace,monospace;color:#8a857c;width:16px">3</span><span style="flex:1;font:600 14px Caveat,cursive">Fénix de Lanús</span><span style="font:700 12px ui-monospace,monospace">1654</span></div>
+<div style="display:flex;align-items:center;gap:8px;border:1.5px solid #1a1a1a;border-radius:8px;padding:7px 9px;background:#efece5"><span style="font:700 12px ui-monospace,monospace;width:16px">12</span><span style="flex:1;font:700 14px Caveat,cursive">Los Pibes del 9 (vos)</span><span style="font:700 12px ui-monospace,monospace">1483</span></div>
+</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c;margin-top:auto">tocar una fila → proponer desafío</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">06 · Ranking <span style="color:#c25b2a">(vacío, etapa 1)</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fff;min-height:250px;align-items:center;justify-content:center;text-align:center">
+<div style="width:60px;height:60px;border:1.5px dashed #b5b0a6;border-radius:10px"></div>
+<div style="font:700 17px Caveat,cursive">Todavía no hay nadie arriba</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">Sos de los primeros. Jugá un partido firmado y el ranking arranca con vos.</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:8px 16px;font:700 14px Caveat,cursive">Generar QR</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">07 · Proponer desafío</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="font:700 17px Caveat,cursive">Los Pibes del 9<br>desafía a Atlético Saavedra</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">Cantidad</div>
+<div style="display:flex;gap:5px"><span style="border:1.5px solid #1a1a1a;border-radius:8px;padding:3px 10px;font:700 13px Caveat,cursive">5</span><span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:3px 10px;font:600 13px Caveat,cursive;color:#8a857c">6</span><span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:3px 10px;font:600 13px Caveat,cursive;color:#8a857c">7</span><span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:3px 10px;font:600 13px Caveat,cursive;color:#8a857c">8</span><span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:3px 10px;font:600 13px Caveat,cursive;color:#8a857c">11</span></div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">Superficie</div>
+<div style="display:flex;gap:5px;flex-wrap:wrap"><span style="border:1.5px solid #1a1a1a;border-radius:8px;padding:3px 10px;font:700 13px Caveat,cursive">Sintético</span><span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:3px 10px;font:600 13px Caveat,cursive;color:#8a857c">Salón</span><span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:3px 10px;font:600 13px Caveat,cursive;color:#8a857c">Pasto</span><span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:3px 10px;font:600 13px Caveat,cursive;color:#8a857c">Tierra</span></div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:8px;font:600 12px Caveat,cursive;color:#8a857c">Cuesta 1 ficha. Si perdés, se quema. Si ganás, vuelve y pagás grande.</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:8px;text-align:center;font:700 14px Caveat,cursive;margin-top:auto">Enviar desafío</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">08 · Desafíos</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff;min-height:250px">
+<div style="display:flex;gap:6px"><span style="border:1.5px solid #1a1a1a;border-radius:99px;padding:2px 10px;font:700 12px Caveat,cursive">Recibidos 2</span><span style="border:1.5px dashed #b5b0a6;border-radius:99px;padding:2px 10px;font:600 12px Caveat,cursive;color:#8a857c">Enviados</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:9px;display:flex;flex-direction:column;gap:6px">
+<span style="font:600 14px Caveat,cursive">Villa Crespo FC → vos</span>
+<span style="font:600 11px Caveat,cursive;color:#8a857c">F7 pasto · vence en 41 h · están #4</span>
+<div style="display:flex;gap:6px"><span style="border:1.5px solid #1a1a1a;border-radius:7px;padding:3px 12px;font:700 13px Caveat,cursive">Aceptar</span><span style="border:1.5px dashed #1a1a1a;border-radius:7px;padding:3px 12px;font:700 13px Caveat,cursive">Rechazar</span></div>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;display:flex;flex-direction:column;gap:3px">
+<span style="font:600 14px Caveat,cursive">vos → Atlético Saavedra</span>
+<span style="font:600 11px Caveat,cursive;color:#8a857c">Aceptado · pactado sáb 20 h</span>
+<span style="border:1.5px solid #1a1a1a;border-radius:7px;padding:3px 10px;font:700 12px Caveat,cursive;align-self:flex-start">Ver partido</span>
+</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c;margin-top:auto">rechazar seguido = te marcan como esquivo</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">09 · Generar QR</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px;align-items:center">
+<div style="font:700 16px Caveat,cursive;align-self:flex-start">Código del partido</div>
+<div style="width:140px;height:140px;border:1.5px dashed #b5b0a6;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 13px Caveat,cursive;color:#8a857c">QR</div>
+<div style="font:700 26px ui-monospace,monospace;letter-spacing:4px">7KM4P9X2</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c;text-align:center">Que lo escanee el rival. Vence en 10 min.</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c;text-align:center;margin-top:auto">F5 · sintético · Cancha La Barra, Villa Urquiza</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">10 · Escanear / unirse</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="display:flex;gap:6px"><span style="border:1.5px solid #1a1a1a;border-radius:8px;padding:3px 12px;font:700 13px Caveat,cursive">Escanear QR</span><span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:3px 12px;font:600 13px Caveat,cursive;color:#8a857c">Escribir código</span></div>
+<div style="flex:1;border:1.5px dashed #b5b0a6;border-radius:10px;background:#efece5;display:flex;align-items:center;justify-content:center;min-height:130px;font:600 13px Caveat,cursive;color:#8a857c">visor de cámara<br>+ marco de mira</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:8px;font:600 12px Caveat,cursive;color:#8a857c">Sin permiso de cámara → pedirlo acá, con el motivo</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">11 · Firmar (handshake)</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="font:700 17px Caveat,cursive;text-align:center">Esto es el contrato</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;align-items:center">
+<span style="font:600 15px Caveat,cursive">Los Pibes del 9</span>
+<span style="font:700 13px Caveat,cursive;color:#8a857c">vs</span>
+<span style="font:600 15px Caveat,cursive">Deportivo Aldao</span>
+</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">F5 sintético · Cancha La Barra</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;font:600 13px Caveat,cursive">Reportan: vos y Martín G. Nadie más puede cargar este resultado.</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">En juego: ±22 puntos</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:9px;text-align:center;font:700 15px Caveat,cursive;margin-top:auto">Firmar y jugar</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">12 · Reportar resultado</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="font:700 16px Caveat,cursive">¿Cómo salió para tu equipo?</div>
+<div style="display:flex;gap:6px"><span style="flex:1;border:2px solid #1a1a1a;border-radius:8px;padding:9px;text-align:center;font:700 14px Caveat,cursive">Ganamos</span><span style="flex:1;border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;text-align:center;font:600 14px Caveat,cursive;color:#8a857c">Empate</span><span style="flex:1;border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;text-align:center;font:600 14px Caveat,cursive;color:#8a857c">Perdimos</span></div>
+<div style="display:flex;gap:8px;align-items:center;justify-content:center">
+<div style="width:56px;height:52px;border:1.5px solid #1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 22px ui-monospace,monospace">3</div>
+<span style="font:700 16px Caveat,cursive;color:#8a857c">–</span>
+<div style="width:56px;height:52px;border:1.5px solid #1a1a1a;border-radius:8px;display:flex;align-items:center;justify-content:center;font:700 22px ui-monospace,monospace">2</div>
+</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c;text-align:center">El marcador es al costado: el rating lo mueve quién ganó.</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:9px;text-align:center;font:700 15px Caveat,cursive;margin-top:auto">Cargar resultado</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:7px;text-align:center;font:600 13px Caveat,cursive;color:#8a857c">Reportar incidente</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">13 · Esperando al rival</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fff;min-height:250px;align-items:center;justify-content:center;text-align:center">
+<div style="width:54px;height:54px;border:1.5px dashed #b5b0a6;border-radius:99px"></div>
+<div style="font:700 17px Caveat,cursive">Cargaste 3-2. Falta que confirmen.</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">Si no dicen nada en 24 h, se liquida como lo cargaste.</div>
+<div style="width:100%;height:6px;border:1.5px solid #1a1a1a;border-radius:99px;overflow:hidden"><div style="width:38%;height:100%;background:#1a1a1a"></div></div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">quedan 14 h</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">14 · Liquidado (el premio)</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px;align-items:center;justify-content:center;text-align:center">
+<div style="font:700 17px Caveat,cursive">Ganaron 3-2 a Deportivo Aldao</div>
+<div style="font:700 40px/1 ui-monospace,monospace">+18</div>
+<div style="font:600 13px Caveat,cursive;color:#8a857c">1483 → 1501</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:8px 14px;font:700 14px Caveat,cursive">Subiste al #10 · Oro</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">Falta poco para Elite. Elegí bien el próximo.</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">15 · Disputa <span style="color:#c25b2a">(estado difícil)</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:7px;text-align:center;font:700 14px Caveat,cursive">En disputa</div>
+<div style="display:flex;flex-direction:column;gap:5px">
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:7px;font:600 13px Caveat,cursive">Vos decís: ganamos 3-2</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:7px;font:600 13px Caveat,cursive">Ellos dicen: ganamos 3-2</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px;margin-top:2px">
+<div style="display:flex;gap:7px;align-items:center"><div style="width:14px;height:14px;border:2px solid #1a1a1a;border-radius:99px"></div><span style="font:600 13px Caveat,cursive">1 · Subí la prueba</span></div>
+<div style="display:flex;gap:7px;align-items:center;opacity:.5"><div style="width:14px;height:14px;border:1.5px dashed #1a1a1a;border-radius:99px"></div><span style="font:600 13px Caveat,cursive">2 · Preguntamos al plantel</span></div>
+<div style="display:flex;gap:7px;align-items:center;opacity:.5"><div style="width:14px;height:14px;border:1.5px dashed #1a1a1a;border-radius:99px"></div><span style="font:600 13px Caveat,cursive">3 · Decide un humano</span></div>
+</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:9px;text-align:center;font:700 14px Caveat,cursive;margin-top:auto">Subir foto del tablero</div>
+<div style="font:600 11px Caveat,cursive;color:#8a857c;text-align:center">La foto tiene que mostrar el código 7KM4. Abrir disputa cuesta fair-play.</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">16 · Poll al plantel</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="font:700 16px Caveat,cursive">Vos que estuviste, ¿cómo salió?</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">No es una votación. Es para que aparezca lo que los capitanes no contaron.</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:9px;font:600 14px Caveat,cursive">Ganó Los Pibes del 9</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;font:600 14px Caveat,cursive;color:#8a857c">Ganó Deportivo Aldao</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;font:600 14px Caveat,cursive;color:#8a857c">Empate</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;font:600 14px Caveat,cursive;color:#8a857c">No estuve / no me acuerdo</div>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:8px;text-align:center;font:600 13px Caveat,cursive;color:#8a857c;margin-top:auto">Tengo una foto</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">17 · Admin (cola de decisión)</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff;min-height:250px">
+<div style="font:700 16px Caveat,cursive">Disputas abiertas · 3</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:9px;display:flex;flex-direction:column;gap:5px">
+<span style="font:600 14px Caveat,cursive">Pibes del 9 vs Aldao</span>
+<span style="font:600 11px Caveat,cursive;color:#8a857c">sin evidencia · fair-play 912 vs 734 · SLA 18 h</span>
+<div style="display:flex;gap:5px;flex-wrap:wrap"><span style="border:1.5px solid #1a1a1a;border-radius:7px;padding:2px 9px;font:700 12px Caveat,cursive">Gana A</span><span style="border:1.5px solid #1a1a1a;border-radius:7px;padding:2px 9px;font:700 12px Caveat,cursive">Gana B</span><span style="border:1.5px dashed #1a1a1a;border-radius:7px;padding:2px 9px;font:700 12px Caveat,cursive">Anular</span></div>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:9px;font:600 13px Caveat,cursive;color:#8a857c">Fénix vs Barrio Rivadavia<br>foto con nonce ✓ · SLA 2 d</div>
+<div style="font:600 11px Caveat,cursive;color:#8a857c;margin-top:auto">toda decisión queda en el ledger</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">18 · Perfil de equipo (stats)</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#fff;min-height:250px">
+<div style="display:flex;align-items:center;gap:9px"><div style="width:36px;height:36px;border:1.5px dashed #b5b0a6;border-radius:8px"></div><div style="display:flex;flex-direction:column"><span style="font:700 16px Caveat,cursive">Los Pibes del 9</span><span style="font:600 11px Caveat,cursive;color:#8a857c">Oro · #12 · pico 1520</span></div></div>
+<div style="height:52px;border:1.5px dashed #b5b0a6;border-radius:8px;display:flex;align-items:center;justify-content:center;font:600 12px Caveat,cursive;color:#8a857c">gráfico de evolución</div>
+<div style="display:flex;gap:6px">
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:8px;padding:7px;text-align:center"><div style="font:700 16px ui-monospace,monospace">18-4-6</div><div style="font:600 11px Caveat,cursive;color:#8a857c">G-E-P</div></div>
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:8px;padding:7px;text-align:center"><div style="font:700 16px ui-monospace,monospace">31%</div><div style="font:600 11px Caveat,cursive;color:#8a857c">upset</div></div>
+<div style="flex:1;border:1.5px solid #e3dfd6;border-radius:8px;padding:7px;text-align:center"><div style="font:700 16px ui-monospace,monospace">912</div><div style="font:600 11px Caveat,cursive;color:#8a857c">fair-play</div></div>
+</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">Por formato</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;justify-content:space-between;font:600 13px Caveat,cursive"><span>F5 sintético</span><span style="font-family:ui-monospace,monospace;font-size:11px">14-2-3</span></div>
+<div style="display:flex;justify-content:space-between;font:600 13px Caveat,cursive"><span>F7 pasto</span><span style="font-family:ui-monospace,monospace;font-size:11px">4-2-3</span></div>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:7px;font:600 12px Caveat,cursive;color:#8a857c;margin-top:auto">Palmarés: sin títulos todavía</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">19 · <span style="color:#c25b2a">Cargando / sin red</span></div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:14px;background:#fff;min-height:250px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="height:14px;border-radius:4px;background:#e9e5dd"></div>
+<div style="height:14px;width:70%;border-radius:4px;background:#e9e5dd"></div>
+<div style="height:70px;border-radius:8px;background:#e9e5dd"></div>
+<div style="height:14px;width:50%;border-radius:4px;background:#e9e5dd"></div>
+</div>
+<div style="height:1.5px;background:#e3dfd6"></div>
+<div style="display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center">
+<div style="font:700 16px Caveat,cursive">Se cortó el internet en la cancha</div>
+<div style="font:600 12px Caveat,cursive;color:#8a857c">Guardamos lo que cargaste. Se manda solo cuando vuelva la señal.</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:8px;padding:7px 14px;font:700 13px Caveat,cursive">Reintentar</div>
+</div>
+</div>
+</div>
+
+<div style="width:262px;display:flex;flex-direction:column;gap:6px">
+<div style="font:700 14px Caveat,cursive;color:#8a857c">20 · Perfil / cuenta</div>
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;background:#fff;min-height:250px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:5px;border:1.5px solid #e3dfd6;border-radius:10px;padding:12px">
+<div style="width:52px;height:52px;border:1.5px dashed #b5b0a6;border-radius:99px"></div>
+<span style="font:700 16px Caveat,cursive">Leonardo B.</span>
+<span style="font:600 12px Caveat,cursive;color:#8a857c">+54 9 11 5555-1234 · capitán</span>
+</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:8px;font:600 13px Caveat,cursive">Editar perfil</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:8px;font:600 13px Caveat,cursive">Plantel · 6 de 11 cargados</div>
+<div style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:8px;font:600 13px Caveat,cursive">Notificaciones</div>
+<div style="border:1.5px dashed #c25b2a;border-radius:8px;padding:8px;font:600 13px Caveat,cursive;color:#c25b2a;margin-top:auto">Cerrar sesión</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1e">
+<div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Nombre + wordmark — cinco direcciones, bocetadas</div>
+<div class="dv-card" style="width:620px;padding:22px;background:#fbfaf7">
+<div style="display:flex;flex-direction:column;gap:14px">
+
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:16px;background:#fff;display:flex;gap:18px;align-items:center">
+<div style="width:220px;flex:none;font:400 34px/1 'Archivo Black',sans-serif;letter-spacing:-1.5px">HAMBRE</div>
+<div style="flex:1;font:400 16px/1.35 Caveat,cursive;color:#4a463f"><b>Hambre.</b> Directo del motor emocional del concepto: hambre de gloria. Una palabra, sin explicación, memorable en la cancha. Riesgo: no dice "fútbol" solo.</div>
+</div>
+
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:16px;background:#fff;display:flex;gap:18px;align-items:center">
+<div style="width:220px;flex:none;display:flex;flex-direction:column;gap:4px"><div style="font:400 28px/1 'Archivo Black',sans-serif;letter-spacing:-1px">POTRERO</div><div style="height:4px;background:#1a1a1a;width:70%"></div></div>
+<div style="flex:1;font:400 16px/1.35 Caveat,cursive;color:#4a463f"><b>Potrero.</b> Muy argentino, cálido, de barrio. Ideal para etapa 1 (presencial, entre conocidos). Riesgo: suena más nostálgico que competitivo, y no viaja fuera del Río de la Plata.</div>
+</div>
+
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:16px;background:#fff;display:flex;gap:18px;align-items:center">
+<div style="width:220px;flex:none;display:flex;align-items:flex-end;gap:6px">
+<div style="display:flex;align-items:flex-end;gap:2px"><div style="width:7px;height:9px;background:#1a1a1a"></div><div style="width:7px;height:16px;background:#1a1a1a"></div><div style="width:7px;height:23px;background:#1a1a1a"></div></div>
+<div style="font:400 25px/1 'Archivo Black',sans-serif;letter-spacing:-1px">ESCALERA</div>
+</div>
+<div style="flex:1;font:400 16px/1.35 Caveat,cursive;color:#4a463f"><b>Escalera.</b> Es literalmente el producto: un ladder de desafíos. Explica solo qué hacés adentro. Riesgo: descriptivo, poco épico, difícil de proteger como marca.</div>
+</div>
+
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:16px;background:#fff;display:flex;gap:18px;align-items:center">
+<div style="width:220px;flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:4px 0"><div style="border:2.5px solid #1a1a1a;padding:3px 10px;font:400 24px/1 'Archivo Black',sans-serif;letter-spacing:-1px">LA CIMA</div><div style="font:600 12px Caveat,cursive;color:#8a857c">ranking de equipos</div></div>
+<div style="flex:1;font:400 16px/1.35 Caveat,cursive;color:#4a463f"><b>La Cima.</b> Aspiracional y neutro: sirve para cualquier deporte y cualquier país hispanohablante. Riesgo: genérico, hay muchos "cima" dando vueltas.</div>
+</div>
+
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:16px;background:#fff;display:flex;gap:18px;align-items:center">
+<div style="width:220px;flex:none;display:flex;align-items:center;gap:8px"><div style="width:26px;height:26px;border:3px solid #1a1a1a;border-radius:99px"></div><div style="font:400 32px/1 'Archivo Black',sans-serif;letter-spacing:-1.5px">GUAPO</div></div>
+<div style="flex:1;font:400 16px/1.35 Caveat,cursive;color:#4a463f"><b>Guapo. ← elegido.</b> "El guapo del barrio" — el que se la banca contra cualquiera. Provocador, con actitud, encaja con el desafío abierto. Riesgo: lectura ambigua fuera de Argentina.</div>
+</div>
+
+<div style="border:1.5px solid #1a1a1a;border-radius:12px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:8px">
+<div style="font:400 15px/1.4 Caveat,cursive;color:#4a463f">Va <b>Guapo</b>. Cómo suena en la app:</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;font:600 14px Caveat,cursive">
+<span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:4px 10px">"¿Quién se la banca?" — home vacío</span>
+<span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:4px 10px">"Guapo de verdad" — insignia de upset</span>
+<span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:4px 10px">"Te achicaste" — rechazar desafío</span>
+<span style="border:1.5px dashed #b5b0a6;border-radius:8px;padding:4px 10px">"El guapo del barrio" — n°1 de zona</span>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Para seguir: "voy con <a class="dv-oid" href="#1b">1b</a>, pasalo a hi-fi con dirección de cancha" · "mezclá el hero de <a class="dv-oid" href="#1a">1a</a> con la escalera de <a class="dv-oid" href="#1b">1b</a>" · "más nombres, menos argentinos"</p>
+</section>
+
+</x-dc>
+</body>
+</html>

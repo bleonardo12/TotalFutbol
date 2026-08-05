@@ -1,4 +1,4 @@
-import { Pressable, ScrollView, Text, type ViewStyle } from "react-native";
+import { Pressable, ScrollView, Text, View, type ViewStyle } from "react-native";
 import { useTema } from "@/theme";
 
 export interface OpcionTab<T> {
@@ -10,23 +10,74 @@ interface TabsProps<T> {
   opciones: OpcionTab<T>[];
   valorActivo: T;
   onCambiar: (valor: T) => void;
+  /**
+   * "pildoras" (default): chips sueltos, scroll horizontal -- filtro de
+   * division/categoria. "segmentado": contenedor unico con la pestaña
+   * activa resaltada -- recibidos/enviados, escanear/tipear (docs Guapo §2).
+   */
+  variante?: "pildoras" | "segmentado";
   style?: ViewStyle;
 }
 
 /**
- * Componente unico de tabs para toda la app. ScrollView horizontal +
- * ancho de contenido (nunca flex:1) + padding generoso -- construido una
- * sola vez para que etiquetas largas ("Oro"/"Plata") no se corten nunca
- * mas, en vez de que cada pantalla reimplemente su propio patron de tabs
- * (la causa raiz del bug que se repitio varias veces en Hito 5a).
+ * Componente unico de tabs para toda la app -- construido una sola vez
+ * para que etiquetas largas ("Oro"/"Plata") no se corten nunca mas, en vez
+ * de que cada pantalla reimplemente su propio patron de tabs.
  */
 export function Tabs<T>({
   opciones,
   valorActivo,
   onCambiar,
+  variante = "pildoras",
   style,
 }: TabsProps<T>): React.JSX.Element {
   const { colores, espaciado, radio, tipografia } = useTema();
+
+  if (variante === "segmentado") {
+    return (
+      <View
+        style={[
+          {
+            flexDirection: "row",
+            backgroundColor: colores.superficieHundida,
+            borderWidth: 1,
+            borderColor: colores.borde,
+            borderRadius: radio.md,
+            padding: 3,
+          },
+          style,
+        ]}
+      >
+        {opciones.map((opcion) => {
+          const activo = opcion.valor === valorActivo;
+          return (
+            <Pressable
+              key={String(opcion.valor)}
+              onPress={() => onCambiar(opcion.valor)}
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: activo ? colores.superficieElevada : "transparent",
+                borderRadius: radio.sm,
+                paddingVertical: espaciado.sm,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Archivo_800ExtraBold",
+                  fontSize: 13,
+                  color: activo ? colores.textoPrimario : colores.textoApagado,
+                }}
+              >
+                {opcion.etiqueta}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -36,7 +87,7 @@ export function Tabs<T>({
       contentContainerStyle={{
         flexDirection: "row",
         alignItems: "flex-start",
-        gap: espaciado.sm,
+        gap: 7,
       }}
     >
       {opciones.map((opcion) => {
@@ -47,21 +98,18 @@ export function Tabs<T>({
             onPress={() => onCambiar(opcion.valor)}
             style={{
               borderWidth: 1,
-              borderColor: activo ? colores.acento : colores.borde,
+              borderColor: activo ? colores.acento : colores.bordeControl,
               backgroundColor: activo ? colores.acento : "transparent",
               borderRadius: radio.pill,
-              paddingVertical: espaciado.sm,
-              paddingHorizontal: espaciado.lg,
+              paddingVertical: 6,
+              paddingHorizontal: 14,
               alignItems: "center",
             }}
           >
             <Text
               style={[
                 tipografia.caption,
-                {
-                  color: activo ? colores.acentoTexto : colores.textoSecundario,
-                  fontWeight: "700",
-                },
+                { color: activo ? colores.acentoTexto : colores.textoSecundario },
               ]}
             >
               {opcion.etiqueta}

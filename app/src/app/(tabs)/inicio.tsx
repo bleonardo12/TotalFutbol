@@ -13,9 +13,9 @@ const ETIQUETA_DIVISION: Record<Division, string> = {
   BRONCE: "Bronce",
 };
 
-const TONO_DIVISION: Record<Division, "exito" | "alerta" | "neutral"> = {
-  ELITE: "exito",
-  ORO: "alerta",
+const TONO_DIVISION: Record<Division, "elite" | "oro" | "neutral"> = {
+  ELITE: "elite",
+  ORO: "oro",
   PLATA: "neutral",
   BRONCE: "neutral",
 };
@@ -82,7 +82,7 @@ export default function Inicio(): React.JSX.Element {
             <View style={styles.filaChips}>
               <Chip
                 texto={equipo.estado === "RANKEADO" ? "Rankeado" : "Provisional"}
-                tono={equipo.estado === "RANKEADO" ? "exito" : "neutral"}
+                tono={equipo.estado === "RANKEADO" ? "elite" : "neutral"}
               />
               {equipo.division && (
                 <Chip
@@ -90,7 +90,7 @@ export default function Inicio(): React.JSX.Element {
                   tono={TONO_DIVISION[equipo.division]}
                 />
               )}
-              <Chip texto={ETIQUETA_CATEGORIA[equipo.categoria]} tono="acento" />
+              <Chip texto={ETIQUETA_CATEGORIA[equipo.categoria]} tono="elite" />
             </View>
 
             <NumeroRating

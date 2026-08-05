@@ -28,15 +28,15 @@ export const ETIQUETA_ESTADO_PARTIDO: Record<EstadoPartido, string> = {
 
 export const TONO_ESTADO_PARTIDO: Record<
   EstadoPartido,
-  "neutral" | "acento" | "exito" | "error" | "alerta"
+  "neutral" | "elite" | "error" | "alerta"
 > = {
   PACTADO: "neutral",
-  FIRMADO: "acento",
-  EN_JUEGO: "acento",
+  FIRMADO: "elite",
+  EN_JUEGO: "elite",
   REPORTADO: "alerta",
-  CONFIRMADO: "exito",
+  CONFIRMADO: "elite",
   EN_DISPUTA: "error",
-  LIQUIDADO: "exito",
+  LIQUIDADO: "elite",
   SUSPENDIDO: "alerta",
   VOID: "neutral",
 };

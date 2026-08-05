@@ -51,12 +51,12 @@ function useCountUp(valorObjetivo: number, reducirMovimiento: boolean): number {
 
 interface NumeroRatingProps {
   valor: number;
-  /** Top 3 / Elite: numeral en acento con glow ambar (docs/design.md §1). */
+  /** Top 3 / Elite: numeral en acento (docs Guapo §1, sin sombras -- unico glow es el escaner QR). */
   podio?: boolean;
   style?: TextStyle;
 }
 
-/** Numeral protagonista del rating -- tabular, Sora extra bold, con count-up y glow reservado al podio. */
+/** Numeral protagonista del rating -- JetBrains Mono, con count-up. */
 export function NumeroRating({ valor, podio = false, style }: NumeroRatingProps): React.JSX.Element {
   const { colores, tipografia } = useTema();
   const reducirMovimiento = useReducedMotion();
@@ -65,13 +65,8 @@ export function NumeroRating({ valor, podio = false, style }: NumeroRatingProps)
   return (
     <Text
       style={[
-        tipografia.numeroHero,
-        {
-          color: podio ? colores.acento : colores.textoPrimario,
-          textShadowColor: podio ? colores.glowPodio : "transparent",
-          textShadowOffset: { width: 0, height: 0 },
-          textShadowRadius: podio ? 14 : 0,
-        },
+        tipografia.numeroGrande,
+        { color: podio ? colores.acento : colores.textoPrimario },
         style,
       ]}
     >
