@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { OutcomePartido, Prisma } from "@prisma/client";
-import { liquidarPartido, type ResultadoOutcome } from "@totalfutbol/core";
+import { liquidarPartido, type EstadoGlicko, type ResultadoOutcome } from "@totalfutbol/core";
 
 function outcomeLocalDesde(outcome: OutcomePartido): ResultadoOutcome {
   switch (outcome) {
@@ -85,5 +85,20 @@ export class RatingService {
         estado: "RANKEADO",
       },
     });
+  }
+
+  /**
+   * Mismo calculo que `liquidar`, pero sin persistir nada -- una previsualizacion
+   * de "que pasaria si". Usado para mostrar el delta en juego antes de que el
+   * partido exista de verdad (tarjeta de desafio recibido, pantalla de reportar
+   * resultado).
+   */
+  proyectar(
+    local: EstadoGlicko,
+    visitante: EstadoGlicko,
+    outcome: OutcomePartido,
+  ): { local: number; visitante: number } {
+    const resultado = liquidarPartido(local, visitante, outcomeLocalDesde(outcome));
+    return { local: resultado.local.delta, visitante: resultado.visitante.delta };
   }
 }

@@ -5,6 +5,7 @@ import type { Queue } from "bullmq";
 import { FairPlayService } from "../fair-play/fair-play.service";
 import { MatchesService } from "../matches/matches.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { RatingService } from "../rating/rating.service";
 import { CHALLENGE_TTL_HORAS, COLA_VENCIMIENTO_DESAFIO } from "./challenges.constantes";
 import { ProponerDesafioDto } from "./dto/proponer-desafio.dto";
 
@@ -15,12 +16,20 @@ const INCLUIR_DETALLE = {
   partido: { select: { id: true } },
 } as const;
 
+const INCLUIR_DETALLE_CON_RATING = {
+  desafiante: { select: { id: true, nombre: true, rating: true, rd: true, volatilidad: true } },
+  desafiado: { select: { id: true, nombre: true, rating: true, rd: true, volatilidad: true } },
+  sede: true,
+  partido: { select: { id: true } },
+} as const;
+
 @Injectable()
 export class ChallengesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly matchesService: MatchesService,
     private readonly fairPlayService: FairPlayService,
+    private readonly ratingService: RatingService,
     @InjectQueue(COLA_VENCIMIENTO_DESAFIO) private readonly colaVencimiento: Queue,
   ) {}
 
@@ -110,7 +119,12 @@ export class ChallengesService {
     });
   }
 
-  /** Desafios (propuestos o respondidos) donde alguno de mis equipos participa. */
+  /**
+   * Desafios (propuestos o respondidos) donde alguno de mis equipos participa.
+   * Suma el delta de rating proyectado para cada resultado posible ("Ganarles
+   * vale +41. Perder, apenas -7", docs Guapo §3.1) -- calculado con el rating
+   * actual de ambos equipos, sin persistir nada (`RatingService.proyectar`).
+   */
   async misDesafios(usuarioId: string) {
     const misEquipos = await this.prisma.teamMember.findMany({
       where: { userId: usuarioId },
@@ -118,10 +132,28 @@ export class ChallengesService {
     });
     const equipoIds = misEquipos.map((m) => m.teamId);
 
-    return this.prisma.challenge.findMany({
+    const desafios = await this.prisma.challenge.findMany({
       where: { OR: [{ desafianteId: { in: equipoIds } }, { desafiadoId: { in: equipoIds } }] },
       orderBy: { createdAt: "desc" },
-      include: INCLUIR_DETALLE,
+      include: INCLUIR_DETALLE_CON_RATING,
+    });
+
+    return desafios.map((desafio) => {
+      const ganaDesafiante = this.ratingService.proyectar(
+        desafio.desafiante,
+        desafio.desafiado,
+        "GANA_LOCAL",
+      );
+      const ganaDesafiado = this.ratingService.proyectar(
+        desafio.desafiante,
+        desafio.desafiado,
+        "GANA_VISITANTE",
+      );
+      return {
+        ...desafio,
+        deltaSiGanaDesafiante: ganaDesafiante.local,
+        deltaSiGanaDesafiado: ganaDesafiado.visitante,
+      };
     });
   }
 
