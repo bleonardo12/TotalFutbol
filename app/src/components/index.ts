@@ -6,5 +6,6 @@ export { FilaRanking, type ZonaFila } from "./FilaRanking";
 export { MarcaHero } from "./MarcaHero";
 export { NumeroRating } from "./NumeroRating";
 export { Pantalla } from "./Pantalla";
+export { SelectorChips, type OpcionChip } from "./SelectorChips";
 export { Tabs, type OpcionTab } from "./Tabs";
 export { Tarjeta } from "./Tarjeta";

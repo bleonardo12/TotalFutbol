@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Pressable, Text, View } from "react-native";
+import { Animated, Text, View } from "react-native";
 import { crearEquipo, misEquipos, type CategoriaFutbol, type Division } from "@/api/teams";
-import { Boton, Campo, Chip, NumeroRating, Pantalla, Tarjeta } from "@/components";
+import { Boton, Campo, Chip, NumeroRating, Pantalla, SelectorChips, Tarjeta } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -122,27 +122,11 @@ export default function Inicio(): React.JSX.Element {
               <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
                 Categoria (fija, no se puede cambiar despues)
               </Text>
-              <View style={styles.opcionesCategoria}>
-                {OPCIONES_CATEGORIA.map((opcion) => {
-                  const activo = categoria === opcion.valor;
-                  return (
-                    <Pressable
-                      key={opcion.valor}
-                      onPress={() => setCategoria(opcion.valor)}
-                      style={[styles.opcionCategoria, activo && styles.opcionCategoriaActiva]}
-                    >
-                      <Text
-                        style={[
-                          tipografia.caption,
-                          { color: activo ? colores.acentoTexto : colores.textoSecundario },
-                        ]}
-                      >
-                        {opcion.etiqueta}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
+              <SelectorChips
+                opciones={OPCIONES_CATEGORIA}
+                valorSeleccionado={categoria}
+                onCambiar={setCategoria}
+              />
             </View>
 
             {crearMutacion.isError && (
@@ -164,27 +148,11 @@ export default function Inicio(): React.JSX.Element {
   );
 }
 
-function crearEstilos({ colores, espaciado, radio }: Tema) {
+function crearEstilos({ colores, espaciado }: Tema) {
   return {
     tarjetaEquipo: {
       alignItems: "center" as const,
       gap: espaciado.xs,
-    },
-    opcionesCategoria: {
-      flexDirection: "row" as const,
-      flexWrap: "wrap" as const,
-      gap: espaciado.sm,
-    },
-    opcionCategoria: {
-      borderWidth: 1,
-      borderColor: colores.borde,
-      borderRadius: radio.pill,
-      paddingVertical: espaciado.sm,
-      paddingHorizontal: espaciado.md,
-    },
-    opcionCategoriaActiva: {
-      backgroundColor: colores.acento,
-      borderColor: colores.acento,
     },
     filaChips: {
       flexDirection: "row" as const,
