@@ -10,5 +10,6 @@ export { MarcaHero } from "./MarcaHero";
 export { NumeroRating } from "./NumeroRating";
 export { Pantalla } from "./Pantalla";
 export { SelectorChips, type OpcionChip } from "./SelectorChips";
+export { Skeleton } from "./Skeleton";
 export { Tabs, type OpcionTab } from "./Tabs";
 export { Tarjeta } from "./Tarjeta";

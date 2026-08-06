@@ -23,6 +23,7 @@ import {
   FilaEscalera,
   Pantalla,
   SelectorChips,
+  Skeleton,
   Tarjeta,
 } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
@@ -205,7 +206,27 @@ export default function Inicio(): React.JSX.Element {
       formaQuery.isLoading);
 
   if (cargandoBase || cargandoActivo) {
-    return <Pantalla centrado />;
+    return (
+      <Pantalla style={{ gap: espaciado.lg }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: espaciado.md }}>
+          <Skeleton ancho={42} alto={42} radio={12} />
+          <View style={{ flex: 1, gap: espaciado.xs }}>
+            <Skeleton ancho="60%" alto={17} />
+            <Skeleton ancho="35%" alto={12} variante="secundaria" />
+          </View>
+          <Skeleton ancho={50} alto={22} />
+        </View>
+        <Tarjeta style={{ gap: espaciado.sm }}>
+          <Skeleton ancho="70%" alto={16} />
+          <Skeleton ancho="90%" alto={12} variante="secundaria" />
+          <Skeleton ancho="40%" alto={12} variante="secundaria" />
+        </Tarjeta>
+        <Tarjeta style={{ gap: espaciado.sm }}>
+          <Skeleton ancho="50%" alto={16} />
+          <Skeleton ancho="100%" alto={44} />
+        </Tarjeta>
+      </Pantalla>
+    );
   }
 
   // Sin equipo: unica pantalla realmente distinta (docs Guapo §3.1, "ahi si es otra pantalla").
