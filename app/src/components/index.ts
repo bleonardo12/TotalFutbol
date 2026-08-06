@@ -6,6 +6,7 @@ export { Chip, type TonoChip } from "./Chip";
 export { EmptyState } from "./EmptyState";
 export { EtiquetaSeccion } from "./EtiquetaSeccion";
 export { FilaEscalera } from "./FilaEscalera";
+export { HojaInferior } from "./HojaInferior";
 export { FilaRanking, type ZonaFila } from "./FilaRanking";
 export { MarcaHero } from "./MarcaHero";
 export { NumeroRating } from "./NumeroRating";

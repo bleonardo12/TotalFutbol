@@ -3,6 +3,7 @@ import * as Location from "expo-location";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { generarHandshake, type CantidadJugadores, type Superficie } from "@/api/matches";
 import {
@@ -39,7 +40,7 @@ function formatearVencimiento(expiraEnIso: string, ahoraMs: number): string {
   }
   const minutos = Math.floor(restanteMs / 60_000);
   const segundos = Math.floor((restanteMs % 60_000) / 1000);
-  return `Vence en ${minutos}:${String(segundos).padStart(2, "0")}`;
+  return `⏳ Vence en ${minutos}:${String(segundos).padStart(2, "0")}`;
 }
 
 /** Cancha detectada por GPS (docs Guapo §3.2): permiso, ubicacion actual, la mas cercana en 1.5km. */
@@ -295,6 +296,7 @@ function SelectorCancha({
 }): React.JSX.Element {
   const accessToken = useAuthStore((s) => s.accessToken);
   const { colores, espaciado, tipografia } = useTema();
+  const insets = useSafeAreaInsets();
   const [nombreNueva, setNombreNueva] = useState("");
 
   const venuesQuery = useQuery({
@@ -335,6 +337,7 @@ function SelectorCancha({
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             padding: espaciado.lg,
+            paddingBottom: espaciado.lg + insets.bottom,
             gap: espaciado.md,
             maxHeight: "70%",
           }}

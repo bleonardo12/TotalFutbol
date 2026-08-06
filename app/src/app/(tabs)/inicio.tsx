@@ -17,6 +17,7 @@ import {
   ComoFunciona,
   EtiquetaSeccion,
   FilaEscalera,
+  HojaInferior,
   Pantalla,
   SelectorChips,
   Skeleton,
@@ -104,6 +105,7 @@ export default function Inicio(): React.JSX.Element {
   const [nombre, setNombre] = useState("");
   const [categoria, setCategoria] = useState<CategoriaFutbol | null>(null);
   const [switcherAbierto, setSwitcherAbierto] = useState(false);
+  const [comoFuncionaAbierto, setComoFuncionaAbierto] = useState(false);
 
   const usuarioQuery = useQuery({
     queryKey: ["usuario", "actual"],
@@ -310,6 +312,9 @@ export default function Inicio(): React.JSX.Element {
               </Text>
             </View>
           </View>
+        </Pressable>
+        <Pressable onPress={() => setComoFuncionaAbierto(true)} style={{ padding: espaciado.xs }}>
+          <Ionicons name="help-circle-outline" size={22} color={colores.textoSecundario} />
         </Pressable>
         {(equipos.length > 1 || opcionesCategoriaLibres.length > 0) && (
           <Pressable onPress={() => setSwitcherAbierto(true)} style={{ padding: espaciado.xs }}>
@@ -729,6 +734,10 @@ export default function Inicio(): React.JSX.Element {
         cargando={crearMutacion.isPending}
         error={crearMutacion.error?.message}
       />
+
+      <HojaInferior visible={comoFuncionaAbierto} onCerrar={() => setComoFuncionaAbierto(false)}>
+        <ComoFunciona />
+      </HojaInferior>
     </Pantalla>
   );
 }

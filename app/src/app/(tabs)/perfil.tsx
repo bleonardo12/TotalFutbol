@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Image, Modal, Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
-import { Boton, Chip, ComoFunciona, Pantalla, Tarjeta } from "@/components";
+import { Boton, Chip, ComoFunciona, HojaInferior, Pantalla, Tarjeta } from "@/components";
 import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
@@ -75,21 +75,9 @@ export default function Perfil(): React.JSX.Element {
         {`v${Constants.expoConfig?.version ?? "0.0.0"}`}
       </Text>
 
-      <Modal
-        visible={comoFuncionaAbierto}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setComoFuncionaAbierto(false)}
-      >
-        <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}
-          onPress={() => setComoFuncionaAbierto(false)}
-        >
-          <Pressable style={{ padding: 20 }}>
-            <ComoFunciona />
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <HojaInferior visible={comoFuncionaAbierto} onCerrar={() => setComoFuncionaAbierto(false)}>
+        <ComoFunciona />
+      </HojaInferior>
     </Pantalla>
   );
 }
