@@ -29,9 +29,32 @@ import {
   VENTANA_DISPUTA_HORAS,
 } from "./matches.constantes";
 
+export interface MatchProyeccion {
+  siGanaLocal: { local: number; visitante: number };
+  siGanaVisitante: { local: number; visitante: number };
+  siEmpate: { local: number; visitante: number };
+}
+
+export interface MatchDeltas {
+  local: number;
+  visitante: number;
+}
+
 const INCLUIR_DETALLE = {
   equipoLocal: { select: { id: true, nombre: true, fairPlay: true } },
   equipoVisitante: { select: { id: true, nombre: true, fairPlay: true } },
+  sede: true,
+  reporterLocal: { select: { id: true, telefono: true, nombre: true } },
+  reporterVisitante: { select: { id: true, telefono: true, nombre: true } },
+} as const;
+
+const INCLUIR_DETALLE_CON_RATING = {
+  equipoLocal: {
+    select: { id: true, nombre: true, fairPlay: true, rating: true, rd: true, volatilidad: true },
+  },
+  equipoVisitante: {
+    select: { id: true, nombre: true, fairPlay: true, rating: true, rd: true, volatilidad: true },
+  },
   sede: true,
   reporterLocal: { select: { id: true, telefono: true, nombre: true } },
   reporterVisitante: { select: { id: true, telefono: true, nombre: true } },
@@ -390,8 +413,45 @@ export class MatchesService {
     });
   }
 
+  /**
+   * `proyeccion` (partido no decidido) y `deltas` (partido LIQUIDADO) -- misma
+   * logica que `ChallengesService.misDesafios` pero para un partido puntual
+   * (docs Guapo §3.2: celda "EN JUEGO" de Firmar, delta por opcion en
+   * Reportar, delta real en la pantalla Liquidado).
+   */
   async buscarPorId(id: string) {
-    return this.prisma.match.findUnique({ where: { id }, include: INCLUIR_DETALLE });
+    const match = await this.prisma.match.findUnique({
+      where: { id },
+      include: INCLUIR_DETALLE_CON_RATING,
+    });
+    if (!match) {
+      return null;
+    }
+
+    let proyeccion: MatchProyeccion | undefined;
+    if (!match.outcomeFinal) {
+      proyeccion = {
+        siGanaLocal: this.ratingService.proyectar(match.equipoLocal, match.equipoVisitante, "GANA_LOCAL"),
+        siGanaVisitante: this.ratingService.proyectar(
+          match.equipoLocal,
+          match.equipoVisitante,
+          "GANA_VISITANTE",
+        ),
+        siEmpate: this.ratingService.proyectar(match.equipoLocal, match.equipoVisitante, "EMPATE"),
+      };
+    }
+
+    let deltas: MatchDeltas | undefined;
+    if (match.estado === "LIQUIDADO") {
+      const ledger = await this.prisma.ratingLedger.findMany({ where: { matchId: id } });
+      const local = ledger.find((asiento) => asiento.teamId === match.equipoLocalId);
+      const visitante = ledger.find((asiento) => asiento.teamId === match.equipoVisitanteId);
+      if (local && visitante) {
+        deltas = { local: local.delta, visitante: visitante.delta };
+      }
+    }
+
+    return { ...match, proyeccion, deltas };
   }
 
   /** Partidos donde el usuario es uno de los dos reporters fijados. */
