@@ -6,6 +6,7 @@ import { FOTO_MIME_PERMITIDOS } from "./auth.constantes";
 import { ActualizarPerfilDto } from "./dto/actualizar-perfil.dto";
 import { TokensService, type ParDeTokens } from "./jwt/tokens.service";
 import { OtpService } from "./otp/otp.service";
+import { normalizarTelefono } from "./telefono.util";
 
 interface ArchivoFoto {
   buffer: Buffer;
@@ -22,20 +23,25 @@ export class AuthService {
   ) {}
 
   async solicitarOtp(telefono: string): Promise<void> {
-    await this.otp.solicitar(telefono);
+    await this.otp.solicitar(normalizarTelefono(telefono));
   }
 
-  /** Verifica el OTP y crea el usuario si es la primera vez (registro agil, concepto.md §4). */
+  /**
+   * Verifica el OTP y crea el usuario si es la primera vez (registro agil, concepto.md §4).
+   * `telefono` se normaliza primero (telefono.util.ts) -- el mismo numero real, tipeado con o
+   * sin +54/9, siempre tiene que resolver al mismo User.telefono (unique), nunca crear otro.
+   */
   async verificarOtp(telefono: string, codigo: string): Promise<ParDeTokens> {
-    const valido = await this.otp.verificar(telefono, codigo);
+    const normalizado = normalizarTelefono(telefono);
+    const valido = await this.otp.verificar(normalizado, codigo);
     if (!valido) {
       throw new UnauthorizedException("Codigo invalido o vencido");
     }
 
     const usuario = await this.prisma.user.upsert({
-      where: { telefono },
+      where: { telefono: normalizado },
       update: {},
-      create: { telefono },
+      create: { telefono: normalizado },
     });
 
     return this.tokens.emitirPar(usuario.id, usuario.telefono);
