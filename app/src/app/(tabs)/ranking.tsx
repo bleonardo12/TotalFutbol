@@ -3,9 +3,9 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { FlatList, RefreshControl, Text, View } from "react-native";
 import { obtenerRanking, type EntradaRanking } from "@/api/ranking";
-import { misEquipos, type CategoriaFutbol, type Division } from "@/api/teams";
+import { type CategoriaFutbol, type Division } from "@/api/teams";
 import { Boton, FilaEscalera, NumeroRating, Pantalla, Tabs, type OpcionTab } from "@/components";
-import { useAuthStore } from "@/store/auth-store";
+import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { DIVISION_COLOR, useTema, type Tema } from "@/theme";
 
 const OPCIONES_DIVISION: OpcionTab<Division | null>[] = [
@@ -58,17 +58,11 @@ export default function Ranking(): React.JSX.Element {
   const [division, setDivision] = useState<Division | null>(null);
   const [categoria, setCategoria] = useState<CategoriaFutbol | null>(null);
   const router = useRouter();
-  const accessToken = useAuthStore((s) => s.accessToken);
   const tema = useTema();
   const { colores, espaciado, tipografia } = tema;
   const styles = crearEstilos(tema);
 
-  const equiposQuery = useQuery({
-    queryKey: ["equipos", "mios"],
-    queryFn: () => misEquipos(accessToken as string),
-    enabled: accessToken !== null,
-  });
-  const miEquipo = equiposQuery.data?.[0];
+  const { equipo: miEquipo } = useEquipoActivo();
 
   // Por defecto arranca en la categoria del equipo propio -- si todavia no cargo o no tiene equipo, Masculino.
   useEffect(() => {

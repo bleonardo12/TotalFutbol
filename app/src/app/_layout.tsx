@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/auth-store";
+import { useEquipoActivoStore } from "@/store/equipo-activo-store";
 import { TIPOGRAFIA, useTema } from "@/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -27,6 +28,8 @@ export default function RootLayout(): React.JSX.Element {
   const [queryClient] = useState(() => new QueryClient());
   const hidratado = useAuthStore((s) => s.hidratado);
   const hidratar = useAuthStore((s) => s.hidratar);
+  const equipoActivoHidratado = useEquipoActivoStore((s) => s.hidratado);
+  const hidratarEquipoActivo = useEquipoActivoStore((s) => s.hidratar);
   const { colores } = useTema();
   const [fuentesListas] = useFonts({
     Archivo_500Medium,
@@ -41,15 +44,16 @@ export default function RootLayout(): React.JSX.Element {
 
   useEffect(() => {
     hidratar();
-  }, [hidratar]);
+    hidratarEquipoActivo();
+  }, [hidratar, hidratarEquipoActivo]);
 
   useEffect(() => {
-    if (hidratado && fuentesListas) {
+    if (hidratado && equipoActivoHidratado && fuentesListas) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [hidratado, fuentesListas]);
+  }, [hidratado, equipoActivoHidratado, fuentesListas]);
 
-  if (!hidratado || !fuentesListas) {
+  if (!hidratado || !equipoActivoHidratado || !fuentesListas) {
     return (
       <SafeAreaProvider>
         <View

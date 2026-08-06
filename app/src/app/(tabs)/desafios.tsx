@@ -9,8 +9,8 @@ import {
   ETIQUETA_ESTADO_DESAFIO,
   TONO_ESTADO_DESAFIO,
 } from "@/api/challenges";
-import { misEquipos } from "@/api/teams";
 import { Boton, Chip, Pantalla, Tabs, Tarjeta, type OpcionTab } from "@/components";
+import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -35,12 +35,8 @@ export default function MisDesafios(): React.JSX.Element {
   const styles = crearEstilos(tema);
   const [solapa, setSolapa] = useState<Solapa>("recibidos");
 
-  const equiposQuery = useQuery({
-    queryKey: ["equipos", "mios"],
-    queryFn: () => misEquipos(accessToken as string),
-    enabled: accessToken !== null,
-  });
-  const miEquipoId = equiposQuery.data?.[0]?.id;
+  const { equipo: miEquipo } = useEquipoActivo();
+  const miEquipoId = miEquipo?.id;
 
   const desafiosQuery = useQuery({
     queryKey: ["desafios", "mios"],

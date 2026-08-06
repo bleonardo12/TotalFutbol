@@ -1,12 +1,12 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import { consumirHandshake } from "@/api/matches";
-import { misEquipos } from "@/api/teams";
 import { Boton, Campo, Pantalla, Tabs, type OpcionTab } from "@/components";
+import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema } from "@/theme";
 
@@ -104,12 +104,7 @@ export default function UnirsePartido(): React.JSX.Element {
   const [permiso, solicitarPermiso] = useCameraPermissions();
   const escaneadoRef = useRef(false);
 
-  const equiposQuery = useQuery({
-    queryKey: ["equipos", "mios"],
-    queryFn: () => misEquipos(accessToken as string),
-    enabled: accessToken !== null,
-  });
-  const equipo = equiposQuery.data?.[0];
+  const { equiposQuery, equipo } = useEquipoActivo();
 
   const mutacion = useMutation({
     mutationFn: (codigoAUsar: string) =>

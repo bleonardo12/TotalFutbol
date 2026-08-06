@@ -4,8 +4,8 @@ import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { Image, Pressable, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
-import { misEquipos } from "@/api/teams";
 import { Boton, Chip, Pantalla, Tarjeta } from "@/components";
+import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -24,12 +24,8 @@ export default function Perfil(): React.JSX.Element {
   });
   const usuario = usuarioQuery.data;
 
-  const equiposQuery = useQuery({
-    queryKey: ["equipos", "mios"],
-    queryFn: () => misEquipos(accessToken as string),
-    enabled: accessToken !== null,
-  });
-  const esCapitan = equiposQuery.data?.[0]?.capitanId === usuario?.id;
+  const { equipo: miEquipo } = useEquipoActivo();
+  const esCapitan = miEquipo?.capitanId === usuario?.id;
 
   async function salir(): Promise<void> {
     await cerrarSesion();

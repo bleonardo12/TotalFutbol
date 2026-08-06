@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Linking, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { generarHandshake, type CantidadJugadores, type Superficie } from "@/api/matches";
-import { misEquipos } from "@/api/teams";
 import {
   crearVenue,
   obtenerVenues,
@@ -14,6 +13,7 @@ import {
   type VenueCercana,
 } from "@/api/venues";
 import { Boton, Campo, EtiquetaSeccion, Pantalla, SelectorChips, Tarjeta } from "@/components";
+import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema } from "@/theme";
 
@@ -95,12 +95,7 @@ export default function GenerarPartido(): React.JSX.Element {
   const [pickerAbierto, setPickerAbierto] = useState(false);
   const { venue, coords, estado: estadoCancha, elegirManualmente } = useCanchaDetectada();
 
-  const equiposQuery = useQuery({
-    queryKey: ["equipos", "mios"],
-    queryFn: () => misEquipos(accessToken as string),
-    enabled: accessToken !== null,
-  });
-  const equipo = equiposQuery.data?.[0];
+  const { equiposQuery, equipo } = useEquipoActivo();
 
   const mutacion = useMutation({
     mutationFn: () =>

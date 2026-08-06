@@ -17,9 +17,9 @@ import {
   type PartidoDetalle,
 } from "@/api/matches";
 import { obtenerMiEntorno } from "@/api/ranking";
-import { misEquipos } from "@/api/teams";
 import { Boton, Campo, Chip, EtiquetaSeccion, Pantalla, Tarjeta } from "@/components";
 import { useColaReportes } from "@/hooks/useColaReportes";
+import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -107,12 +107,8 @@ export default function DetallePartido(): React.JSX.Element {
     enabled: accessToken !== null,
   });
 
-  const equiposQuery = useQuery({
-    queryKey: ["equipos", "mios"],
-    queryFn: () => misEquipos(accessToken as string),
-    enabled: accessToken !== null,
-  });
-  const miEquipoId = equiposQuery.data?.[0]?.id;
+  const { equipo: miEquipo } = useEquipoActivo();
+  const miEquipoId = miEquipo?.id;
 
   const partidoQuery = useQuery({
     queryKey: ["partidos", id],

@@ -1,19 +1,13 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
 import { aceptarDesafio, misDesafios, rechazarDesafio, type DesafioConDeltas } from "@/api/challenges";
 import { misPartidos, reportarResultado, type Partido } from "@/api/matches";
 import { obtenerMiEntorno, type MiEntorno } from "@/api/ranking";
-import {
-  crearEquipo,
-  misEquipos,
-  obtenerForma,
-  type CategoriaFutbol,
-  type Division,
-  type Equipo,
-} from "@/api/teams";
+import { crearEquipo, obtenerForma, type CategoriaFutbol, type Division, type Equipo } from "@/api/teams";
 import {
   BarraAccion,
   Boton,
@@ -26,6 +20,7 @@ import {
   Skeleton,
   Tarjeta,
 } from "@/components";
+import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -112,6 +107,7 @@ export default function Inicio(): React.JSX.Element {
 
   const [nombre, setNombre] = useState("");
   const [categoria, setCategoria] = useState<CategoriaFutbol | null>(null);
+  const [switcherAbierto, setSwitcherAbierto] = useState(false);
 
   const usuarioQuery = useQuery({
     queryKey: ["usuario", "actual"],
@@ -119,13 +115,10 @@ export default function Inicio(): React.JSX.Element {
     enabled: accessToken !== null,
   });
 
-  const equiposQuery = useQuery({
-    queryKey: ["equipos", "mios"],
-    queryFn: () => misEquipos(accessToken as string),
-    enabled: accessToken !== null,
-  });
-  const equipo: Equipo | undefined = equiposQuery.data?.[0];
+  const { equiposQuery, equipos, equipo, seleccionarEquipoActivo } = useEquipoActivo();
   const rankeado = equipo?.estado === "RANKEADO";
+  const categoriasUsadas = new Set(equipos.map((e) => e.categoria));
+  const opcionesCategoriaLibres = OPCIONES_CATEGORIA.filter((o) => !categoriasUsadas.has(o.valor));
 
   // mi-entorno y forma se degradan (no tiran error) para un equipo sin rankear -- Inicio nunca
   // oculta un bloque, siempre pide los dos apenas hay equipo (docs Guapo §3.1).
@@ -155,10 +148,12 @@ export default function Inicio(): React.JSX.Element {
 
   const crearMutacion = useMutation({
     mutationFn: () => crearEquipo(accessToken as string, nombre, categoria as CategoriaFutbol),
-    onSuccess: () => {
+    onSuccess: async (equipoCreado) => {
       setNombre("");
       setCategoria(null);
-      queryClient.invalidateQueries({ queryKey: ["equipos", "mios"] });
+      setSwitcherAbierto(false);
+      await queryClient.invalidateQueries({ queryKey: ["equipos", "mios"] });
+      seleccionarEquipoActivo(equipoCreado.id);
     },
   });
 
@@ -234,32 +229,17 @@ export default function Inicio(): React.JSX.Element {
     return (
       <Pantalla centrado>
         <Tarjeta style={{ gap: espaciado.md }}>
-          <Text style={[tipografia.display, { color: colores.textoPrimario, textAlign: "center" }]}>
-            ¿Cómo se llaman?
-          </Text>
-          <Campo placeholder="Nombre del equipo" value={nombre} onChangeText={setNombre} />
-
-          <View style={{ gap: espaciado.xs }}>
-            <EtiquetaSeccion>Categoria (fija, no se puede cambiar despues)</EtiquetaSeccion>
-            <SelectorChips
-              opciones={OPCIONES_CATEGORIA}
-              valorSeleccionado={categoria}
-              onCambiar={setCategoria}
-            />
-          </View>
-
-          {crearMutacion.isError && (
-            <Text style={[tipografia.caption, { color: colores.error }]}>
-              {crearMutacion.error.message}
-            </Text>
-          )}
-          <Boton
-            onPress={() => crearMutacion.mutate()}
+          <FormularioCrearEquipo
+            titulo="¿Cómo se llaman?"
+            nombre={nombre}
+            setNombre={setNombre}
+            categoria={categoria}
+            setCategoria={setCategoria}
+            opciones={OPCIONES_CATEGORIA}
+            onCrear={() => crearMutacion.mutate()}
             cargando={crearMutacion.isPending}
-            deshabilitado={nombre.length < 2 || categoria === null}
-          >
-            Crear
-          </Boton>
+            error={crearMutacion.error?.message}
+          />
         </Tarjeta>
       </Pantalla>
     );
@@ -319,6 +299,11 @@ export default function Inicio(): React.JSX.Element {
             </View>
           </View>
         </Pressable>
+        {equipos.length > 1 && (
+          <Pressable onPress={() => setSwitcherAbierto(true)} style={{ padding: espaciado.xs }}>
+            <Ionicons name="chevron-down" size={20} color={colores.textoSecundario} />
+          </Pressable>
+        )}
         <View style={{ alignItems: "flex-end" }}>
           <Text
             style={[tipografia.numero, { color: rankeado ? colores.textoPrimario : colores.textoApagado }]}
@@ -750,7 +735,196 @@ export default function Inicio(): React.JSX.Element {
         onPress={() => router.push("/partido/generar")}
         onEscanear={() => router.push("/partido/unirse")}
       />
+
+      <SelectorEquipo
+        visible={switcherAbierto}
+        equipos={equipos}
+        equipoActivoId={equipo.id}
+        onCerrar={() => setSwitcherAbierto(false)}
+        onElegir={seleccionarEquipoActivo}
+        opcionesCategoriaLibres={opcionesCategoriaLibres}
+        nombre={nombre}
+        setNombre={setNombre}
+        categoria={categoria}
+        setCategoria={setCategoria}
+        onCrear={() => crearMutacion.mutate()}
+        cargando={crearMutacion.isPending}
+        error={crearMutacion.error?.message}
+      />
     </Pantalla>
+  );
+}
+
+function FormularioCrearEquipo({
+  titulo,
+  nombre,
+  setNombre,
+  categoria,
+  setCategoria,
+  opciones,
+  onCrear,
+  cargando,
+  error,
+}: {
+  titulo?: string;
+  nombre: string;
+  setNombre: (v: string) => void;
+  categoria: CategoriaFutbol | null;
+  setCategoria: (v: CategoriaFutbol) => void;
+  opciones: { valor: CategoriaFutbol; etiqueta: string }[];
+  onCrear: () => void;
+  cargando: boolean;
+  error?: string;
+}): React.JSX.Element {
+  const { colores, espaciado, tipografia } = useTema();
+  return (
+    <View style={{ gap: espaciado.md }}>
+      {titulo && (
+        <Text style={[tipografia.display, { color: colores.textoPrimario, textAlign: "center" }]}>
+          {titulo}
+        </Text>
+      )}
+      <Campo placeholder="Nombre del equipo" value={nombre} onChangeText={setNombre} />
+      <View style={{ gap: espaciado.xs }}>
+        <EtiquetaSeccion>Categoria (fija, no se puede cambiar despues)</EtiquetaSeccion>
+        <SelectorChips opciones={opciones} valorSeleccionado={categoria} onCambiar={setCategoria} />
+      </View>
+      {error && <Text style={[tipografia.caption, { color: colores.error }]}>{error}</Text>}
+      <Boton onPress={onCrear} cargando={cargando} deshabilitado={nombre.length < 2 || categoria === null}>
+        Crear
+      </Boton>
+    </View>
+  );
+}
+
+function SelectorEquipo({
+  visible,
+  equipos,
+  equipoActivoId,
+  onCerrar,
+  onElegir,
+  opcionesCategoriaLibres,
+  nombre,
+  setNombre,
+  categoria,
+  setCategoria,
+  onCrear,
+  cargando,
+  error,
+}: {
+  visible: boolean;
+  equipos: Equipo[];
+  equipoActivoId: string;
+  onCerrar: () => void;
+  onElegir: (id: string) => void;
+  opcionesCategoriaLibres: { valor: CategoriaFutbol; etiqueta: string }[];
+  nombre: string;
+  setNombre: (v: string) => void;
+  categoria: CategoriaFutbol | null;
+  setCategoria: (v: CategoriaFutbol) => void;
+  onCrear: () => void;
+  cargando: boolean;
+  error?: string;
+}): React.JSX.Element {
+  const { colores, espaciado, radio, tipografia } = useTema();
+  const [alta, setAlta] = useState(false);
+
+  useEffect(() => {
+    if (!visible) setAlta(false);
+  }, [visible]);
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onCerrar}>
+      <Pressable
+        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}
+        onPress={onCerrar}
+      >
+        <Pressable
+          style={{
+            backgroundColor: colores.superficie,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: espaciado.lg,
+            gap: espaciado.md,
+            maxHeight: "80%",
+          }}
+        >
+          <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>Tus equipos</Text>
+          <ScrollView style={{ maxHeight: 320 }} contentContainerStyle={{ gap: espaciado.xs }}>
+            {equipos.map((e) => (
+              <Pressable
+                key={e.id}
+                onPress={() => {
+                  onElegir(e.id);
+                  onCerrar();
+                }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: espaciado.md,
+                  paddingVertical: espaciado.sm,
+                  paddingHorizontal: espaciado.md,
+                  backgroundColor: e.id === equipoActivoId ? colores.superficieAcento : colores.superficieHundida,
+                  borderWidth: 1,
+                  borderColor: e.id === equipoActivoId ? colores.bordeAcento : "transparent",
+                  borderRadius: radio.md,
+                }}
+              >
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 9,
+                    backgroundColor: colores.superficieElevada,
+                    borderWidth: 1,
+                    borderColor: colores.borde,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ fontFamily: "Archivo_900Black", fontSize: 12, color: colores.acento }}>
+                    {iniciales(e.nombre)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>{e.nombre}</Text>
+                  <Chip texto={OPCIONES_CATEGORIA.find((o) => o.valor === e.categoria)?.etiqueta ?? e.categoria} tono="neutral" />
+                </View>
+                <Text style={[tipografia.numeroChico, { color: colores.textoSecundario }]}>
+                  {Math.round(e.rating)}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {opcionesCategoriaLibres.length > 0 && (
+            <View style={{ gap: espaciado.sm, borderTopWidth: 1, borderTopColor: colores.bordeSutil, paddingTop: espaciado.md }}>
+              {alta ? (
+                <FormularioCrearEquipo
+                  nombre={nombre}
+                  setNombre={setNombre}
+                  categoria={categoria}
+                  setCategoria={setCategoria}
+                  opciones={opcionesCategoriaLibres}
+                  onCrear={onCrear}
+                  cargando={cargando}
+                  error={error}
+                />
+              ) : (
+                <Pressable
+                  onPress={() => setAlta(true)}
+                  style={{ paddingVertical: espaciado.sm, alignItems: "center" }}
+                >
+                  <Text style={{ fontFamily: "Archivo_600SemiBold", fontSize: 13, color: colores.acento }}>
+                    + Nuevo equipo
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 }
 

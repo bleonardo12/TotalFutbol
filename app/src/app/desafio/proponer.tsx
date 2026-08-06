@@ -5,8 +5,9 @@ import { ScrollView, Text, View } from "react-native";
 import { proponerDesafio } from "@/api/challenges";
 import type { CantidadJugadores, Superficie } from "@/api/matches";
 import { obtenerMiEntorno } from "@/api/ranking";
-import { misEquipos, obtenerProyeccionDesafio } from "@/api/teams";
+import { obtenerProyeccionDesafio } from "@/api/teams";
 import { Boton, EtiquetaSeccion, Pantalla, SelectorChips, Tarjeta } from "@/components";
+import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema } from "@/theme";
 
@@ -37,12 +38,7 @@ export default function ProponerDesafio(): React.JSX.Element {
   const [cantidadJugadores, setCantidadJugadores] = useState<CantidadJugadores>("F5");
   const [superficie, setSuperficie] = useState<Superficie>("SINTETICO");
 
-  const equiposQuery = useQuery({
-    queryKey: ["equipos", "mios"],
-    queryFn: () => misEquipos(accessToken as string),
-    enabled: accessToken !== null,
-  });
-  const equipo = equiposQuery.data?.[0];
+  const { equiposQuery, equipo } = useEquipoActivo();
 
   const miEntornoQuery = useQuery({
     queryKey: ["ranking", "mi-entorno", equipo?.id],
