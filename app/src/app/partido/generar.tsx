@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { generarHandshake, type CantidadJugadores, type Superficie } from "@/api/matches";
 import { misEquipos } from "@/api/teams";
@@ -45,6 +45,7 @@ function formatearVencimiento(expiraEnIso: string, ahoraMs: number): string {
 /** Cancha detectada por GPS (docs Guapo §3.2): permiso, ubicacion actual, la mas cercana en 1.5km. */
 function useCanchaDetectada() {
   const [venue, setVenue] = useState<VenueCercana | Venue | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [estado, setEstado] = useState<"buscando" | "encontrada" | "sin-resultado" | "sin-permiso">(
     "buscando",
   );
@@ -59,6 +60,8 @@ function useCanchaDetectada() {
       }
       try {
         const posicion = await Location.getCurrentPositionAsync({});
+        if (cancelado) return;
+        setCoords({ lat: posicion.coords.latitude, lng: posicion.coords.longitude });
         const cercanas = await obtenerVenuesCercanas(
           posicion.coords.latitude,
           posicion.coords.longitude,
@@ -79,7 +82,7 @@ function useCanchaDetectada() {
     };
   }, []);
 
-  return { venue, estado, elegirManualmente: setVenue };
+  return { venue, coords, estado, elegirManualmente: setVenue };
 }
 
 export default function GenerarPartido(): React.JSX.Element {
@@ -90,7 +93,7 @@ export default function GenerarPartido(): React.JSX.Element {
   const [superficie, setSuperficie] = useState<Superficie>("SINTETICO");
   const [ahoraMs, setAhoraMs] = useState(() => Date.now());
   const [pickerAbierto, setPickerAbierto] = useState(false);
-  const { venue, estado: estadoCancha, elegirManualmente } = useCanchaDetectada();
+  const { venue, coords, estado: estadoCancha, elegirManualmente } = useCanchaDetectada();
 
   const equiposQuery = useQuery({
     queryKey: ["equipos", "mios"],
@@ -224,9 +227,31 @@ export default function GenerarPartido(): React.JSX.Element {
                   </Text>
                 )}
                 {estadoCancha === "sin-resultado" && !venue && (
-                  <Text style={[tipografia.cuerpo, { color: colores.textoSecundario }]}>
-                    No detectamos una cancha cerca.
-                  </Text>
+                  <>
+                    <Text style={[tipografia.cuerpo, { color: colores.textoSecundario }]}>
+                      No detectamos una cancha cerca.
+                    </Text>
+                    {coords && (
+                      <Pressable
+                        onPress={() =>
+                          Linking.openURL(
+                            `https://www.google.com/maps/search/canchas+de+futbol/@${coords.lat},${coords.lng},15z`,
+                          )
+                        }
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "Archivo_600SemiBold",
+                            fontSize: 12,
+                            color: colores.acento,
+                            marginTop: 2,
+                          }}
+                        >
+                          Buscar en Google Maps
+                        </Text>
+                      </Pressable>
+                    )}
+                  </>
                 )}
                 {venue && (
                   <>

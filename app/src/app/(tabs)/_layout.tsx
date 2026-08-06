@@ -1,56 +1,56 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Text, View } from "react-native";
-import { TIPOGRAFIA, useTema } from "@/theme";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTema } from "@/theme";
 
-/** Alto de la franja de marca arriba de los iconos -- el nombre del producto no aparecia en
- * ninguna pantalla salvo login; esta es la unica franja que cubre las 5 pestanas principales. */
-const ALTO_FRANJA_MARCA = 26;
+/** Marca GUAPO como header propio, arriba de todo (no arriba de la tab bar -- feedback de
+ * Leonardo tras ver la version anterior: mas arriba y mas grande). Reemplaza el header nativo
+ * de Expo Router (que solo repetia el nombre de la pestaña, ya visible en el tab bar de abajo). */
+function HeaderMarca(): React.JSX.Element {
+  const { colores } = useTema();
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View
+      style={{
+        paddingTop: insets.top + 10,
+        paddingBottom: 12,
+        backgroundColor: colores.barra,
+        borderBottomWidth: 1,
+        borderBottomColor: colores.bordeSutil,
+        alignItems: "center",
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: "Archivo_900Black",
+          fontSize: 22,
+          letterSpacing: 2,
+          color: colores.acento,
+        }}
+      >
+        GUAPO
+      </Text>
+    </View>
+  );
+}
 
 export default function TabsLayout(): React.JSX.Element {
   const { colores } = useTema();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
-        headerTitleAlign: "center",
-        headerStyle: { backgroundColor: colores.superficie },
-        headerTintColor: colores.textoPrimario,
-        headerTitleStyle: {
-          color: colores.textoPrimario,
-          fontFamily: TIPOGRAFIA.subtitulo.fontFamily,
-          fontSize: 18,
-        },
+        header: () => <HeaderMarca />,
         tabBarStyle: {
+          backgroundColor: colores.barra,
           borderTopColor: colores.bordeSutil,
-          height: 78,
-          paddingTop: ALTO_FRANJA_MARCA,
-          paddingBottom: 8,
+          height: 56 + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: insets.bottom,
         },
-        tabBarBackground: () => (
-          <View style={{ flex: 1, backgroundColor: colores.barra }}>
-            <View
-              style={{
-                height: ALTO_FRANJA_MARCA,
-                alignItems: "center",
-                justifyContent: "center",
-                borderBottomWidth: 1,
-                borderBottomColor: colores.bordeSutil,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: "Archivo_900Black",
-                  fontSize: 11,
-                  letterSpacing: 1.5,
-                  color: colores.acento,
-                }}
-              >
-                GUAPO
-              </Text>
-            </View>
-          </View>
-        ),
         tabBarActiveTintColor: colores.acento,
         tabBarInactiveTintColor: colores.textoApagado,
         tabBarLabelStyle: { fontFamily: "Archivo_600SemiBold", fontSize: 10 },
