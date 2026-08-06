@@ -1,18 +1,25 @@
 import { useMutation } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text } from "react-native";
-import { obtenerUsuarioActual, verificarOtp } from "@/api/auth";
-import { Boton, Campo, Pantalla } from "@/components";
+import { Animated, Pressable, Text, TextInput, View } from "react-native";
+import { obtenerUsuarioActual, solicitarOtp, verificarOtp } from "@/api/auth";
+import { Boton, Pantalla } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
-import { useTema } from "@/theme";
+import { useTema, type Tema } from "@/theme";
+
+const LONGITUD_CODIGO = 6;
+const REENVIO_SEGUNDOS = 30;
 
 export default function Verificar(): React.JSX.Element {
   const { telefono } = useLocalSearchParams<{ telefono: string }>();
   const router = useRouter();
   const iniciarSesion = useAuthStore((s) => s.iniciarSesion);
-  const { colores, espaciado, tipografia } = useTema();
+  const tema = useTema();
+  const { colores, espaciado, tipografia } = tema;
+  const styles = crearEstilos(tema);
   const [codigo, setCodigo] = useState("");
+  const [segundosParaReenviar, setSegundosParaReenviar] = useState(REENVIO_SEGUNDOS);
+  const inputRef = useRef<TextInput>(null);
 
   const anim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -23,6 +30,12 @@ export default function Verificar(): React.JSX.Element {
     transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
   };
 
+  useEffect(() => {
+    if (segundosParaReenviar <= 0) return;
+    const intervalo = setInterval(() => setSegundosParaReenviar((s) => s - 1), 1000);
+    return () => clearInterval(intervalo);
+  }, [segundosParaReenviar]);
+
   const mutacion = useMutation({
     mutationFn: () => verificarOtp(telefono, codigo),
     onSuccess: async (tokens) => {
@@ -32,23 +45,55 @@ export default function Verificar(): React.JSX.Element {
     },
   });
 
+  const reenviarMutacion = useMutation({
+    mutationFn: () => solicitarOtp(telefono),
+    onSuccess: () => {
+      setCodigo("");
+      setSegundosParaReenviar(REENVIO_SEGUNDOS);
+    },
+  });
+
   return (
     <Pantalla centrado>
       <Animated.View style={[estiloAnimado, { gap: espaciado.lg }]}>
-        <Text style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}>
-          Verificar codigo
+        <Text style={[tipografia.display, { color: colores.textoPrimario, textAlign: "center" }]}>
+          Los 6 dígitos que te llegaron
         </Text>
         <Text style={[tipografia.cuerpo, { color: colores.textoSecundario, textAlign: "center" }]}>
-          Te enviamos un codigo a {telefono}
+          Te enviamos un código a {telefono}
         </Text>
 
-        <Campo
-          placeholder="123456"
-          keyboardType="number-pad"
-          maxLength={6}
+        <Pressable onPress={() => inputRef.current?.focus()} style={styles.cajasFila}>
+          {Array.from({ length: LONGITUD_CODIGO }).map((_, indice) => {
+            const caracter = codigo[indice];
+            const activa = indice === codigo.length;
+            return (
+              <View
+                key={indice}
+                style={[
+                  styles.caja,
+                  caracter ? styles.cajaLlena : undefined,
+                  activa ? styles.cajaActiva : undefined,
+                ]}
+              >
+                {caracter ? (
+                  <Text style={[tipografia.titulo, { color: colores.textoPrimario }]}>{caracter}</Text>
+                ) : activa ? (
+                  <View style={styles.cursor} />
+                ) : null}
+              </View>
+            );
+          })}
+        </Pressable>
+
+        <TextInput
+          ref={inputRef}
           value={codigo}
-          onChangeText={setCodigo}
-          style={{ textAlign: "center", letterSpacing: 6 }}
+          onChangeText={(texto) => setCodigo(texto.replace(/[^0-9]/g, "").slice(0, LONGITUD_CODIGO))}
+          keyboardType="number-pad"
+          maxLength={LONGITUD_CODIGO}
+          autoFocus
+          style={styles.inputOculto}
         />
 
         {mutacion.isError && (
@@ -60,11 +105,60 @@ export default function Verificar(): React.JSX.Element {
         <Boton
           onPress={() => mutacion.mutate()}
           cargando={mutacion.isPending}
-          deshabilitado={codigo.length !== 6}
+          deshabilitado={codigo.length !== LONGITUD_CODIGO}
         >
           Verificar
         </Boton>
+
+        {segundosParaReenviar > 0 ? (
+          <Text style={[tipografia.caption, { color: colores.textoApagado, textAlign: "center" }]}>
+            {`Reenviar código en 0:${String(segundosParaReenviar).padStart(2, "0")}`}
+          </Text>
+        ) : (
+          <Pressable onPress={() => reenviarMutacion.mutate()} disabled={reenviarMutacion.isPending}>
+            <Text style={[tipografia.cuerpoDestacado, { color: colores.acento, textAlign: "center" }]}>
+              Reenviar código
+            </Text>
+          </Pressable>
+        )}
       </Animated.View>
     </Pantalla>
   );
+}
+
+function crearEstilos({ colores, espaciado, radio }: Tema) {
+  return {
+    cajasFila: {
+      flexDirection: "row" as const,
+      justifyContent: "center" as const,
+      gap: espaciado.sm,
+    },
+    caja: {
+      width: 48,
+      height: 62,
+      borderRadius: radio.md,
+      borderWidth: 1,
+      borderColor: colores.borde,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
+    cajaLlena: {
+      borderColor: colores.bordeAcento,
+    },
+    cajaActiva: {
+      borderWidth: 2,
+      borderColor: colores.acento,
+    },
+    cursor: {
+      width: 2,
+      height: 26,
+      backgroundColor: colores.acento,
+    },
+    inputOculto: {
+      position: "absolute" as const,
+      opacity: 0,
+      height: 1,
+      width: 1,
+    },
+  };
 }
