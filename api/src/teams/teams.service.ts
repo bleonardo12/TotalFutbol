@@ -15,6 +15,10 @@ const INCLUIR_DETALLE = {
 /** Hasta 10 barras en el mini-grafico de forma (docs Guapo §3.1, "TU FORMA"). */
 const TOPE_BARRAS_FORMA = 10;
 
+/** Umbrales de la senal de colusion (patronesSospechosos) -- arbitrarios pero razonables, a calibrar con datos reales. */
+const MIN_PARTIDOS_PATRON = 3;
+const UMBRAL_CONCENTRACION_RIVAL = 50;
+
 export interface FormaEquipo {
   gEP: { g: number; e: number; p: number };
   /** Upsets / partidos ganados, redondeado. 0 si nunca gano. */
@@ -39,6 +43,16 @@ export interface PalmaresItem {
   esCampeonDelAnio: boolean;
 }
 
+export interface PatronSospechoso {
+  equipoId: string;
+  equipoNombre: string;
+  categoria: CategoriaFutbol;
+  rivalId: string;
+  rivalNombre: string;
+  partidos: number;
+  porcentaje: number;
+}
+
 @Injectable()
 export class TeamsService {
   constructor(
@@ -49,6 +63,7 @@ export class TeamsService {
 
   /** Crea el equipo con el capitan como primer integrante del plantel (progresivo, concepto.md §4). */
   async crear(capitanId: string, nombre: string, categoria: CategoriaFutbol) {
+    await this.verificarLimiteCapitan(capitanId, categoria);
     await this.verificarNombreDisponible(nombre, categoria);
 
     const equipo = await this.prisma.team.create({
@@ -268,6 +283,86 @@ export class TeamsService {
       division: c.division,
       esCampeonDelAnio: c.esCampeonDelAnio,
     }));
+  }
+
+  /**
+   * Senal de colusion para el admin (equipos fantasma, concepto.md §16): un equipo que jugo la
+   * gran mayoria de sus partidos contra el mismo rival es sospechoso de goleadas arregladas para
+   * inflar el rating. NO bloquea ni sanciona nada solo -- "la app no arbitra, el admin decide"
+   * (CLAUDE.md). Umbrales arbitrarios pero razonables, a calibrar con datos reales (mismo criterio
+   * que el rating inicial): minimo 3 partidos liquidados, 50%+ contra el mismo rival.
+   */
+  async patronesSospechosos(): Promise<PatronSospechoso[]> {
+    const partidos = await this.prisma.match.findMany({
+      where: { estado: "LIQUIDADO" },
+      select: { equipoLocalId: true, equipoVisitanteId: true },
+    });
+
+    const porEquipo = new Map<string, Map<string, number>>();
+    const sumarRival = (equipoId: string, rivalId: string) => {
+      const rivales = porEquipo.get(equipoId) ?? new Map<string, number>();
+      rivales.set(rivalId, (rivales.get(rivalId) ?? 0) + 1);
+      porEquipo.set(equipoId, rivales);
+    };
+    for (const partido of partidos) {
+      sumarRival(partido.equipoLocalId, partido.equipoVisitanteId);
+      sumarRival(partido.equipoVisitanteId, partido.equipoLocalId);
+    }
+
+    const candidatos: { equipoId: string; rivalId: string; partidos: number; porcentaje: number }[] = [];
+    for (const [equipoId, rivales] of porEquipo) {
+      const total = Array.from(rivales.values()).reduce((suma, n) => suma + n, 0);
+      if (total < MIN_PARTIDOS_PATRON) {
+        continue;
+      }
+      const [rivalId, cantidad] = Array.from(rivales.entries()).sort((a, b) => b[1] - a[1])[0] as [string, number];
+      const porcentaje = Math.round((cantidad / total) * 100);
+      if (porcentaje >= UMBRAL_CONCENTRACION_RIVAL) {
+        candidatos.push({ equipoId, rivalId, partidos: total, porcentaje });
+      }
+    }
+
+    if (candidatos.length === 0) {
+      return [];
+    }
+
+    const idsEquipos = Array.from(
+      new Set(candidatos.flatMap((c) => [c.equipoId, c.rivalId])),
+    );
+    const equipos = await this.prisma.team.findMany({
+      where: { id: { in: idsEquipos } },
+      select: { id: true, nombre: true, categoria: true },
+    });
+    const nombrePorId = new Map(equipos.map((e) => [e.id, e]));
+
+    return candidatos
+      .map((c) => ({
+        equipoId: c.equipoId,
+        equipoNombre: nombrePorId.get(c.equipoId)?.nombre ?? "?",
+        categoria: nombrePorId.get(c.equipoId)?.categoria as CategoriaFutbol,
+        rivalId: c.rivalId,
+        rivalNombre: nombrePorId.get(c.rivalId)?.nombre ?? "?",
+        partidos: c.partidos,
+        porcentaje: c.porcentaje,
+      }))
+      .sort((a, b) => b.porcentaje - a.porcentaje);
+  }
+
+  /**
+   * Antifraude (Hito 3, decision de Leonardo 2026-08-06): un capitan no puede
+   * "lavar" el mal historial (rating/fair-play bajo) de un equipo creando
+   * uno nuevo en la misma categoria -- limite de 1 equipo por capitan por
+   * categoria, de por vida (no hay forma de dar de baja un equipo ni de
+   * transferir la capitania, asi que "equipos donde soy capitan" es
+   * simplemente "equipos que cree"). Distintas categorias si se permiten:
+   * son pools de ranking separados, capitanear un equipo masculino y otro
+   * mixto no tiene el mismo problema.
+   */
+  private async verificarLimiteCapitan(capitanId: string, categoria: CategoriaFutbol): Promise<void> {
+    const yaTiene = await this.prisma.team.count({ where: { capitanId, categoria } });
+    if (yaTiene > 0) {
+      throw new ConflictException("Ya sos capitan de un equipo en esta categoria");
+    }
   }
 
   /**

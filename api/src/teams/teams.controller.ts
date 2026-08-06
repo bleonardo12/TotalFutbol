@@ -1,5 +1,6 @@
 import { Body, Controller, Get, NotFoundException, Param, Post, Query, UseGuards } from "@nestjs/common";
 import type { User } from "@prisma/client";
+import { AdminGuard } from "../auth/jwt/admin.guard";
 import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { UsuarioActual } from "../auth/jwt/usuario-actual.decorator";
 import { CrearEquipoDto } from "./dto/crear-equipo.dto";
@@ -20,6 +21,13 @@ export class TeamsController {
   @Get("mios")
   async mios(@UsuarioActual() usuario: User) {
     return this.teamsService.buscarMios(usuario.id);
+  }
+
+  // Antes de ":id" -- si no, "patrones-sospechosos" se interpreta como un id de equipo.
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  @Get("patrones-sospechosos")
+  async patronesSospechosos() {
+    return this.teamsService.patronesSospechosos();
   }
 
   @Get(":id")
