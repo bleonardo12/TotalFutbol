@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
-import { subirEvidencia } from "@/api/disputes";
+import { obtenerDisputa, subirEvidencia } from "@/api/disputes";
 import { Boton, Campo, Pantalla } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
@@ -20,6 +20,12 @@ export default function SubirEvidencia(): React.JSX.Element {
   const [permiso, solicitarPermiso] = useCameraPermissions();
   const [fotoUri, setFotoUri] = useState<string | null>(null);
   const [descripcion, setDescripcion] = useState("");
+
+  const disputaQuery = useQuery({
+    queryKey: ["disputas", matchId],
+    queryFn: () => obtenerDisputa(accessToken as string, matchId),
+    enabled: accessToken !== null && !!matchId,
+  });
 
   const mutacion = useMutation({
     mutationFn: () => {
@@ -82,6 +88,16 @@ export default function SubirEvidencia(): React.JSX.Element {
           ) : (
             <>
               <CameraView ref={camaraRef} style={{ flex: 1 }} facing="back" />
+              {disputaQuery.data && (
+                <View style={styles.nonceOverlay} pointerEvents="none">
+                  <Text style={[tipografia.codigo, { color: "#EEF4EC", fontSize: 28, letterSpacing: 3 }]}>
+                    {disputaQuery.data.nonce}
+                  </Text>
+                  <Text style={[tipografia.caption, { color: "#EEF4EC", textAlign: "center" }]}>
+                    Escribilo a mano y que se vea en la foto
+                  </Text>
+                </View>
+              )}
               <Pressable style={styles.botonCaptura} onPress={tomarFoto} />
             </>
           )}
@@ -118,13 +134,21 @@ export default function SubirEvidencia(): React.JSX.Element {
   );
 }
 
-function crearEstilos({ colores, radio }: Tema) {
+function crearEstilos({ colores, espaciado, radio }: Tema) {
   return {
     camaraContenedor: {
       height: 400,
       borderRadius: radio.lg,
       overflow: "hidden" as const,
       backgroundColor: "#000",
+    },
+    nonceOverlay: {
+      position: "absolute" as const,
+      top: espaciado.lg,
+      left: espaciado.lg,
+      right: espaciado.lg,
+      alignItems: "center" as const,
+      gap: 4,
     },
     botonCaptura: {
       position: "absolute" as const,
