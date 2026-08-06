@@ -525,7 +525,11 @@ export default function Inicio(): React.JSX.Element {
                             onPress: () =>
                               router.push({
                                 pathname: "/desafio/proponer",
-                                params: { equipoDesafiadoId: vecino.id, equipoDesafiadoNombre: vecino.nombre },
+                                params: {
+                                  equipoDesafiadoId: vecino.id,
+                                  equipoDesafiadoNombre: vecino.nombre,
+                                  equipoDesafiadoPosicion: String(vecino.posicion),
+                                },
                               }),
                           }
                         : undefined
