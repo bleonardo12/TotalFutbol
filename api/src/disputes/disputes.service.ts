@@ -182,14 +182,18 @@ export class DisputesService {
             equipoVisitante: { select: { id: true, nombre: true, fairPlay: true } },
           },
         },
+        _count: { select: { evidencias: true, respuestasPlantel: true } },
       },
       orderBy: { capaExpiraEn: "asc" },
     });
 
-    // Endpoint ya restringido a ADMIN por el guard del controller.
-    return disputas.map((disputa) => ({
+    // Endpoint ya restringido a ADMIN por el guard del controller. Conteos de evidencia/plantel
+    // para la grilla de senales de la cola (docs Guapo §3.4) -- fair-play ya viaja en el equipo.
+    return disputas.map(({ _count, ...disputa }) => ({
       ...disputa,
       presuncionContraEquipoId: this.calcularPresuncion(disputa.match),
+      evidenciasCount: _count.evidencias,
+      respuestasPlantelCount: _count.respuestasPlantel,
     }));
   }
 
