@@ -1,4 +1,5 @@
 import { apiRequest } from "./client";
+import type { CantidadJugadores, Superficie } from "./matches";
 
 /** De mejor a peor (concepto.md §6): corte por percentil del ranking global, no un dato guardado. */
 export type Division = "ELITE" | "ORO" | "PLATA" | "BRONCE";
@@ -59,4 +60,28 @@ export interface ProyeccionDesafio {
 /** Deltas reales antes de crear el desafio, para Proponer desafio (docs Guapo §3.3). */
 export function obtenerProyeccionDesafio(teamId: string, rivalId: string): Promise<ProyeccionDesafio> {
   return apiRequest(`/teams/${teamId}/proyectar-desafio?rivalId=${rivalId}`);
+}
+
+export interface FormatoEquipo {
+  cantidadJugadores: CantidadJugadores;
+  superficie: Superficie;
+  partidos: number;
+  victorias: number;
+  porcentaje: number;
+}
+
+/** "DONDE SON BUENOS" del perfil de equipo: partidos liquidados por formato, mejor % primero (docs Guapo §3.5). */
+export function obtenerPorFormato(teamId: string): Promise<FormatoEquipo[]> {
+  return apiRequest(`/teams/${teamId}/formato`);
+}
+
+export interface PalmaresItem {
+  anio: number;
+  division: Division;
+  esCampeonDelAnio: boolean;
+}
+
+/** "PALMARES" del perfil de equipo: 1° de cada division al cierre de cada temporada (docs Guapo §3.5). */
+export function obtenerPalmares(teamId: string): Promise<PalmaresItem[]> {
+  return apiRequest(`/teams/${teamId}/palmares`);
 }
