@@ -25,12 +25,23 @@ function HeaderMarca(): React.JSX.Element {
       <Text
         style={{
           fontFamily: "Archivo_900Black",
-          fontSize: 22,
+          fontSize: 30,
           letterSpacing: 2,
-          color: colores.acento,
+          color: colores.oro,
         }}
       >
         CABRA
+      </Text>
+      <Text
+        style={{
+          fontFamily: "Archivo_700Bold",
+          fontSize: 11,
+          letterSpacing: 0.8,
+          color: colores.textoSecundario,
+          marginTop: 1,
+        }}
+      >
+        Demostrá que sos el GOAT 🐐
       </Text>
     </View>
   );
