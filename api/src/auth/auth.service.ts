@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { User } from "@prisma/client";
-import { OAuth2Client } from "google-auth-library";
+import { OAuth2Client, type TokenPayload } from "google-auth-library";
 import { StorageService } from "../storage/storage.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { FOTO_MIME_PERMITIDOS } from "./auth.constantes";
@@ -105,8 +105,16 @@ export class AuthService {
 
   private async verificarIdTokenGoogle(idToken: string): Promise<{ googleId: string; email: string }> {
     const clientId = this.config.getOrThrow<string>("GOOGLE_CLIENT_ID");
-    const ticket = await this.obtenerGoogleClient().verifyIdToken({ idToken, audience: clientId });
-    const payload = ticket.getPayload();
+    // google-auth-library tira errores crudos (no HttpException) ante un token mal formado --
+    // sin este try/catch cualquier token invalido, no solo uno que falle la firma, terminaba en
+    // un 500 en vez de un 401 prolijo.
+    let payload: TokenPayload | undefined;
+    try {
+      const ticket = await this.obtenerGoogleClient().verifyIdToken({ idToken, audience: clientId });
+      payload = ticket.getPayload();
+    } catch {
+      throw new UnauthorizedException("Token de Google invalido");
+    }
     if (!payload || !payload.sub || !payload.email || !payload.email_verified) {
       throw new UnauthorizedException("Token de Google invalido");
     }
