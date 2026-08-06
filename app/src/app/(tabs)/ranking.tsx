@@ -138,7 +138,7 @@ export default function Ranking(): React.JSX.Element {
               accion={
                 !esMiEquipo
                   ? {
-                      etiqueta: "RETAR",
+                      etiqueta: "RETAR 👊",
                       onPress: () =>
                         router.push({
                           pathname: "/desafio/proponer",

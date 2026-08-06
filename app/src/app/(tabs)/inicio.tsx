@@ -290,7 +290,10 @@ export default function Inicio(): React.JSX.Element {
             <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>{equipo.nombre}</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: espaciado.xs }}>
               {rankeado && equipo.division ? (
-                <Chip texto={ETIQUETA_DIVISION[equipo.division]} tono={TONO_DIVISION[equipo.division]} />
+                <Chip
+                  texto={equipo.division === "ELITE" ? `${ETIQUETA_DIVISION[equipo.division]} 🐐` : ETIQUETA_DIVISION[equipo.division]}
+                  tono={TONO_DIVISION[equipo.division]}
+                />
               ) : (
                 <Chip texto="Sin rankear" tono="neutral" />
               )}
@@ -514,7 +517,7 @@ export default function Inicio(): React.JSX.Element {
               ) : (
                 <>
                   <Text style={[tipografia.display, { color: colores.textoPrimario, textAlign: "center" }]}>
-                    {posicion > 10 ? `Faltan ${posicion - 10}\npara el top 10` : "Ya estás\nen el top 10"}
+                    {posicion > 10 ? `Faltan ${posicion - 10}\npara el top 10` : "Ya estás\nen el top 10 🐐"}
                   </Text>
                   <Text
                     style={[
@@ -564,7 +567,7 @@ export default function Inicio(): React.JSX.Element {
                     accion={
                       !vecino.esPropio && vecino.posicion < posicion
                         ? {
-                            etiqueta: "RETAR",
+                            etiqueta: "RETAR 👊",
                             onPress: () =>
                               router.push({
                                 pathname: "/desafio/proponer",
@@ -611,7 +614,11 @@ export default function Inicio(): React.JSX.Element {
 
         {/* TU FORMA -- nunca se oculta: barras y celdas en cero/guion sin partidos. */}
         <View style={[{ gap: espaciado.sm }, styles.divisorSeccion]}>
-          <EtiquetaSeccion>Tu forma</EtiquetaSeccion>
+          <EtiquetaSeccion>
+            {tieneForma && (forma as NonNullable<typeof forma>).gEP.g > (forma as NonNullable<typeof forma>).gEP.e + (forma as NonNullable<typeof forma>).gEP.p
+              ? "Tu forma 🔥"
+              : "Tu forma"}
+          </EtiquetaSeccion>
           <Tarjeta style={{ gap: espaciado.md }}>
             {tieneForma ? (
               <>

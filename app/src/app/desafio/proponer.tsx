@@ -160,7 +160,7 @@ export default function ProponerDesafio(): React.JSX.Element {
           )}
 
           <Boton onPress={() => mutacion.mutate()} cargando={mutacion.isPending}>
-            Mandar el desafío
+            Mandar el desafío 👊
           </Boton>
         </ScrollView>
       )}
