@@ -2,7 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Text, View } from "react-native";
 import { useTema } from "@/theme";
 
-/** Hero de las pantallas de arranque (login/verificar): wordmark GUAPO (docs Guapo §2, §7). */
+/** Hero de las pantallas de arranque (login/verificar): wordmark CABRA. */
 export function MarcaHero(): React.JSX.Element {
   const { colores, espaciado } = useTema();
 
@@ -41,7 +41,7 @@ export function MarcaHero(): React.JSX.Element {
           color: colores.textoPrimario,
         }}
       >
-        GUAPO
+        CABRA
       </Text>
       <Text
         style={{
@@ -53,7 +53,7 @@ export function MarcaHero(): React.JSX.Element {
           marginTop: espaciado.xs,
         }}
       >
-        Que se sepa quién se la banca.
+        Que se sepa quién es la cabra. 🐐
       </Text>
     </View>
   );

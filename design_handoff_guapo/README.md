@@ -408,23 +408,41 @@ en `app/src/api/`. Lo que hace falta agregar:
 
 ## 6. Copy — reglas
 
-El tono es español rioplatense, corto y con actitud. Tres reglas:
+El tono es español rioplatense, corto y con actitud. Reglas:
 
 1. **Nunca una etiqueta de sistema donde puede ir una frase.** No "Confirmar / Disputar" sino
    "Fue así / No fue así". No "Rechazar" sino "Achicarse".
 2. **Siempre decir la consecuencia con el número.** "Perderías 19 puntos", "Ganarles vale +41",
    "quedan 14 h", "11 días sin pisar la cancha". El diseño depende de esto: sin el dato concreto las
    pantallas quedan vacías.
-3. **Sin emoji, sin signos de exclamación.** La actitud viene de la elección de palabras.
+3. **Emoji con criterio, no de relleno** (revisado 2026-08-06, rebrand Cabra). La regla original
+   ("sin emoji, sin exclamación") se escribió sin pensarla del todo y se revirtió a pedido de
+   Leonardo — "estamos en 2026", quiere aprovechar la modernidad y los juegos de palabras. Un emoji
+   por concepto, siempre el mismo (ver tabla abajo), nunca decorativo. El número sigue siendo el
+   héroe tipográfico (regla 4 de `docs/design.md`): el emoji acompaña al texto, no compite con el
+   numeral ni lo reemplaza. Los signos de exclamación quedan permitidos pero no son el default —
+   el emoji ya aporta la energía, no hace falta apilar los dos.
+
+**Vocabulario de emoji** (referencia durable para el repaso de copy de cada pantalla):
+
+| Concepto | Emoji | Dónde |
+|---|---|---|
+| Identidad / mascota | 🐐 | wordmark, hitos máximos (llegar a Elite, campeón del año) |
+| Desafío / reto | 👊 | RETAR, mandar desafío |
+| Urgencia / cuenta regresiva | ⏳ | SLA de disputa, vencimiento de código/desafío |
+| Racha ganadora | 🔥 | TU FORMA con racha positiva |
+| Alerta / disputa / fair-play negativo | ⚠️ | disputa abierta, incidente reportado |
+| Sin señal / guardado local | 📡 | banda offline |
 
 Los textos exactos están en los mocks. Están pensados para caber: si el copy cambia mucho, revisar
 que no se rompa el layout en 360 px de ancho.
 
 ## 7. Nombre y marca
 
-El producto pasa de "TotalFutbol (TBD)" a **Guapo** — "el guapo del barrio", el que se la banca
-contra cualquiera. Wordmark: `Archivo_900Black`, tracking −3, todo en mayúscula, con un círculo de
-borde grueso en acento a la izquierda o encima. Bajada: *"Que se sepa quién se la banca."*
+El producto pasó de "TotalFutbol (TBD)" a **Guapo** — "el guapo del barrio", el que se la banca
+contra cualquiera — y de ahí a **Cabra** (2026-08-06, juego de palabras con GOAT: "Greatest Of All
+Time"). Wordmark: `Archivo_900Black`, tracking −3, todo en mayúscula, con un círculo de borde
+grueso en acento a la izquierda o encima. Bajada: *"Que se sepa quién es la cabra. 🐐"*
 
 Vocabulario del producto, para usar consistente en toda la app:
 
@@ -434,7 +452,8 @@ Vocabulario del producto, para usar consistente en toda la app:
 - ganarle a alguien muy superior → **upset** (se mantiene, ya es de uso común)
 - el ranking de conducta → **fair-play** (sin traducir)
 
-Si el nombre cambia, lo único atado a él son `MarcaHero`, el login y `app.json`.
+Si el nombre cambia, lo único atado a él son `MarcaHero`, el header de tabs (`(tabs)/_layout.tsx`),
+el login y `app.json`.
 
 ## 8. Assets
 

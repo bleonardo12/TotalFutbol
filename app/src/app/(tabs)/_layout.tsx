@@ -4,7 +4,7 @@ import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTema } from "@/theme";
 
-/** Marca GUAPO como header propio, arriba de todo (no arriba de la tab bar -- feedback de
+/** Marca CABRA como header propio, arriba de todo (no arriba de la tab bar -- feedback de
  * Leonardo tras ver la version anterior: mas arriba y mas grande). Reemplaza el header nativo
  * de Expo Router (que solo repetia el nombre de la pestaña, ya visible en el tab bar de abajo). */
 function HeaderMarca(): React.JSX.Element {
@@ -30,7 +30,7 @@ function HeaderMarca(): React.JSX.Element {
           color: colores.acento,
         }}
       >
-        GUAPO
+        CABRA
       </Text>
     </View>
   );
