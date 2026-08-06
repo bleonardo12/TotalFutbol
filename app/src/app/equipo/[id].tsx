@@ -103,7 +103,10 @@ export default function PerfilEquipo(): React.JSX.Element {
                 tono={equipo.estado === "RANKEADO" ? "elite" : "neutral"}
               />
               {equipo.division && (
-                <Chip texto={ETIQUETA_DIVISION[equipo.division]} tono={TONO_DIVISION[equipo.division]} />
+                <Chip
+                  texto={equipo.division === "ELITE" ? `${ETIQUETA_DIVISION[equipo.division]} 🐐` : ETIQUETA_DIVISION[equipo.division]}
+                  tono={TONO_DIVISION[equipo.division]}
+                />
               )}
               <Chip texto={ETIQUETA_CATEGORIA[equipo.categoria]} tono="neutral" />
             </View>
@@ -224,7 +227,7 @@ export default function PerfilEquipo(): React.JSX.Element {
                     style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
                   >
                     <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
-                      {item.esCampeonDelAnio ? `Campeón del año ${item.anio}` : `Campeón ${item.anio}`}
+                      {item.esCampeonDelAnio ? `Campeón del año ${item.anio} 🐐` : `Campeón ${item.anio}`}
                     </Text>
                     <Chip texto={ETIQUETA_DIVISION[item.division]} tono={TONO_DIVISION[item.division]} />
                   </Tarjeta>
@@ -252,7 +255,7 @@ export default function PerfilEquipo(): React.JSX.Element {
               })
             }
           >
-            Desafiar
+            Desafiar 👊
           </Boton>
         </ScrollView>
       )}

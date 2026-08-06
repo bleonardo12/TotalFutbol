@@ -128,7 +128,7 @@ export default function Verificar(): React.JSX.Element {
 
         {segundosParaReenviar > 0 ? (
           <Text style={[tipografia.caption, { color: colores.textoApagado, textAlign: "center" }]}>
-            {`Reenviar código en 0:${String(segundosParaReenviar).padStart(2, "0")}`}
+            {`⏳ Reenviar código en 0:${String(segundosParaReenviar).padStart(2, "0")}`}
           </Text>
         ) : (
           <Pressable onPress={() => reenviarMutacion.mutate()} disabled={reenviarMutacion.isPending}>
