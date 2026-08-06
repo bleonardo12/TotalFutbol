@@ -29,7 +29,8 @@ export interface VecinoEscalera {
 }
 
 export interface MiEntorno {
-  posicion: number;
+  /** null si el equipo todavia no esta rankeado (docs Guapo §3.1: el bloque se degrada, no se oculta). */
+  posicion: number | null;
   total: number;
   /** Hasta 2 arriba y 2 abajo, incluye al propio equipo. */
   vecinos: VecinoEscalera[];

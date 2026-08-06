@@ -82,16 +82,47 @@ export interface Partido {
   reportes: ReporteResultado[];
 }
 
+interface EquipoResumenConRating extends EquipoResumen {
+  rating: number;
+  rd: number;
+  volatilidad: number;
+}
+
+interface DeltaPorLado {
+  local: number;
+  visitante: number;
+}
+
+/**
+ * `obtenerPartido` (GET /matches/:id) trae mas que la lista de `misPartidos`: rating/rd/volatilidad
+ * de ambos equipos, la sede, y proyeccion/deltas de rating (docs Guapo §3.2 -- celda "EN JUEGO" de
+ * Firmar, delta por opcion en Reportar, delta real en Liquidado).
+ */
+export interface PartidoDetalle extends Omit<Partido, "equipoLocal" | "equipoVisitante"> {
+  equipoLocal: EquipoResumenConRating;
+  equipoVisitante: EquipoResumenConRating;
+  sede: { id: string; nombre: string; lat: number; lng: number } | null;
+  /** Presente si el partido todavia no tiene outcomeFinal. */
+  proyeccion?: {
+    siGanaLocal: DeltaPorLado;
+    siGanaVisitante: DeltaPorLado;
+    siEmpate: DeltaPorLado;
+  };
+  /** Presente solo si estado === "LIQUIDADO". */
+  deltas?: DeltaPorLado;
+}
+
 export function generarHandshake(
   token: string,
   equipoLocalId: string,
   cantidadJugadores: CantidadJugadores,
   superficie: Superficie,
+  sedeId?: string,
 ): Promise<{ codigo: string; expiraEn: string }> {
   return apiRequest("/matches/generar", {
     method: "POST",
     token,
-    body: { equipoLocalId, cantidadJugadores, superficie },
+    body: { equipoLocalId, cantidadJugadores, superficie, sedeId },
   });
 }
 
@@ -111,7 +142,7 @@ export function misPartidos(token: string): Promise<Partido[]> {
   return apiRequest("/matches/mios", { token });
 }
 
-export function obtenerPartido(token: string, id: string): Promise<Partido> {
+export function obtenerPartido(token: string, id: string): Promise<PartidoDetalle> {
   return apiRequest(`/matches/${id}`, { token });
 }
 
