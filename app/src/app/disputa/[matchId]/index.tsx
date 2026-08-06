@@ -3,14 +3,15 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
-import { obtenerDisputa, ETIQUETA_CAPA } from "@/api/disputes";
+import { obtenerDisputa } from "@/api/disputes";
 import {
   obtenerPartido,
   resolverDisputa,
   type OutcomePartido,
+  type Partido,
   type TipoSancionFairPlay,
 } from "@/api/matches";
-import { Boton, Pantalla, SelectorChips, Tarjeta } from "@/components";
+import { Boton, Chip, Pantalla, SelectorChips, Tarjeta } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -22,6 +23,21 @@ const OPCIONES_SANCION: { valor: TipoSancionFairPlay; etiqueta: string }[] = [
 function formatearFecha(iso: string): string {
   return new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
 }
+
+function textoOutcome(outcome: OutcomePartido, partido: Partido): string {
+  if (outcome === "EMPATE") {
+    return "Empataron";
+  }
+  return outcome === "GANA_LOCAL"
+    ? `Ganó ${partido.equipoLocal.nombre}`
+    : `Ganó ${partido.equipoVisitante.nombre}`;
+}
+
+const PASOS_TIMELINE: { capa: "C1_EVIDENCIA" | "C2_PLANTELES" | "C3_ADMIN"; titulo: string; texto: string }[] = [
+  { capa: "C1_EVIDENCIA", titulo: "Evidencia", texto: "Suban una foto que muestre el resultado, con el codigo visible." },
+  { capa: "C2_PLANTELES", titulo: "Planteles", texto: "Le preguntamos a los dos planteles que vieron, sin que se vote." },
+  { capa: "C3_ADMIN", titulo: "Admin", texto: "Un admin de la app decide con lo que haya -- se anula si es indeterminable." },
+];
 
 export default function EstadoDisputa(): React.JSX.Element {
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
@@ -81,11 +97,38 @@ export default function EstadoDisputa(): React.JSX.Element {
         </Text>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: espaciado.md }}>
-          <Text
-            style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}
-          >
-            {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
-          </Text>
+          <View style={{ alignItems: "center", gap: espaciado.xs }}>
+            <Text
+              style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}
+            >
+              {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
+            </Text>
+            {!disputa.resuelta && <Chip texto="En disputa" tono="error" />}
+          </View>
+
+          {!disputa.resuelta && (
+            <Tarjeta peligro style={{ gap: espaciado.sm }}>
+              <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+                Los dos dicen que ganaron
+              </Text>
+              {partido.reportes.map((reporte) => {
+                const equipo =
+                  reporte.teamId === partido.equipoLocal.id
+                    ? partido.equipoLocal
+                    : partido.equipoVisitante;
+                return (
+                  <View key={reporte.id} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                    <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                      {equipo.nombre}
+                    </Text>
+                    <Text style={[tipografia.cuerpoDestacado, { color: colores.error }]}>
+                      {textoOutcome(reporte.outcome, partido)}
+                    </Text>
+                  </View>
+                );
+              })}
+            </Tarjeta>
+          )}
 
           {disputa.resuelta ? (
             <Tarjeta style={{ gap: espaciado.xs }}>
@@ -108,16 +151,49 @@ export default function EstadoDisputa(): React.JSX.Element {
               </Text>
             </Tarjeta>
           ) : (
-            <Tarjeta style={{ gap: espaciado.xs }}>
-              <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
-                Etapa actual
-              </Text>
-              <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
-                {ETIQUETA_CAPA[disputa.capa]}
-              </Text>
-              <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
-                Vence el {formatearFecha(disputa.capaExpiraEn)}
-              </Text>
+            <Tarjeta style={{ gap: espaciado.md }}>
+              {PASOS_TIMELINE.map((paso, indice) => {
+                const indiceActual = PASOS_TIMELINE.findIndex((p) => p.capa === disputa.capa);
+                const completado = indice <= indiceActual;
+                const esUltimo = indice === PASOS_TIMELINE.length - 1;
+                return (
+                  <View key={paso.capa} style={{ flexDirection: "row", gap: espaciado.md }}>
+                    <View style={{ alignItems: "center" }}>
+                      <View
+                        style={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: 13,
+                          backgroundColor: completado ? colores.acento : "transparent",
+                          borderWidth: completado ? 0 : 2,
+                          borderColor: colores.bordeControl,
+                        }}
+                      />
+                      {!esUltimo && (
+                        <View style={{ width: 2, flex: 1, minHeight: 20, backgroundColor: colores.borde }} />
+                      )}
+                    </View>
+                    <View style={{ flex: 1, paddingBottom: esUltimo ? 0 : espaciado.sm }}>
+                      <Text
+                        style={[
+                          tipografia.cuerpoDestacado,
+                          { color: indice === indiceActual ? colores.textoPrimario : colores.textoSecundario },
+                        ]}
+                      >
+                        {paso.titulo}
+                      </Text>
+                      <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
+                        {paso.texto}
+                      </Text>
+                      {indice === indiceActual && (
+                        <Text style={[tipografia.caption, { color: colores.alerta, marginTop: 2 }]}>
+                          {`Vence el ${formatearFecha(disputa.capaExpiraEn)}`}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
             </Tarjeta>
           )}
 
