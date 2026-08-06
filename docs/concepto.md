@@ -258,6 +258,6 @@ Las **zonas del ranking emergen** de la geolocalización de las canchas donde se
 - **Sembrado del rating inicial** de un equipo nuevo (placement / rating de arranque \+ RD).  
 - **Calibración numérica fina** — todos los pesos de fair-play, ventanas de decaimiento, costos de fichas, umbrales de presunción y de tier: valores iniciales a ajustar con datos reales.  
 - **Monetización** — sin definir; posible vía sedes/canchas como partners.  
-- **Nombre del producto.**  
+- **Nombre del producto** — RESUELTO 2026-08-06: Cabra (juego de palabras con GOAT, "Greatest Of All Time"). Ver `design_handoff_guapo/README.md` §7.  
 - **Colusión entre equipos "fantasma"** — RESUELTO 2026-08-06. Capa 1 (lavado de reputación, un capitán con varios equipos propios): límite duro, 1 equipo por capitán por categoría, para siempre (`TeamsService.crear`). Capa 2 (colusión distribuida entre equipos de distintos usuarios): señal por agregado, no bloqueo — concentración de rival (≥3 partidos liquidados, ≥50% contra el mismo rival) visible solo para el admin (`GET /teams/patrones-sospechosos`, tarjeta "Patrones sospechosos" en el panel de admin). El admin decide, la app no arbitra.
 
