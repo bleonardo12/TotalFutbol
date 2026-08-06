@@ -370,7 +370,7 @@ export default function Inicio(): React.JSX.Element {
         )}
 
         {/* TE TOCA A VOS -- nunca se oculta, siempre hay al menos una card. */}
-        <View style={{ gap: espaciado.md }}>
+        <View style={[{ gap: espaciado.md }, styles.divisorSeccion]}>
           <View style={styles.filaEtiquetaConBadge}>
             <EtiquetaSeccion>Te toca a vos</EtiquetaSeccion>
             {(!rankeado || totalPendientes > 0) && (
@@ -537,7 +537,7 @@ export default function Inicio(): React.JSX.Element {
         </View>
 
         {/* TU ESCALERA -- nunca se oculta: top 3 + fila propia "todavia afuera" si no rankea. */}
-        <View style={{ gap: espaciado.sm }}>
+        <View style={[{ gap: espaciado.sm }, styles.divisorSeccion]}>
           <View style={styles.filaEtiquetaConBadge}>
             <EtiquetaSeccion>Tu escalera</EtiquetaSeccion>
             <Pressable onPress={() => router.push("/ranking")}>
@@ -610,7 +610,7 @@ export default function Inicio(): React.JSX.Element {
         {/* Fichas de desafio: unico bloque que si se oculta -- no existen en el backend todavia (§5). */}
 
         {/* TU FORMA -- nunca se oculta: barras y celdas en cero/guion sin partidos. */}
-        <View style={{ gap: espaciado.sm }}>
+        <View style={[{ gap: espaciado.sm }, styles.divisorSeccion]}>
           <EtiquetaSeccion>Tu forma</EtiquetaSeccion>
           <Tarjeta style={{ gap: espaciado.md }}>
             {tieneForma ? (
@@ -700,7 +700,7 @@ export default function Inicio(): React.JSX.Element {
             fijos y un boton sin accion era peor que no tener el bloque (mismo criterio que
             "fichas de desafio" arriba). */}
         {rankeado && (
-          <View style={{ gap: espaciado.sm }}>
+          <View style={[{ gap: espaciado.sm }, styles.divisorSeccion]}>
             <EtiquetaSeccion>Lo último</EtiquetaSeccion>
             <View style={{ gap: espaciado.sm }}>
               {ultimosPartidos.length > 0 ? (
@@ -960,6 +960,13 @@ function crearEstilos({ colores, espaciado, radio }: Tema) {
       borderRadius: 999,
       paddingHorizontal: 8,
       paddingVertical: 1,
+    },
+    /** Separa secciones con una linea + aire (feedback "se ve sobrecargada, ordenar visualmente"
+     * -- el ojo tiene que distinguir bloques en el scroll, sin sacar ninguna informacion). */
+    divisorSeccion: {
+      borderTopWidth: 1,
+      borderTopColor: colores.bordeSutil,
+      paddingTop: espaciado.lg,
     },
     badgeTexto: {
       fontFamily: "JetBrainsMono_800ExtraBold",
