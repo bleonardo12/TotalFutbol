@@ -10,6 +10,10 @@ interface SelectorChipsProps<T> {
   opciones: OpcionChip<T>[];
   valorSeleccionado: T | null;
   onCambiar: (valor: T) => void;
+  /** "wrap" (default): pills sueltas, se acomodan solas. "flex": todas el mismo ancho, ocupan la fila entera -- ej. "CUANTOS SON" en Generar codigo (docs Guapo §3.2). */
+  distribucion?: "wrap" | "flex";
+  /** Texto en JetBrains Mono -- para opciones que son numeros (cantidad de jugadores). */
+  numerica?: boolean;
   style?: ViewStyle;
 }
 
@@ -22,12 +26,19 @@ export function SelectorChips<T>({
   opciones,
   valorSeleccionado,
   onCambiar,
+  distribucion = "wrap",
+  numerica = false,
   style,
 }: SelectorChipsProps<T>): React.JSX.Element {
   const { colores, espaciado, radio, tipografia } = useTema();
 
   return (
-    <View style={[{ flexDirection: "row", flexWrap: "wrap", gap: espaciado.sm }, style]}>
+    <View
+      style={[
+        { flexDirection: "row", flexWrap: distribucion === "wrap" ? "wrap" : "nowrap", gap: espaciado.sm },
+        style,
+      ]}
+    >
       {opciones.map((opcion, indice) => {
         const activo = opcion.valor === valorSeleccionado;
         return (
@@ -35,6 +46,8 @@ export function SelectorChips<T>({
             key={typeof opcion.valor === "string" || typeof opcion.valor === "number" ? opcion.valor : indice}
             onPress={() => onCambiar(opcion.valor)}
             style={{
+              flex: distribucion === "flex" ? 1 : undefined,
+              alignItems: "center",
               borderWidth: 1,
               borderColor: activo ? colores.acento : colores.borde,
               backgroundColor: activo ? colores.acento : "transparent",
@@ -45,7 +58,9 @@ export function SelectorChips<T>({
           >
             <Text
               style={[
-                tipografia.caption,
+                numerica
+                  ? { fontFamily: "JetBrainsMono_700Bold", fontSize: 17 }
+                  : tipografia.caption,
                 { color: activo ? colores.acentoTexto : colores.textoSecundario },
               ]}
             >
