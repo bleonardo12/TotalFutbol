@@ -52,10 +52,13 @@ export interface DisputaPendiente {
   matchId: string;
   capa: CapaDisputa;
   capaExpiraEn: string;
+  presuncionContraEquipoId?: string | null;
+  evidenciasCount: number;
+  respuestasPlantelCount: number;
   match: {
     id: string;
-    equipoLocal: EquipoResumen;
-    equipoVisitante: EquipoResumen;
+    equipoLocal: EquipoResumen & { fairPlay: number };
+    equipoVisitante: EquipoResumen & { fairPlay: number };
   };
 }
 
