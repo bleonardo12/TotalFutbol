@@ -299,7 +299,7 @@ export default function Inicio(): React.JSX.Element {
             </View>
           </View>
         </Pressable>
-        {equipos.length > 1 && (
+        {(equipos.length > 1 || opcionesCategoriaLibres.length > 0) && (
           <Pressable onPress={() => setSwitcherAbierto(true)} style={{ padding: espaciado.xs }}>
             <Ionicons name="chevron-down" size={20} color={colores.textoSecundario} />
           </Pressable>
