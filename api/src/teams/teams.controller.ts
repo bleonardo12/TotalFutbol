@@ -1,8 +1,9 @@
-import { Body, Controller, Get, NotFoundException, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, NotFoundException, Param, Post, Query, UseGuards } from "@nestjs/common";
 import type { User } from "@prisma/client";
 import { JwtAuthGuard } from "../auth/jwt/jwt-auth.guard";
 import { UsuarioActual } from "../auth/jwt/usuario-actual.decorator";
 import { CrearEquipoDto } from "./dto/crear-equipo.dto";
+import { ProyectarDesafioQueryDto } from "./dto/proyectar-desafio-query.dto";
 import { TeamsService } from "./teams.service";
 
 @Controller("teams")
@@ -33,5 +34,10 @@ export class TeamsController {
   @Get(":id/forma")
   async forma(@Param("id") id: string) {
     return this.teamsService.forma(id);
+  }
+
+  @Get(":id/proyectar-desafio")
+  async proyectarDesafio(@Param("id") id: string, @Query() query: ProyectarDesafioQueryDto) {
+    return this.teamsService.proyectarDesafio(id, query.rivalId);
   }
 }

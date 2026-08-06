@@ -3,6 +3,7 @@ import type { CategoriaFutbol } from "@prisma/client";
 import { sonNombresParecidos } from "@totalfutbol/core";
 import { PrismaService } from "../prisma/prisma.service";
 import { RankingService } from "../ranking/ranking.service";
+import { RatingService } from "../rating/rating.service";
 
 const INCLUIR_DETALLE = {
   capitan: { select: { id: true, telefono: true, nombre: true } },
@@ -29,6 +30,7 @@ export class TeamsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly rankingService: RankingService,
+    private readonly ratingService: RatingService,
   ) {}
 
   /** Crea el equipo con el capitan como primer integrante del plantel (progresivo, concepto.md §4). */
@@ -155,6 +157,27 @@ export class TeamsService {
     );
 
     return { gEP: { g, e, p }, upsetPorcentaje, pico, barras };
+  }
+
+  /**
+   * Deltas proyectados de un desafio hipotetico entre `teamId` y `rivalId`,
+   * antes de que el desafio exista (docs Guapo §3.3, tarjeta de Proponer
+   * desafio: "Si ganas +X / Si perdes Y"). Mismo patron que
+   * `ChallengesService.misDesafios` y `MatchesService.buscarPorId`, con el
+   * rating actual de ambos equipos -- sin persistir nada.
+   */
+  async proyectarDesafio(teamId: string, rivalId: string): Promise<{ siGano: number; siPierdo: number }> {
+    const [equipo, rival] = await Promise.all([
+      this.prisma.team.findUnique({ where: { id: teamId } }),
+      this.prisma.team.findUnique({ where: { id: rivalId } }),
+    ]);
+    if (!equipo || !rival) {
+      throw new NotFoundException("Equipo no encontrado");
+    }
+
+    const siGano = this.ratingService.proyectar(equipo, rival, "GANA_LOCAL");
+    const siPierdo = this.ratingService.proyectar(equipo, rival, "GANA_VISITANTE");
+    return { siGano: siGano.local, siPierdo: siPierdo.local };
   }
 
   /**
