@@ -271,9 +271,11 @@ export default function Inicio(): React.JSX.Element {
       : (miEntorno?.vecinos ?? []).filter((v) => v.posicion <= posicion);
   const hayVecinosAbajo = (miEntorno?.vecinos ?? []).some((v) => v.posicion > posicion);
 
-  // Regla dura (docs Guapo §3.1): Inicio SIEMPRE tiene la misma estructura de bloques. Un equipo
-  // sin rankear no ve una pantalla mas simple -- ve la misma pantalla con los bloques degradados
-  // (valores en gris, guiones, ceros). La unica pantalla realmente distinta es "sin equipo" arriba.
+  // Estructura (revisada 2026-08-06, feedback "se ve sobrecargada" -> reordenar, no sacar
+  // informacion): Como funciona (solo sin rankear, arriba de todo, es el instructivo de arranque)
+  // · TE TOCA A VOS · TU ESCALERA · TU FORMA · LO ULTIMO · barra de accion. Un equipo sin rankear
+  // no ve una pantalla mas simple -- ve la misma pantalla con los bloques degradados (valores en
+  // gris, guiones, ceros). La unica pantalla realmente distinta es "sin equipo" arriba.
   return (
     <Pantalla style={{ padding: 0 }}>
       <View style={styles.header}>
@@ -333,6 +335,40 @@ export default function Inicio(): React.JSX.Element {
         contentContainerStyle={{ padding: espaciado.lg, gap: espaciado.lg }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Como funciona -- instructivo de arranque, arriba de todo antes de pedir ninguna accion. */}
+        {!rankeado && (
+          <Tarjeta style={{ gap: espaciado.md }}>
+            <EtiquetaSeccion>Cómo funciona</EtiquetaSeccion>
+            {PASOS_COMO_FUNCIONA.map((paso, indice) => (
+              <View key={paso} style={{ flexDirection: "row", gap: espaciado.md, alignItems: "flex-start" }}>
+                <View
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 999,
+                    backgroundColor: indice === 0 ? colores.acento : "transparent",
+                    borderWidth: indice === 0 ? 0 : 1.5,
+                    borderColor: colores.bordeControl,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: "JetBrainsMono_800ExtraBold",
+                      fontSize: 12,
+                      color: indice === 0 ? colores.acentoTexto : colores.textoSecundario,
+                    }}
+                  >
+                    {indice + 1}
+                  </Text>
+                </View>
+                <Text style={[tipografia.cuerpo, { flex: 1, color: colores.textoSecundario }]}>{paso}</Text>
+              </View>
+            ))}
+          </Tarjeta>
+        )}
+
         {/* TE TOCA A VOS -- nunca se oculta, siempre hay al menos una card. */}
         <View style={{ gap: espaciado.md }}>
           <View style={styles.filaEtiquetaConBadge}>
@@ -380,7 +416,7 @@ export default function Inicio(): React.JSX.Element {
                     </Text>
                     {otro && (
                       <Text style={[tipografia.numeroChico, { color: colores.alerta }]}>
-                        {horasRestantes(otro.createdAt, VENTANA_DISPUTA_HORAS)}
+                        {`⏳ ${horasRestantes(otro.createdAt, VENTANA_DISPUTA_HORAS)}`}
                       </Text>
                     )}
                   </View>
@@ -417,7 +453,7 @@ export default function Inicio(): React.JSX.Element {
                     {`${desafio.desafiante.nombre} te desafió`}
                   </Text>
                   <Text style={[tipografia.numeroChico, { color: colores.textoApagado }]}>
-                    {horasRestantes(desafio.createdAt, CHALLENGE_TTL_HORAS)}
+                    {`⏳ ${horasRestantes(desafio.createdAt, CHALLENGE_TTL_HORAS)}`}
                   </Text>
                 </View>
                 <View style={{ flexDirection: "row", gap: espaciado.xs, flexWrap: "wrap" }}>
@@ -659,44 +695,13 @@ export default function Inicio(): React.JSX.Element {
           </Tarjeta>
         </View>
 
-        {/* Bloque extra: solo mientras no hay numero -- se agrega, no reemplaza a ningun otro bloque. */}
-        {!rankeado && (
-          <Tarjeta style={{ gap: espaciado.md }}>
-            <EtiquetaSeccion>Cómo funciona</EtiquetaSeccion>
-            {PASOS_COMO_FUNCIONA.map((paso, indice) => (
-              <View key={paso} style={{ flexDirection: "row", gap: espaciado.md, alignItems: "flex-start" }}>
-                <View
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 999,
-                    backgroundColor: indice === 0 ? colores.acento : "transparent",
-                    borderWidth: indice === 0 ? 0 : 1.5,
-                    borderColor: colores.bordeControl,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "JetBrainsMono_800ExtraBold",
-                      fontSize: 12,
-                      color: indice === 0 ? colores.acentoTexto : colores.textoSecundario,
-                    }}
-                  >
-                    {indice + 1}
-                  </Text>
-                </View>
-                <Text style={[tipografia.cuerpo, { flex: 1, color: colores.textoSecundario }]}>{paso}</Text>
-              </View>
-            ))}
-          </Tarjeta>
-        )}
-
-        {/* LO ULTIMO -- nunca se oculta: deltas propios si rankea, plantel si todavia no. */}
-        <View style={{ gap: espaciado.sm }}>
-          <EtiquetaSeccion>Lo último</EtiquetaSeccion>
-          {rankeado ? (
+        {/* LO ULTIMO -- se oculta si no hay nada real que mostrar todavia: el plantel (sumar
+            jugadores, invitarlos) no esta construido, mostrar una card de "Plantel" con datos
+            fijos y un boton sin accion era peor que no tener el bloque (mismo criterio que
+            "fichas de desafio" arriba). */}
+        {rankeado && (
+          <View style={{ gap: espaciado.sm }}>
+            <EtiquetaSeccion>Lo último</EtiquetaSeccion>
             <View style={{ gap: espaciado.sm }}>
               {ultimosPartidos.length > 0 ? (
                 ultimosPartidos.map((partido) => (
@@ -714,20 +719,8 @@ export default function Inicio(): React.JSX.Element {
                 </Tarjeta>
               )}
             </View>
-          ) : (
-            <Tarjeta style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-              <View>
-                <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>Plantel</Text>
-                <Text style={[tipografia.caption, { color: colores.textoApagado }]}>
-                  1 de 11 · lo cargás cuando quieras
-                </Text>
-              </View>
-              <View style={styles.botonChico}>
-                <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>Sumar</Text>
-              </View>
-            </Tarjeta>
-          )}
-        </View>
+          </View>
+        )}
       </ScrollView>
 
       {/* Barra de accion -- siempre presente, rankeado o no (docs Guapo §3.1). */}
@@ -998,13 +991,6 @@ function crearEstilos({ colores, espaciado, radio }: Tema) {
       fontFamily: "JetBrainsMono_800ExtraBold",
       fontSize: 16,
       color: colores.textoPrimario,
-    },
-    botonChico: {
-      borderWidth: 1,
-      borderColor: colores.bordeControl,
-      borderRadius: radio.sm,
-      paddingVertical: espaciado.sm,
-      paddingHorizontal: espaciado.md,
     },
   };
 }
