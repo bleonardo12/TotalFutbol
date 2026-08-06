@@ -182,7 +182,7 @@ function TarjetaDisputa({
               color: urgente ? colores.error : colores.textoApagado,
             }}
           >
-            {horasRestantes > 0 ? `vence ${formatearFecha(item.capaExpiraEn)}` : "vencida"}
+            {horasRestantes > 0 ? `⏳ vence ${formatearFecha(item.capaExpiraEn)}` : "⚠️ vencida"}
           </Text>
         </View>
 

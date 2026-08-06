@@ -103,13 +103,13 @@ export default function EstadoDisputa(): React.JSX.Element {
             >
               {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
             </Text>
-            {!disputa.resuelta && <Chip texto="En disputa" tono="error" />}
+            {!disputa.resuelta && <Chip texto="En disputa ⚠️" tono="error" />}
           </View>
 
           {!disputa.resuelta && (
             <Tarjeta peligro style={{ gap: espaciado.sm }}>
               <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
-                Los dos dicen que ganaron
+                Los dos dicen que ganaron ⚠️
               </Text>
               {partido.reportes.map((reporte) => {
                 const equipo =
@@ -187,7 +187,7 @@ export default function EstadoDisputa(): React.JSX.Element {
                       </Text>
                       {indice === indiceActual && (
                         <Text style={[tipografia.caption, { color: colores.alerta, marginTop: 2 }]}>
-                          {`Vence el ${formatearFecha(disputa.capaExpiraEn)}`}
+                          {`⏳ Vence el ${formatearFecha(disputa.capaExpiraEn)}`}
                         </Text>
                       )}
                     </View>
