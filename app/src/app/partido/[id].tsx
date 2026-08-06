@@ -376,7 +376,7 @@ export default function DetallePartido(): React.JSX.Element {
               {`reportado ${new Date(reportadoEn).getHours()}:${String(new Date(reportadoEn).getMinutes()).padStart(2, "0")}`}
             </Text>
             <Text style={{ fontFamily: "JetBrainsMono_700Bold", fontSize: 12, color: colores.alerta }}>
-              {`quedan ${horasRestantes} h`}
+              {`⏳ quedan ${horasRestantes} h`}
             </Text>
           </View>
         </View>
@@ -545,7 +545,7 @@ export default function DetallePartido(): React.JSX.Element {
 
       {partido.estado === "EN_DISPUTA" && (
         <Boton onPress={() => router.push({ pathname: "/disputa/[matchId]", params: { matchId: id } })}>
-          Ver disputa
+          Ver disputa ⚠️
         </Boton>
       )}
 
@@ -608,7 +608,7 @@ function BandaOffline({
     >
       <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colores.alerta }} />
       <Text style={[tipografia.caption, { color: colores.alerta, flex: 1 }]}>
-        {`Sin conexión — guardando local (${cantidad})`}
+        {`📡 Sin conexión — guardando local (${cantidad})`}
       </Text>
       <Text style={[tipografia.caption, { color: colores.alerta, textDecorationLine: "underline" }]}>
         Reintentar

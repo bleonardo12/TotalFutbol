@@ -160,7 +160,7 @@ export default function FirmarEnCancha(): React.JSX.Element {
             <EtiquetaSeccion>O que lo tipeen</EtiquetaSeccion>
             <Text style={[tipografia.codigo, { color: colores.textoPrimario }]}>{codigoMostrado}</Text>
             <Text style={[tipografia.caption, { color: colores.textoSecundario, textAlign: "center" }]}>
-              El otro capitan lo escanea o lo tipea. Vence en 10 minutos.
+              El otro capitan lo escanea o lo tipea. ⏳ Vence en 10 minutos.
             </Text>
           </Tarjeta>
         ) : (
