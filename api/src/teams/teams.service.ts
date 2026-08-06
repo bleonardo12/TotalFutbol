@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import type { CategoriaFutbol } from "@prisma/client";
+import type { CantidadJugadores, CategoriaFutbol, Division, Superficie } from "@prisma/client";
 import { sonNombresParecidos } from "@totalfutbol/core";
 import { PrismaService } from "../prisma/prisma.service";
 import { RankingService } from "../ranking/ranking.service";
@@ -23,6 +23,20 @@ export interface FormaEquipo {
   pico: number;
   /** Hasta 10 valores normalizados 0-1, en orden cronologico. */
   barras: number[];
+}
+
+export interface FormatoEquipo {
+  cantidadJugadores: CantidadJugadores;
+  superficie: Superficie;
+  partidos: number;
+  victorias: number;
+  porcentaje: number;
+}
+
+export interface PalmaresItem {
+  anio: number;
+  division: Division;
+  esCampeonDelAnio: boolean;
 }
 
 @Injectable()
@@ -178,6 +192,82 @@ export class TeamsService {
     const siGano = this.ratingService.proyectar(equipo, rival, "GANA_LOCAL");
     const siPierdo = this.ratingService.proyectar(equipo, rival, "GANA_VISITANTE");
     return { siGano: siGano.local, siPierdo: siPierdo.local };
+  }
+
+  /**
+   * Partidos liquidados agrupados por formato (cantidad de jugadores x
+   * superficie, concepto.md §5), con el % de victorias de cada uno --
+   * "DONDE SON BUENOS" del perfil de equipo (docs Guapo §3.5). Solo formatos
+   * donde el equipo jugo al menos un partido, ordenado de mejor a peor %.
+   */
+  async porFormato(teamId: string): Promise<FormatoEquipo[]> {
+    const equipo = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!equipo) {
+      throw new NotFoundException("Equipo no encontrado");
+    }
+
+    const partidos = await this.prisma.match.findMany({
+      where: {
+        estado: "LIQUIDADO",
+        OR: [{ equipoLocalId: teamId }, { equipoVisitanteId: teamId }],
+      },
+      select: {
+        cantidadJugadores: true,
+        superficie: true,
+        equipoLocalId: true,
+        outcomeFinal: true,
+      },
+    });
+
+    const porFormato = new Map<
+      string,
+      { cantidadJugadores: CantidadJugadores; superficie: Superficie; partidos: number; victorias: number }
+    >();
+    for (const partido of partidos) {
+      const clave = `${partido.cantidadJugadores}|${partido.superficie}`;
+      const actual = porFormato.get(clave) ?? {
+        cantidadJugadores: partido.cantidadJugadores,
+        superficie: partido.superficie,
+        partidos: 0,
+        victorias: 0,
+      };
+      actual.partidos += 1;
+      const esLocal = partido.equipoLocalId === teamId;
+      const gano =
+        (esLocal && partido.outcomeFinal === "GANA_LOCAL") ||
+        (!esLocal && partido.outcomeFinal === "GANA_VISITANTE");
+      if (gano) {
+        actual.victorias += 1;
+      }
+      porFormato.set(clave, actual);
+    }
+
+    return Array.from(porFormato.values())
+      .map((formato) => ({
+        ...formato,
+        porcentaje: Math.round((formato.victorias / formato.partidos) * 100),
+      }))
+      .sort((a, b) => b.porcentaje - a.porcentaje);
+  }
+
+  /** Campeonatos del equipo, uno por division x temporada en la que salio 1° (concepto.md §6). */
+  async palmares(teamId: string): Promise<PalmaresItem[]> {
+    const equipo = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!equipo) {
+      throw new NotFoundException("Equipo no encontrado");
+    }
+
+    const campeonatos = await this.prisma.campeonato.findMany({
+      where: { teamId },
+      include: { season: { select: { anio: true } } },
+      orderBy: { season: { anio: "desc" } },
+    });
+
+    return campeonatos.map((c) => ({
+      anio: c.season.anio,
+      division: c.division,
+      esCampeonDelAnio: c.esCampeonDelAnio,
+    }));
   }
 
   /**

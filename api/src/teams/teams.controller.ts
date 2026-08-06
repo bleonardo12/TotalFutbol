@@ -40,4 +40,14 @@ export class TeamsController {
   async proyectarDesafio(@Param("id") id: string, @Query() query: ProyectarDesafioQueryDto) {
     return this.teamsService.proyectarDesafio(id, query.rivalId);
   }
+
+  @Get(":id/formato")
+  async porFormato(@Param("id") id: string) {
+    return this.teamsService.porFormato(id);
+  }
+
+  @Get(":id/palmares")
+  async palmares(@Param("id") id: string) {
+    return this.teamsService.palmares(id);
+  }
 }
