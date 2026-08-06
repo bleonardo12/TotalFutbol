@@ -2,9 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import { Image, Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { Image, Modal, Pressable, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
-import { Boton, Chip, Pantalla, Tarjeta } from "@/components";
+import { Boton, Chip, ComoFunciona, Pantalla, Tarjeta } from "@/components";
 import { useEquipoActivo } from "@/hooks/useEquipoActivo";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
@@ -16,6 +17,7 @@ export default function Perfil(): React.JSX.Element {
   const tema = useTema();
   const { colores, tipografia } = tema;
   const styles = crearEstilos(tema);
+  const [comoFuncionaAbierto, setComoFuncionaAbierto] = useState(false);
 
   const usuarioQuery = useQuery({
     queryKey: ["usuario", "actual"],
@@ -59,6 +61,7 @@ export default function Perfil(): React.JSX.Element {
 
       <View style={styles.lista}>
         <ItemLista etiqueta="Editar perfil" onPress={() => router.push("/completar-perfil")} />
+        <ItemLista etiqueta="Cómo funciona" onPress={() => setComoFuncionaAbierto(true)} />
         {usuario?.rol === "ADMIN" && (
           <ItemLista etiqueta="Panel de admin" onPress={() => router.push("/admin")} />
         )}
@@ -71,6 +74,22 @@ export default function Perfil(): React.JSX.Element {
       <Text style={[tipografia.caption, { color: colores.textoFantasma, textAlign: "center" }]}>
         {`v${Constants.expoConfig?.version ?? "0.0.0"}`}
       </Text>
+
+      <Modal
+        visible={comoFuncionaAbierto}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setComoFuncionaAbierto(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}
+          onPress={() => setComoFuncionaAbierto(false)}
+        >
+          <Pressable style={{ padding: 20 }}>
+            <ComoFunciona />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Pantalla>
   );
 }

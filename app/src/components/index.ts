@@ -1,6 +1,7 @@
 export { BarraAccion } from "./BarraAccion";
 export { Boton } from "./Boton";
 export { Campo } from "./Campo";
+export { ComoFunciona } from "./ComoFunciona";
 export { Chip, type TonoChip } from "./Chip";
 export { EmptyState } from "./EmptyState";
 export { EtiquetaSeccion } from "./EtiquetaSeccion";

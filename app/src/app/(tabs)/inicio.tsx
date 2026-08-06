@@ -14,6 +14,7 @@ import {
   Boton,
   Campo,
   Chip,
+  ComoFunciona,
   EtiquetaSeccion,
   FilaEscalera,
   Pantalla,
@@ -49,12 +50,6 @@ const OPCIONES_CATEGORIA: { valor: CategoriaFutbol; etiqueta: string }[] = [
   { valor: "MASCULINO", etiqueta: "Masculino" },
   { valor: "FEMENINO", etiqueta: "Femenino" },
   { valor: "MIXTO", etiqueta: "Mixto" },
-];
-
-const PASOS_COMO_FUNCIONA = [
-  "Se juntan en la cancha y escanean el QR. Eso firma el contrato.",
-  "Juegan. Cada capitán carga quién ganó.",
-  "Si coinciden, listo: entrás al ranking.",
 ];
 
 function iniciales(nombre: string): string {
@@ -287,7 +282,18 @@ export default function Inicio(): React.JSX.Element {
             <Text style={styles.escudoTexto}>{iniciales(equipo.nombre)}</Text>
           </View>
           <View style={{ flex: 1, gap: 3 }}>
-            <Text style={[tipografia.subtitulo, { color: colores.textoPrimario }]}>{equipo.nombre}</Text>
+            <Text
+              style={{
+                fontFamily: "Archivo_900Black",
+                fontSize: 22,
+                letterSpacing: 0.4,
+                textTransform: "uppercase",
+                color: colores.textoPrimario,
+              }}
+              numberOfLines={1}
+            >
+              {equipo.nombre}
+            </Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: espaciado.xs }}>
               {rankeado && equipo.division ? (
                 <Chip
@@ -338,39 +344,10 @@ export default function Inicio(): React.JSX.Element {
         contentContainerStyle={{ padding: espaciado.lg, gap: espaciado.lg }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Como funciona -- instructivo de arranque, arriba de todo antes de pedir ninguna accion. */}
-        {!rankeado && (
-          <Tarjeta style={{ gap: espaciado.md }}>
-            <EtiquetaSeccion>Cómo funciona</EtiquetaSeccion>
-            {PASOS_COMO_FUNCIONA.map((paso, indice) => (
-              <View key={paso} style={{ flexDirection: "row", gap: espaciado.md, alignItems: "flex-start" }}>
-                <View
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 999,
-                    backgroundColor: indice === 0 ? colores.acento : "transparent",
-                    borderWidth: indice === 0 ? 0 : 1.5,
-                    borderColor: colores.bordeControl,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "JetBrainsMono_800ExtraBold",
-                      fontSize: 12,
-                      color: indice === 0 ? colores.acentoTexto : colores.textoSecundario,
-                    }}
-                  >
-                    {indice + 1}
-                  </Text>
-                </View>
-                <Text style={[tipografia.cuerpo, { flex: 1, color: colores.textoSecundario }]}>{paso}</Text>
-              </View>
-            ))}
-          </Tarjeta>
-        )}
+        {/* Como funciona -- instructivo de arranque, arriba de todo antes de pedir ninguna accion.
+            Tambien accesible siempre desde Perfil (ComoFunciona.tsx, componente compartido) para
+            equipos ya rankeados que quieran volver a verlo. */}
+        {!rankeado && <ComoFunciona />}
 
         {/* TE TOCA A VOS -- nunca se oculta, siempre hay al menos una card. */}
         <View style={[{ gap: espaciado.md }, styles.divisorSeccion]}>
@@ -542,7 +519,7 @@ export default function Inicio(): React.JSX.Element {
         {/* TU ESCALERA -- nunca se oculta: top 3 + fila propia "todavia afuera" si no rankea. */}
         <View style={[{ gap: espaciado.sm }, styles.divisorSeccion]}>
           <View style={styles.filaEtiquetaConBadge}>
-            <EtiquetaSeccion>Tu escalera</EtiquetaSeccion>
+            <EtiquetaSeccion>Tu escalera 🪜</EtiquetaSeccion>
             <Pressable onPress={() => router.push("/ranking")}>
               <Text style={{ fontFamily: "Archivo_600SemiBold", fontSize: 12, color: colores.acento }}>
                 Ver todo
@@ -708,7 +685,7 @@ export default function Inicio(): React.JSX.Element {
             "fichas de desafio" arriba). */}
         {rankeado && (
           <View style={[{ gap: espaciado.sm }, styles.divisorSeccion]}>
-            <EtiquetaSeccion>Lo último</EtiquetaSeccion>
+            <EtiquetaSeccion>Lo último 🕒</EtiquetaSeccion>
             <View style={{ gap: espaciado.sm }}>
               {ultimosPartidos.length > 0 ? (
                 ultimosPartidos.map((partido) => (
