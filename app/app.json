@@ -45,7 +45,8 @@
           "locationWhenInUsePermission": "Se usa tu ubicacion para sugerir la cancha mas cercana al generar un partido."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

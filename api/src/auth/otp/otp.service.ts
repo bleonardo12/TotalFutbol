@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { createHmac, randomInt } from "node:crypto";
 import { PrismaService } from "../../prisma/prisma.service";
 import { OTP_INTENTOS_MAXIMOS, OTP_LONGITUD, OTP_TTL_MINUTOS } from "./otp.constantes";
-import { OTP_SENDER, type OtpSender } from "./otp-sender.interface";
+import { OTP_SENDER, type CanalOtp, type OtpSender } from "./otp-sender.interface";
 
 @Injectable()
 export class OtpService {
@@ -13,7 +13,7 @@ export class OtpService {
     @Inject(OTP_SENDER) private readonly otpSender: OtpSender,
   ) {}
 
-  async solicitar(telefono: string): Promise<void> {
+  async solicitar(telefono: string, canal: CanalOtp): Promise<void> {
     const codigo = this.generarCodigo();
 
     // Invalida cualquier codigo vigente anterior: solo hay un codigo activo por telefono.
@@ -30,7 +30,7 @@ export class OtpService {
       },
     });
 
-    await this.otpSender.enviar(telefono, codigo);
+    await this.otpSender.enviar(telefono, codigo, canal);
   }
 
   async verificar(telefono: string, codigo: string): Promise<boolean> {

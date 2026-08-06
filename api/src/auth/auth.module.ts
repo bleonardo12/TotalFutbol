@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { AuthController } from "./auth.controller";
@@ -10,6 +11,7 @@ import { TokensService } from "./jwt/tokens.service";
 import { LogOtpSender } from "./otp/log-otp-sender";
 import { OTP_SENDER } from "./otp/otp-sender.interface";
 import { OtpService } from "./otp/otp.service";
+import { TwilioOtpSender } from "./otp/twilio-otp-sender";
 
 @Module({
   imports: [PassportModule, JwtModule.register({})],
@@ -21,7 +23,14 @@ import { OtpService } from "./otp/otp.service";
     JwtStrategy,
     JwtAuthGuard,
     AdminGuard,
-    { provide: OTP_SENDER, useClass: LogOtpSender },
+    LogOtpSender,
+    TwilioOtpSender,
+    {
+      provide: OTP_SENDER,
+      useFactory: (config: ConfigService, log: LogOtpSender, twilio: TwilioOtpSender) =>
+        config.get<string>("OTP_PROVIDER") === "twilio" ? twilio : log,
+      inject: [ConfigService, LogOtpSender, TwilioOtpSender],
+    },
   ],
   exports: [JwtAuthGuard, AdminGuard],
 })

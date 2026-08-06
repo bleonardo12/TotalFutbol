@@ -15,6 +15,7 @@ import type { User } from "@prisma/client";
 import { AuthService } from "./auth.service";
 import { FOTO_TAMANO_MAXIMO_BYTES } from "./auth.constantes";
 import { ActualizarPerfilDto } from "./dto/actualizar-perfil.dto";
+import { GoogleTokenDto } from "./dto/google-token.dto";
 import { RefrescarTokenDto } from "./dto/refrescar-token.dto";
 import { SolicitarOtpDto } from "./dto/solicitar-otp.dto";
 import { VerificarOtpDto } from "./dto/verificar-otp.dto";
@@ -25,6 +26,7 @@ import { UsuarioActual } from "./jwt/usuario-actual.decorator";
 const CAMPOS_PERFIL = [
   "id",
   "telefono",
+  "email",
   "nombre",
   "apellido",
   "fechaNacimiento",
@@ -40,7 +42,7 @@ export class AuthController {
   @Post("otp/solicitar")
   @HttpCode(HttpStatus.NO_CONTENT)
   async solicitarOtp(@Body() dto: SolicitarOtpDto): Promise<void> {
-    await this.authService.solicitarOtp(dto.telefono);
+    await this.authService.solicitarOtp(dto.telefono, dto.canal);
   }
 
   @Post("otp/verificar")
@@ -53,6 +55,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refrescar(@Body() dto: RefrescarTokenDto): Promise<ParDeTokens> {
     return this.authService.refrescar(dto.refreshToken);
+  }
+
+  /** Login rapido para una cuenta que ya vinculo Google -- nunca crea cuenta nueva. */
+  @Post("google")
+  @HttpCode(HttpStatus.OK)
+  async loginGoogle(@Body() dto: GoogleTokenDto): Promise<ParDeTokens> {
+    return this.authService.loginGoogle(dto.idToken);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post("google/vincular")
+  @HttpCode(HttpStatus.OK)
+  async vincularGoogle(@UsuarioActual() usuario: User, @Body() dto: GoogleTokenDto) {
+    return this.authService.vincularGoogle(usuario.id, dto.idToken);
   }
 
   @UseGuards(JwtAuthGuard)

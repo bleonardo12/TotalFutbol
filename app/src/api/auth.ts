@@ -12,6 +12,7 @@ export type Genero = "MASCULINO" | "FEMENINO" | "OTRO" | "PREFIERO_NO_DECIR";
 export interface UsuarioActual {
   id: string;
   telefono: string;
+  email: string | null;
   nombre: string | null;
   apellido: string | null;
   fechaNacimiento: string | null;
@@ -20,12 +21,24 @@ export interface UsuarioActual {
   rol: RolUsuario;
 }
 
-export function solicitarOtp(telefono: string): Promise<void> {
-  return apiRequest("/auth/otp/solicitar", { method: "POST", body: { telefono } });
+export type CanalOtp = "SMS" | "WHATSAPP";
+
+export function solicitarOtp(telefono: string, canal: CanalOtp = "SMS"): Promise<void> {
+  return apiRequest("/auth/otp/solicitar", { method: "POST", body: { telefono, canal } });
 }
 
 export function verificarOtp(telefono: string, codigo: string): Promise<ParDeTokens> {
   return apiRequest("/auth/otp/verificar", { method: "POST", body: { telefono, codigo } });
+}
+
+/** Login rapido para una cuenta que ya vinculo Google antes -- nunca crea cuenta nueva. */
+export function loginConGoogle(idToken: string): Promise<ParDeTokens> {
+  return apiRequest("/auth/google", { method: "POST", body: { idToken } });
+}
+
+/** Vincula Google a la cuenta ya logueada por telefono (Perfil). */
+export function vincularGoogle(token: string, idToken: string): Promise<UsuarioActual> {
+  return apiRequest("/auth/google/vincular", { method: "POST", token, body: { idToken } });
 }
 
 export function obtenerUsuarioActual(token: string): Promise<UsuarioActual> {

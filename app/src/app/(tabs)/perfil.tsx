@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
-import { obtenerUsuarioActual } from "@/api/auth";
+import { obtenerUsuarioActual, vincularGoogle } from "@/api/auth";
 import { Boton, Chip, ComoFunciona, HojaInferior, Pantalla, Tarjeta } from "@/components";
 import { useEquipoActivo } from "@/hooks/useEquipoActivo";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -14,6 +15,7 @@ export default function Perfil(): React.JSX.Element {
   const accessToken = useAuthStore((s) => s.accessToken);
   const cerrarSesion = useAuthStore((s) => s.cerrarSesion);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const tema = useTema();
   const { colores, tipografia } = tema;
   const styles = crearEstilos(tema);
@@ -25,6 +27,14 @@ export default function Perfil(): React.JSX.Element {
     enabled: accessToken !== null,
   });
   const usuario = usuarioQuery.data;
+
+  const vincularGoogleMutacion = useMutation({
+    mutationFn: (idToken: string) => vincularGoogle(accessToken as string, idToken),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["usuario", "actual"] });
+    },
+  });
+  const google = useGoogleAuth((idToken) => vincularGoogleMutacion.mutate(idToken));
 
   const { equipo: miEquipo } = useEquipoActivo();
   const esCapitan = miEquipo?.capitanId === usuario?.id;
@@ -66,10 +76,22 @@ export default function Perfil(): React.JSX.Element {
           <ItemLista etiqueta="Gestionar plantel" onPress={() => router.push("/equipo/plantel")} />
         )}
         <ItemLista etiqueta="Unirme a un equipo" onPress={() => router.push("/equipo/unirse")} />
+        {!usuario?.email && google.disponible && (
+          <ItemLista
+            etiqueta={vincularGoogleMutacion.isPending ? "Vinculando..." : "Vincular Google"}
+            onPress={() => google.iniciar()}
+          />
+        )}
         {usuario?.rol === "ADMIN" && (
           <ItemLista etiqueta="Panel de admin" onPress={() => router.push("/admin")} />
         )}
       </View>
+
+      {vincularGoogleMutacion.isError && (
+        <Text style={[tipografia.caption, { color: colores.error, textAlign: "center" }]}>
+          {vincularGoogleMutacion.error.message}
+        </Text>
+      )}
 
       <Boton variante="destructivo" onPress={salir}>
         Cerrar sesion

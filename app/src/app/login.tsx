@@ -1,19 +1,23 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text, TextInput, View } from "react-native";
-import { solicitarOtp } from "@/api/auth";
+import { Animated, Pressable, Text, TextInput, View } from "react-native";
+import { loginConGoogle, obtenerUsuarioActual, solicitarOtp, type CanalOtp } from "@/api/auth";
 import { Boton, MarcaHero, Pantalla } from "@/components";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
+import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
 const PREFIJO = "+54 9";
 
 export default function Login(): React.JSX.Element {
   const router = useRouter();
+  const iniciarSesion = useAuthStore((s) => s.iniciarSesion);
   const tema = useTema();
   const { colores, espaciado, tipografia } = tema;
   const styles = crearEstilos(tema);
   const [resto, setResto] = useState("");
+  const [porWhatsApp, setPorWhatsApp] = useState(false);
 
   const heroAnim = useRef(new Animated.Value(0)).current;
   const formAnim = useRef(new Animated.Value(0)).current;
@@ -37,11 +41,22 @@ export default function Login(): React.JSX.Element {
   const telefono = `${PREFIJO.replace(" ", "")}${resto}`;
 
   const mutacion = useMutation({
-    mutationFn: () => solicitarOtp(telefono),
+    mutationFn: () => solicitarOtp(telefono, (porWhatsApp ? "WHATSAPP" : "SMS") as CanalOtp),
     onSuccess: () => {
       router.push({ pathname: "/verificar", params: { telefono } });
     },
   });
+
+  const googleMutacion = useMutation({
+    mutationFn: (idToken: string) => loginConGoogle(idToken),
+    onSuccess: async (tokens) => {
+      await iniciarSesion(tokens);
+      const usuario = await obtenerUsuarioActual(tokens.accessToken);
+      router.replace(usuario.apellido ? "/inicio" : "/completar-perfil");
+    },
+  });
+
+  const google = useGoogleAuth((idToken) => googleMutacion.mutate(idToken));
 
   return (
     <Pantalla centrado>
@@ -65,6 +80,25 @@ export default function Login(): React.JSX.Element {
           </View>
         </View>
 
+        <Pressable
+          onPress={() => setPorWhatsApp((v) => !v)}
+          style={{ flexDirection: "row", alignItems: "center", gap: espaciado.sm }}
+        >
+          <View
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: 4,
+              borderWidth: 1.5,
+              borderColor: porWhatsApp ? colores.acento : colores.bordeControl,
+              backgroundColor: porWhatsApp ? colores.acento : "transparent",
+            }}
+          />
+          <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+            Enviar por WhatsApp
+          </Text>
+        </Pressable>
+
         {mutacion.isError && (
           <Text style={[tipografia.caption, { color: colores.error }]}>
             {mutacion.error.message}
@@ -78,6 +112,26 @@ export default function Login(): React.JSX.Element {
         >
           Mandame el código
         </Boton>
+
+        {google.disponible && (
+          <>
+            <Text style={[tipografia.caption, { color: colores.textoApagado, textAlign: "center" }]}>
+              o
+            </Text>
+            {googleMutacion.isError && (
+              <Text style={[tipografia.caption, { color: colores.error, textAlign: "center" }]}>
+                {googleMutacion.error.message}
+              </Text>
+            )}
+            <Boton
+              variante="secundario"
+              onPress={() => google.iniciar()}
+              cargando={googleMutacion.isPending}
+            >
+              Continuar con Google
+            </Boton>
+          </>
+        )}
 
         <Text style={[tipografia.caption, { color: colores.textoApagado, textAlign: "center" }]}>
           Un teléfono, un capitán. Es lo que hace que el ranking no sea un chiste.

@@ -31,6 +31,9 @@ model User {
   id              String     @id @default(cuid())
   telefono        String     @unique
   email           String?    @unique
+  /// Vinculado desde Perfil estando ya logueado por telefono (nunca crea cuenta por si solo --
+  /// el telefono sigue siendo el ancla de identidad obligatoria, ver comentario de arriba).
+  googleId        String?    @unique
   nombre          String?
   apellido        String?
   fechaNacimiento DateTime?
