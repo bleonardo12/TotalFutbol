@@ -51,6 +51,8 @@ model User {
   respuestasPoll        DisputePollRespuesta[]
   incidentesFlagged     MatchIncidentFlag[]
   noShowsFlagged        MatchNoShowFlag[]
+  invitacionesEnviadas  TeamInvitation[]        @relation("InvitacionesEnviadas")
+  invitacionesUsadas    TeamInvitation[]        @relation("InvitacionesUsadas")
 
   @@map("users")
 }
@@ -117,6 +119,7 @@ model Team {
   noShowsFlagged      MatchNoShowFlag[]
   declinaciones       DeclinacionDesafio[]
   campeonatos         Campeonato[]
+  invitaciones        TeamInvitation[]
 
   @@index([rating])
   @@map("teams")
@@ -139,6 +142,28 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@map("team_members")
+}
+
+/// Invitacion a sumarse al plantel (concepto.md §4, "el plantel se completa despues"). Mismo
+/// patron que MatchHandshake: codigo corto unico + expiraEn + consumidoEn nullable, sin estados
+/// de rechazo explicito -- si nadie lo usa, vence solo.
+model TeamInvitation {
+  id            String @id @default(cuid())
+  teamId        String
+  team          Team   @relation(fields: [teamId], references: [id])
+  invitadoPorId String
+  invitadoPor   User   @relation("InvitacionesEnviadas", fields: [invitadoPorId], references: [id])
+  telefono      String
+  codigo        String @unique
+
+  expiraEn      DateTime
+  consumidoEn   DateTime?
+  consumidoPorId String?
+  consumidoPor   User?    @relation("InvitacionesUsadas", fields: [consumidoPorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("team_invitations")
 }
 
 /// Cancha/sede. Sus coordenadas alimentan las zonas emergentes del ranking (§15).

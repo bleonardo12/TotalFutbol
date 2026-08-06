@@ -1,9 +1,16 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { CantidadJugadores, CategoriaFutbol, Division, Superficie } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { sonNombresParecidos } from "@totalfutbol/core";
+import { randomInt } from "node:crypto";
+import { normalizarTelefono } from "../auth/telefono.util";
 import { PrismaService } from "../prisma/prisma.service";
 import { RankingService } from "../ranking/ranking.service";
 import { RatingService } from "../rating/rating.service";
+import { ConsumirInvitacionDto } from "./dto/consumir-invitacion.dto";
+import { InvitarJugadorDto } from "./dto/invitar-jugador.dto";
+import { INVITACION_SENDER, type InvitacionSender } from "./invitacion-sender.interface";
+import { INVITACION_ALFABETO, INVITACION_CODIGO_LONGITUD, INVITACION_TTL_DIAS } from "./teams.constantes";
 
 const INCLUIR_DETALLE = {
   capitan: { select: { id: true, telefono: true, nombre: true } },
@@ -53,12 +60,25 @@ export interface PatronSospechoso {
   porcentaje: number;
 }
 
+export interface IntegranteEquipo {
+  id: string;
+  rol: string;
+  nombre: string;
+}
+
+export interface InvitacionPendiente {
+  id: string;
+  telefono: string;
+  expiraEn: Date;
+}
+
 @Injectable()
 export class TeamsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly rankingService: RankingService,
     private readonly ratingService: RatingService,
+    @Inject(INVITACION_SENDER) private readonly invitacionSender: InvitacionSender,
   ) {}
 
   /** Crea el equipo con el capitan como primer integrante del plantel (progresivo, concepto.md §4). */
@@ -387,5 +407,123 @@ export class TeamsService {
         `Ya existe un equipo con un nombre muy parecido en esta categoria: "${parecido.nombre}"`,
       );
     }
+  }
+
+  /**
+   * Plantel progresivo (concepto.md §4): el capitan invita por telefono, el invitado se une con
+   * su propia cuenta al consumir el codigo (consumirInvitacion). Solo el capitan invita -- mismo
+   * actor que ya es el unico que puede crear el equipo y fijar la categoria.
+   */
+  async invitarJugador(capitanId: string, teamId: string, dto: InvitarJugadorDto): Promise<void> {
+    const equipo = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!equipo) {
+      throw new NotFoundException("Equipo no encontrado");
+    }
+    if (equipo.capitanId !== capitanId) {
+      throw new ForbiddenException("Solo el capitan puede invitar jugadores");
+    }
+
+    const telefono = normalizarTelefono(dto.telefono);
+
+    const usuarioExistente = await this.prisma.user.findUnique({ where: { telefono } });
+    if (usuarioExistente) {
+      const yaEsIntegrante = await this.prisma.teamMember.findUnique({
+        where: { teamId_userId: { teamId, userId: usuarioExistente.id } },
+      });
+      if (yaEsIntegrante) {
+        throw new ConflictException("Ese telefono ya es parte del plantel");
+      }
+    }
+
+    const expiraEn = new Date(Date.now() + INVITACION_TTL_DIAS * 24 * 60 * 60_000);
+    for (let intento = 0; intento < 5; intento++) {
+      const codigo = this.generarCodigoInvitacion();
+      try {
+        await this.prisma.teamInvitation.create({
+          data: { teamId, invitadoPorId: capitanId, telefono, codigo, expiraEn },
+        });
+        await this.invitacionSender.enviar(telefono, codigo, equipo.nombre);
+        return;
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+          continue; // colision de codigo (muy improbable): reintenta con uno nuevo
+        }
+        throw error;
+      }
+    }
+    throw new Error("No se pudo generar un codigo de invitacion unico");
+  }
+
+  async listarInvitaciones(capitanId: string, teamId: string): Promise<InvitacionPendiente[]> {
+    const equipo = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!equipo) {
+      throw new NotFoundException("Equipo no encontrado");
+    }
+    if (equipo.capitanId !== capitanId) {
+      throw new ForbiddenException("Solo el capitan puede ver las invitaciones");
+    }
+
+    const invitaciones = await this.prisma.teamInvitation.findMany({
+      where: { teamId, consumidoEn: null, expiraEn: { gt: new Date() } },
+      orderBy: { createdAt: "desc" },
+    });
+    return invitaciones.map((i) => ({ id: i.id, telefono: i.telefono, expiraEn: i.expiraEn }));
+  }
+
+  /** El invitado consume su propio codigo, logueado con su propia cuenta (concepto.md §4). */
+  async consumirInvitacion(usuarioId: string, dto: ConsumirInvitacionDto) {
+    const invitacion = await this.prisma.teamInvitation.findFirst({
+      where: { codigo: dto.codigo, consumidoEn: null, expiraEn: { gt: new Date() } },
+    });
+    if (!invitacion) {
+      throw new NotFoundException("Codigo invalido o vencido");
+    }
+
+    const yaEsIntegrante = await this.prisma.teamMember.findUnique({
+      where: { teamId_userId: { teamId: invitacion.teamId, userId: usuarioId } },
+    });
+    if (yaEsIntegrante) {
+      throw new ConflictException("Ya sos parte de este plantel");
+    }
+
+    // Marca de consumo atomica: si otro request ya lo uso en el medio, count da 0.
+    const marcado = await this.prisma.teamInvitation.updateMany({
+      where: { id: invitacion.id, consumidoEn: null },
+      data: { consumidoEn: new Date(), consumidoPorId: usuarioId },
+    });
+    if (marcado.count === 0) {
+      throw new ConflictException("El codigo ya fue usado");
+    }
+
+    await this.prisma.teamMember.create({
+      data: { teamId: invitacion.teamId, userId: usuarioId, rol: "JUGADOR" },
+    });
+    return this.buscarPorId(invitacion.teamId);
+  }
+
+  async integrantes(teamId: string): Promise<IntegranteEquipo[]> {
+    const equipo = await this.prisma.team.findUnique({ where: { id: teamId } });
+    if (!equipo) {
+      throw new NotFoundException("Equipo no encontrado");
+    }
+
+    const integrantes = await this.prisma.teamMember.findMany({
+      where: { teamId },
+      include: { user: { select: { nombre: true, apellido: true, telefono: true } } },
+      orderBy: { createdAt: "asc" },
+    });
+    return integrantes.map((i) => ({
+      id: i.id,
+      rol: i.rol,
+      nombre: i.user.nombre ? `${i.user.nombre} ${i.user.apellido ?? ""}`.trim() : i.user.telefono,
+    }));
+  }
+
+  private generarCodigoInvitacion(): string {
+    let codigo = "";
+    for (let i = 0; i < INVITACION_CODIGO_LONGITUD; i++) {
+      codigo += INVITACION_ALFABETO[randomInt(INVITACION_ALFABETO.length)];
+    }
+    return codigo;
   }
 }

@@ -62,6 +62,10 @@ export default function Perfil(): React.JSX.Element {
       <View style={styles.lista}>
         <ItemLista etiqueta="Editar perfil" onPress={() => router.push("/completar-perfil")} />
         <ItemLista etiqueta="Cómo funciona" onPress={() => setComoFuncionaAbierto(true)} />
+        {esCapitan && (
+          <ItemLista etiqueta="Gestionar plantel" onPress={() => router.push("/equipo/plantel")} />
+        )}
+        <ItemLista etiqueta="Unirme a un equipo" onPress={() => router.push("/equipo/unirse")} />
         {usuario?.rol === "ADMIN" && (
           <ItemLista etiqueta="Panel de admin" onPress={() => router.push("/admin")} />
         )}

@@ -101,3 +101,35 @@ export interface PatronSospechoso {
 export function obtenerPatronesSospechosos(token: string): Promise<PatronSospechoso[]> {
   return apiRequest("/teams/patrones-sospechosos", { token });
 }
+
+export interface IntegranteEquipo {
+  id: string;
+  rol: "CAPITAN" | "JUGADOR";
+  nombre: string;
+}
+
+/** Plantel progresivo (concepto.md §4): quien ya es parte del equipo. */
+export function obtenerIntegrantes(teamId: string): Promise<IntegranteEquipo[]> {
+  return apiRequest(`/teams/${teamId}/integrantes`);
+}
+
+export interface InvitacionPendiente {
+  id: string;
+  telefono: string;
+  expiraEn: string;
+}
+
+/** Solo el capitan. Manda una invitacion por SMS/WhatsApp con un codigo para sumarse al plantel. */
+export function invitarJugador(token: string, teamId: string, telefono: string): Promise<void> {
+  return apiRequest(`/teams/${teamId}/invitaciones`, { method: "POST", token, body: { telefono } });
+}
+
+/** Solo el capitan. Invitaciones mandadas y todavia no consumidas/vencidas. */
+export function obtenerInvitacionesPendientes(token: string, teamId: string): Promise<InvitacionPendiente[]> {
+  return apiRequest(`/teams/${teamId}/invitaciones`, { token });
+}
+
+/** El jugador invitado consume su propio codigo, logueado con su propia cuenta. */
+export function consumirInvitacion(token: string, codigo: string): Promise<Equipo> {
+  return apiRequest("/teams/consumir-invitacion", { method: "POST", token, body: { codigo } });
+}
