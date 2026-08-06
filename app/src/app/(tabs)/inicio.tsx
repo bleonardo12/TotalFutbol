@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { obtenerUsuarioActual } from "@/api/auth";
 import { aceptarDesafio, misDesafios, rechazarDesafio, type DesafioConDeltas } from "@/api/challenges";
 import { misPartidos, reportarResultado, type Partido } from "@/api/matches";
@@ -827,6 +828,7 @@ function SelectorEquipo({
   error?: string;
 }): React.JSX.Element {
   const { colores, espaciado, radio, tipografia } = useTema();
+  const insets = useSafeAreaInsets();
   const [alta, setAlta] = useState(false);
 
   useEffect(() => {
@@ -845,6 +847,7 @@ function SelectorEquipo({
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             padding: espaciado.lg,
+            paddingBottom: espaciado.lg + insets.bottom,
             gap: espaciado.md,
             maxHeight: "80%",
           }}
