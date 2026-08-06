@@ -47,6 +47,12 @@ export interface EquipoResumen {
   fairPlay: number;
 }
 
+export interface UsuarioResumen {
+  id: string;
+  telefono: string;
+  nombre: string | null;
+}
+
 export type TipoSancionFairPlay = "REPORTE_FALSO_PROBADO" | "DISPUTA_FRIVOLA";
 
 export interface SancionFairPlay {
@@ -79,6 +85,9 @@ export interface Partido {
   createdAt: string;
   equipoLocal: EquipoResumen;
   equipoVisitante: EquipoResumen;
+  /** null hasta que alguien genera/confirma el codigo -- el reporter se fija recien al firmar. */
+  reporterLocal: UsuarioResumen | null;
+  reporterVisitante: UsuarioResumen | null;
   reportes: ReporteResultado[];
 }
 
