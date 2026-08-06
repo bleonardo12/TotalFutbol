@@ -46,6 +46,7 @@ const INCLUIR_DETALLE = {
   sede: true,
   reporterLocal: { select: { id: true, telefono: true, nombre: true } },
   reporterVisitante: { select: { id: true, telefono: true, nombre: true } },
+  reportes: true,
 } as const;
 
 const INCLUIR_DETALLE_CON_RATING = {
