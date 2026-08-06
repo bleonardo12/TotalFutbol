@@ -276,6 +276,7 @@ export default function GenerarPartido(): React.JSX.Element {
 
       <SelectorCancha
         visible={pickerAbierto}
+        coords={coords}
         onCerrar={() => setPickerAbierto(false)}
         onElegir={(v) => {
           elegirManualmente(v);
@@ -288,10 +289,12 @@ export default function GenerarPartido(): React.JSX.Element {
 
 function SelectorCancha({
   visible,
+  coords,
   onCerrar,
   onElegir,
 }: {
   visible: boolean;
+  coords: { lat: number; lng: number } | null;
   onCerrar: () => void;
   onElegir: (venue: Venue) => void;
 }): React.JSX.Element {
@@ -363,6 +366,24 @@ function SelectorCancha({
               </Text>
             )}
           </ScrollView>
+
+          {coords && (
+            <Pressable
+              onPress={() =>
+                Linking.openURL(
+                  `https://www.google.com/maps/search/canchas+de+futbol/@${coords.lat},${coords.lng},15z`,
+                )
+              }
+              style={{
+                paddingVertical: espaciado.sm,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontFamily: "Archivo_600SemiBold", fontSize: 13, color: colores.acento }}>
+                Buscar cancha en Google Maps
+              </Text>
+            </Pressable>
+          )}
 
           <View style={{ gap: espaciado.sm, borderTopWidth: 1, borderTopColor: colores.bordeSutil, paddingTop: espaciado.md }}>
             <Campo
