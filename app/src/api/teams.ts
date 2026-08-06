@@ -50,3 +50,13 @@ export interface FormaEquipo {
 export function obtenerForma(teamId: string): Promise<FormaEquipo> {
   return apiRequest(`/teams/${teamId}/forma`);
 }
+
+export interface ProyeccionDesafio {
+  siGano: number;
+  siPierdo: number;
+}
+
+/** Deltas reales antes de crear el desafio, para Proponer desafio (docs Guapo §3.3). */
+export function obtenerProyeccionDesafio(teamId: string, rivalId: string): Promise<ProyeccionDesafio> {
+  return apiRequest(`/teams/${teamId}/proyectar-desafio?rivalId=${rivalId}`);
+}

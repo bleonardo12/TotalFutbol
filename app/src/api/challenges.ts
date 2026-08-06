@@ -1,4 +1,5 @@
 import type { CantidadJugadores, Partido, Superficie } from "./matches";
+import type { Venue } from "./venues";
 import { apiRequest } from "./client";
 
 export type EstadoDesafio = "PROPUESTO" | "ACEPTADO" | "RECHAZADO" | "EXPIRADO";
@@ -19,13 +20,14 @@ export interface Desafio {
   createdAt: string;
   desafiante: EquipoResumenDesafio;
   desafiado: EquipoResumenDesafio;
+  sede: Venue | null;
   partido: { id: string } | null;
 }
 
 export const ETIQUETA_ESTADO_DESAFIO: Record<EstadoDesafio, string> = {
   PROPUESTO: "Propuesto",
   ACEPTADO: "Aceptado",
-  RECHAZADO: "Rechazado",
+  RECHAZADO: "Se achicaron",
   EXPIRADO: "Expirado",
 };
 
