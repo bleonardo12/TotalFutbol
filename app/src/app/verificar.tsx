@@ -45,11 +45,23 @@ export default function Verificar(): React.JSX.Element {
     },
   });
 
+  /**
+   * En Android, si el usuario cierra el teclado a mano (boton atras, swipe), el TextInput queda
+   * "enfocado" en el estado interno de RN aunque el teclado del sistema ya se escondio -- llamar
+   * .focus() de nuevo no hace nada porque RN cree que ya lo esta. Forzar blur antes reinicia ese
+   * estado y el focus() del siguiente frame si vuelve a abrir el teclado.
+   */
+  function reenfocarCodigo(): void {
+    inputRef.current?.blur();
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
   const reenviarMutacion = useMutation({
     mutationFn: () => solicitarOtp(telefono),
     onSuccess: () => {
       setCodigo("");
       setSegundosParaReenviar(REENVIO_SEGUNDOS);
+      reenfocarCodigo();
     },
   });
 
@@ -63,38 +75,42 @@ export default function Verificar(): React.JSX.Element {
           Te enviamos un código a {telefono}
         </Text>
 
-        <Pressable onPress={() => inputRef.current?.focus()} style={styles.cajasFila}>
-          {Array.from({ length: LONGITUD_CODIGO }).map((_, indice) => {
-            const caracter = codigo[indice];
-            const activa = indice === codigo.length;
-            return (
-              <View
-                key={indice}
-                style={[
-                  styles.caja,
-                  caracter ? styles.cajaLlena : undefined,
-                  activa ? styles.cajaActiva : undefined,
-                ]}
-              >
-                {caracter ? (
-                  <Text style={[tipografia.titulo, { color: colores.textoPrimario }]}>{caracter}</Text>
-                ) : activa ? (
-                  <View style={styles.cursor} />
-                ) : null}
-              </View>
-            );
-          })}
-        </Pressable>
+        <View style={styles.cajasContenedor}>
+          <View style={styles.cajasFila} pointerEvents="none">
+            {Array.from({ length: LONGITUD_CODIGO }).map((_, indice) => {
+              const caracter = codigo[indice];
+              const activa = indice === codigo.length;
+              return (
+                <View
+                  key={indice}
+                  style={[
+                    styles.caja,
+                    caracter ? styles.cajaLlena : undefined,
+                    activa ? styles.cajaActiva : undefined,
+                  ]}
+                >
+                  {caracter ? (
+                    <Text style={[tipografia.titulo, { color: colores.textoPrimario }]}>{caracter}</Text>
+                  ) : activa ? (
+                    <View style={styles.cursor} />
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
 
-        <TextInput
-          ref={inputRef}
-          value={codigo}
-          onChangeText={(texto) => setCodigo(texto.replace(/[^0-9]/g, "").slice(0, LONGITUD_CODIGO))}
-          keyboardType="number-pad"
-          maxLength={LONGITUD_CODIGO}
-          autoFocus
-          style={styles.inputOculto}
-        />
+          {/* Tapar directo esto (no un Pressable + .focus() imperativo) es lo que hace que el
+              toque siempre abra el teclado nativo, incluso despues de cerrarlo a mano. */}
+          <TextInput
+            ref={inputRef}
+            value={codigo}
+            onChangeText={(texto) => setCodigo(texto.replace(/[^0-9]/g, "").slice(0, LONGITUD_CODIGO))}
+            keyboardType="number-pad"
+            maxLength={LONGITUD_CODIGO}
+            autoFocus
+            style={styles.inputOculto}
+          />
+        </View>
 
         {mutacion.isError && (
           <Text style={[tipografia.caption, { color: colores.error, textAlign: "center" }]}>
@@ -128,6 +144,9 @@ export default function Verificar(): React.JSX.Element {
 
 function crearEstilos({ colores, espaciado, radio }: Tema) {
   return {
+    cajasContenedor: {
+      position: "relative" as const,
+    },
     cajasFila: {
       flexDirection: "row" as const,
       justifyContent: "center" as const,
@@ -156,9 +175,11 @@ function crearEstilos({ colores, espaciado, radio }: Tema) {
     },
     inputOculto: {
       position: "absolute" as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       opacity: 0,
-      height: 1,
-      width: 1,
     },
   };
 }
