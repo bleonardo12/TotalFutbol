@@ -17,7 +17,9 @@ export default function Login(): React.JSX.Element {
   const { colores, espaciado, tipografia } = tema;
   const styles = crearEstilos(tema);
   const [resto, setResto] = useState("");
-  const [porWhatsApp, setPorWhatsApp] = useState(false);
+  // Default en true: SMS_FROM todavia no esta cargado (falta comprar el numero), asi que por
+  // ahora WhatsApp es el unico canal que realmente funciona.
+  const [porWhatsApp, setPorWhatsApp] = useState(true);
 
   const heroAnim = useRef(new Animated.Value(0)).current;
   const formAnim = useRef(new Animated.Value(0)).current;
