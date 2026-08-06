@@ -1,15 +1,19 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text } from "react-native";
+import { Animated, Text, TextInput, View } from "react-native";
 import { solicitarOtp } from "@/api/auth";
-import { Boton, Campo, MarcaHero, Pantalla } from "@/components";
-import { useTema } from "@/theme";
+import { Boton, MarcaHero, Pantalla } from "@/components";
+import { useTema, type Tema } from "@/theme";
+
+const PREFIJO = "+54 9";
 
 export default function Login(): React.JSX.Element {
   const router = useRouter();
-  const { colores, espaciado, tipografia } = useTema();
-  const [telefono, setTelefono] = useState("");
+  const tema = useTema();
+  const { colores, espaciado, tipografia } = tema;
+  const styles = crearEstilos(tema);
+  const [resto, setResto] = useState("");
 
   const heroAnim = useRef(new Animated.Value(0)).current;
   const formAnim = useRef(new Animated.Value(0)).current;
@@ -30,6 +34,8 @@ export default function Login(): React.JSX.Element {
     transform: [{ translateY: formAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }],
   };
 
+  const telefono = `${PREFIJO.replace(" ", "")}${resto}`;
+
   const mutacion = useMutation({
     mutationFn: () => solicitarOtp(telefono),
     onSuccess: () => {
@@ -43,27 +49,56 @@ export default function Login(): React.JSX.Element {
         <MarcaHero />
       </Animated.View>
       <Animated.View style={[estiloForm, { gap: espaciado.lg }]}>
-        <Campo
-          etiqueta="Telefono (con codigo de pais)"
-          placeholder="+5491122334455"
-          keyboardType="phone-pad"
-          autoComplete="tel"
-          value={telefono}
-          onChangeText={setTelefono}
-        />
+        <View style={{ gap: espaciado.xs }}>
+          <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>Teléfono</Text>
+          <View style={styles.campoTelefono}>
+            <Text style={[tipografia.cuerpo, { color: colores.textoApagado }]}>{PREFIJO}</Text>
+            <TextInput
+              style={[tipografia.cuerpo, { flex: 1, color: colores.textoPrimario }]}
+              placeholder="11 2233 4455"
+              placeholderTextColor={colores.textoApagado}
+              keyboardType="phone-pad"
+              autoComplete="tel"
+              value={resto}
+              onChangeText={setResto}
+            />
+          </View>
+        </View>
+
         {mutacion.isError && (
           <Text style={[tipografia.caption, { color: colores.error }]}>
             {mutacion.error.message}
           </Text>
         )}
+
         <Boton
           onPress={() => mutacion.mutate()}
           cargando={mutacion.isPending}
-          deshabilitado={telefono.length < 8}
+          deshabilitado={resto.length < 8}
         >
-          Enviar codigo
+          Mandame el código
         </Boton>
+
+        <Text style={[tipografia.caption, { color: colores.textoApagado, textAlign: "center" }]}>
+          Un teléfono, un capitán. Es lo que hace que el ranking no sea un chiste.
+        </Text>
       </Animated.View>
     </Pantalla>
   );
+}
+
+function crearEstilos({ colores, espaciado, radio }: Tema) {
+  return {
+    campoTelefono: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: espaciado.sm,
+      backgroundColor: colores.superficie,
+      borderWidth: 1,
+      borderColor: colores.borde,
+      borderRadius: radio.md,
+      paddingVertical: espaciado.md,
+      paddingHorizontal: espaciado.lg,
+    },
+  };
 }
