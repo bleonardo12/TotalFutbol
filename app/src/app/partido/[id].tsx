@@ -531,7 +531,7 @@ export default function DetallePartido(): React.JSX.Element {
             </Text>
           </View>
 
-          {reportarMutacion.isError && (
+          {reportarMutacion.isError && reportarMutacion.error instanceof ApiError && (
             <Text style={[tipografia.caption, { color: colores.error, textAlign: "center" }]}>
               {reportarMutacion.error.message}
             </Text>
