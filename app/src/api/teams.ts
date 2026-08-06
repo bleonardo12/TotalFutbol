@@ -86,3 +86,18 @@ export interface PalmaresItem {
 export function obtenerPalmares(teamId: string): Promise<PalmaresItem[]> {
   return apiRequest(`/teams/${teamId}/palmares`);
 }
+
+export interface PatronSospechoso {
+  equipoId: string;
+  equipoNombre: string;
+  categoria: CategoriaFutbol;
+  rivalId: string;
+  rivalNombre: string;
+  partidos: number;
+  porcentaje: number;
+}
+
+/** Solo ADMIN. Senal de colusion (equipos fantasma): equipos que concentran sus partidos contra un mismo rival. */
+export function obtenerPatronesSospechosos(token: string): Promise<PatronSospechoso[]> {
+  return apiRequest("/teams/patrones-sospechosos", { token });
+}

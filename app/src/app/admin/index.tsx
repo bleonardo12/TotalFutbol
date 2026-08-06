@@ -3,6 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 import { listarDisputasPendientes, type DisputaPendiente } from "@/api/disputes";
 import { cerrarTemporada, obtenerTemporadaActual } from "@/api/seasons";
+import { obtenerPatronesSospechosos } from "@/api/teams";
 import { Boton, EtiquetaSeccion, Pantalla, Tarjeta } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
@@ -34,6 +35,12 @@ export default function PanelAdmin(): React.JSX.Element {
   const temporadaQuery = useQuery({
     queryKey: ["temporada", "actual"],
     queryFn: obtenerTemporadaActual,
+  });
+
+  const patronesQuery = useQuery({
+    queryKey: ["equipos", "patrones-sospechosos"],
+    queryFn: () => obtenerPatronesSospechosos(accessToken as string),
+    enabled: accessToken !== null,
   });
 
   const cerrarMutacion = useMutation({
@@ -87,6 +94,27 @@ export default function PanelAdmin(): React.JSX.Element {
               </Text>
             )}
           </Tarjeta>
+        )}
+
+        {patronesQuery.data && patronesQuery.data.length > 0 && (
+          <View style={{ gap: espaciado.sm }}>
+            <EtiquetaSeccion>Patrones sospechosos</EtiquetaSeccion>
+            {patronesQuery.data.map((p) => (
+              <Pressable
+                key={`${p.equipoId}-${p.rivalId}`}
+                onPress={() => router.push({ pathname: "/equipo/[id]", params: { id: p.equipoId } })}
+              >
+                <Tarjeta style={{ gap: 2 }}>
+                  <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+                    {p.equipoNombre}
+                  </Text>
+                  <Text style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                    {`${p.porcentaje}% de sus ${p.partidos} partidos son contra ${p.rivalNombre}. No decide nada por si solo.`}
+                  </Text>
+                </Tarjeta>
+              </Pressable>
+            ))}
+          </View>
         )}
 
         <View style={{ flexDirection: "row", alignItems: "center", gap: espaciado.sm }}>
