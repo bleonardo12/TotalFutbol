@@ -45,17 +45,22 @@ export default function PollPlantel(): React.JSX.Element {
       <Text
         style={[tipografia.caption, { color: colores.textoApagado, textAlign: "center" }]}
       >
-        Esto no decide nada por si solo: es una señal mas para que el admin resuelva la disputa.
+        Tu respuesta no se le muestra a los capitanes en disputa, solo al admin. No decide nada por
+        si sola: es una señal mas para que resuelva.
       </Text>
 
       <View style={{ gap: espaciado.sm }}>
-        {OPCIONES.map((opcion) => {
+        {OPCIONES.map((opcion, indice) => {
           const activo = respuesta === opcion.valor;
           return (
             <Pressable
               key={opcion.valor}
               onPress={() => setRespuesta(opcion.valor)}
-              style={[styles.opcion, activo && styles.opcionActiva]}
+              style={[
+                styles.opcion,
+                indice === 0 && !activo && styles.opcionPrimera,
+                activo && styles.opcionActiva,
+              ]}
             >
               <Text
                 style={[
@@ -97,13 +102,16 @@ export default function PollPlantel(): React.JSX.Element {
   );
 }
 
-function crearEstilos({ colores, espaciado, radio }: Tema) {
+function crearEstilos({ colores }: Tema) {
   return {
     opcion: {
       borderWidth: 1,
       borderColor: colores.borde,
-      borderRadius: radio.md,
-      padding: espaciado.md,
+      borderRadius: 14,
+      padding: 18,
+    },
+    opcionPrimera: {
+      borderColor: colores.bordeAcento,
     },
     opcionActiva: {
       backgroundColor: colores.acento,
