@@ -2,8 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { obtenerUsuarioActual } from "@/api/auth";
+import { ApiError } from "@/api/client";
 import {
   desistirPartido,
   flaggearIncidente,
@@ -18,6 +19,7 @@ import {
 import { obtenerMiEntorno } from "@/api/ranking";
 import { misEquipos } from "@/api/teams";
 import { Boton, Campo, Chip, EtiquetaSeccion, Pantalla, Tarjeta } from "@/components";
+import { useColaReportes } from "@/hooks/useColaReportes";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
 
@@ -97,6 +99,7 @@ export default function DetallePartido(): React.JSX.Element {
   const [mostrarIncidente, setMostrarIncidente] = useState(false);
   const [descripcionIncidente, setDescripcionIncidente] = useState("");
   const [ahoraMs, setAhoraMs] = useState(() => Date.now());
+  const { cola, reintentarTodo, encolarReporte } = useColaReportes();
 
   const usuarioQuery = useQuery({
     queryKey: ["usuario", "actual"],
@@ -153,22 +156,37 @@ export default function DetallePartido(): React.JSX.Element {
     },
   });
 
+  function payloadReporte(): { outcome: OutcomePartido; golesLocal?: number; golesVisita?: number } {
+    if (!resultado || !partidoQuery.data) {
+      throw new Error("Elegi un resultado");
+    }
+    const esLocal = partidoQuery.data.reporterLocalId === usuarioQuery.data?.id;
+    const outcome = mapearResultadoPropio(resultado, esLocal);
+    const propios = golesPropios ? Number(golesPropios) : undefined;
+    const rival = golesRival ? Number(golesRival) : undefined;
+    return {
+      outcome,
+      golesLocal: esLocal ? propios : rival,
+      golesVisita: esLocal ? rival : propios,
+    };
+  }
+
   const reportarMutacion = useMutation({
     mutationFn: () => {
-      if (!resultado || !partidoQuery.data) {
-        throw new Error("Elegi un resultado");
-      }
-      const esLocal = partidoQuery.data.reporterLocalId === usuarioQuery.data?.id;
-      const outcome = mapearResultadoPropio(resultado, esLocal);
-      const propios = golesPropios ? Number(golesPropios) : undefined;
-      const rival = golesRival ? Number(golesRival) : undefined;
-      const golesLocal = esLocal ? propios : rival;
-      const golesVisita = esLocal ? rival : propios;
+      const { outcome, golesLocal, golesVisita } = payloadReporte();
       return reportarResultado(accessToken as string, id, outcome, golesLocal, golesVisita);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partidos", id] });
       queryClient.invalidateQueries({ queryKey: ["equipos", "mios"] });
+    },
+    onError: (error) => {
+      // Sin respuesta del servidor (no ApiError) = sin señal, no un error de negocio -- se
+      // encola en vez de mostrarlo como fallo (docs Guapo §3.4/§4, "Sin señal").
+      if (!(error instanceof ApiError) && resultado) {
+        const { outcome, golesLocal, golesVisita } = payloadReporte();
+        encolarReporte({ matchId: id, outcome, golesLocal, golesVisita });
+      }
     },
   });
 
@@ -376,17 +394,38 @@ export default function DetallePartido(): React.JSX.Element {
   }
 
   return (
-    <Pantalla centrado={false}>
+    <Pantalla centrado={false} style={{ padding: 0 }}>
       <Stack.Screen
         options={{ title: `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}` }}
       />
 
+      {cola.length > 0 && <BandaOffline cantidad={cola.length} onReintentar={reintentarTodo} />}
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: espaciado.lg, gap: espaciado.md }}>
       <View style={{ alignItems: "center", gap: espaciado.xs }}>
         <Text style={[tipografia.titulo, { color: colores.textoPrimario, textAlign: "center" }]}>
           {partido.equipoLocal.nombre} vs {partido.equipoVisitante.nombre}
         </Text>
         <Chip texto={ETIQUETA_ESTADO_PARTIDO[partido.estado]} tono={TONO_ESTADO_PARTIDO[partido.estado]} />
       </View>
+
+      {cola.filter((r) => r.matchId === id).length > 0 && (
+        <Tarjeta style={{ gap: espaciado.sm, borderColor: colores.alertaBorde }}>
+          <Text style={[tipografia.cuerpoDestacado, { color: colores.textoPrimario }]}>
+            Guardado local, se manda solo
+          </Text>
+          {cola
+            .filter((r) => r.matchId === id)
+            .map((item) => (
+              <Text key={item.id} style={[tipografia.caption, { color: colores.textoSecundario }]}>
+                {`Reportaste ${new Date(item.creadoEn).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })} — se manda cuando vuelva la señal.`}
+              </Text>
+            ))}
+          <Boton variante="secundario" onPress={() => reintentarTodo()}>
+            Reintentar ahora
+          </Boton>
+        </Tarjeta>
+      )}
 
       {partido.estado === "PACTADO" && esParteDelPacto && (
         <Tarjeta style={{ gap: espaciado.sm }}>
@@ -543,7 +582,42 @@ export default function DetallePartido(): React.JSX.Element {
           )}
         </View>
       )}
+      </ScrollView>
     </Pantalla>
+  );
+}
+
+/** Banda superior de "sin señal" (docs Guapo §3.4/§4): aparece mientras haya reportes encolados. */
+function BandaOffline({
+  cantidad,
+  onReintentar,
+}: {
+  cantidad: number;
+  onReintentar: () => void;
+}): React.JSX.Element {
+  const { colores, espaciado, tipografia } = useTema();
+  return (
+    <Pressable
+      onPress={onReintentar}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: espaciado.xs,
+        backgroundColor: colores.alertaFondo,
+        borderBottomWidth: 1,
+        borderBottomColor: colores.alertaBorde,
+        paddingVertical: espaciado.sm,
+        paddingHorizontal: espaciado.lg,
+      }}
+    >
+      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colores.alerta }} />
+      <Text style={[tipografia.caption, { color: colores.alerta, flex: 1 }]}>
+        {`Sin conexión — guardando local (${cantidad})`}
+      </Text>
+      <Text style={[tipografia.caption, { color: colores.alerta, textDecorationLine: "underline" }]}>
+        Reintentar
+      </Text>
+    </Pressable>
   );
 }
 
