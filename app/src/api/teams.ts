@@ -10,6 +10,7 @@ export type CategoriaFutbol = "MASCULINO" | "FEMENINO" | "MIXTO";
 export interface Equipo {
   id: string;
   nombre: string;
+  capitanId: string;
   categoria: CategoriaFutbol;
   estado: "PROVISIONAL" | "RANKEADO";
   rating: number;
