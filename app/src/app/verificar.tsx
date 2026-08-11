@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, Text, TextInput, View } from "react-native";
-import { obtenerUsuarioActual, solicitarOtp, verificarOtp } from "@/api/auth";
+import { obtenerUsuarioActual, solicitarOtp, verificarOtp, type CanalOtp } from "@/api/auth";
 import { Boton, Pantalla } from "@/components";
 import { useAuthStore } from "@/store/auth-store";
 import { useTema, type Tema } from "@/theme";
@@ -11,7 +11,7 @@ const LONGITUD_CODIGO = 6;
 const REENVIO_SEGUNDOS = 30;
 
 export default function Verificar(): React.JSX.Element {
-  const { telefono } = useLocalSearchParams<{ telefono: string }>();
+  const { telefono, canal } = useLocalSearchParams<{ telefono: string; canal: CanalOtp }>();
   const router = useRouter();
   const iniciarSesion = useAuthStore((s) => s.iniciarSesion);
   const tema = useTema();
@@ -57,7 +57,7 @@ export default function Verificar(): React.JSX.Element {
   }
 
   const reenviarMutacion = useMutation({
-    mutationFn: () => solicitarOtp(telefono),
+    mutationFn: () => solicitarOtp(telefono, canal),
     onSuccess: () => {
       setCodigo("");
       setSegundosParaReenviar(REENVIO_SEGUNDOS);
@@ -131,11 +131,18 @@ export default function Verificar(): React.JSX.Element {
             {`⏳ Reenviar código en 0:${String(segundosParaReenviar).padStart(2, "0")}`}
           </Text>
         ) : (
-          <Pressable onPress={() => reenviarMutacion.mutate()} disabled={reenviarMutacion.isPending}>
-            <Text style={[tipografia.cuerpoDestacado, { color: colores.acento, textAlign: "center" }]}>
-              Reenviar código
-            </Text>
-          </Pressable>
+          <>
+            <Pressable onPress={() => reenviarMutacion.mutate()} disabled={reenviarMutacion.isPending}>
+              <Text style={[tipografia.cuerpoDestacado, { color: colores.acento, textAlign: "center" }]}>
+                Reenviar código
+              </Text>
+            </Pressable>
+            {reenviarMutacion.isError && (
+              <Text style={[tipografia.caption, { color: colores.error, textAlign: "center" }]}>
+                {reenviarMutacion.error.message}
+              </Text>
+            )}
+          </>
         )}
       </Animated.View>
     </Pantalla>

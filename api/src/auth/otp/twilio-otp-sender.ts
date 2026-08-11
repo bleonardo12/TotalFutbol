@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Twilio } from "twilio";
 import type { CanalOtp, OtpSender } from "./otp-sender.interface";
@@ -36,10 +36,12 @@ export class TwilioOtpSender implements OtpSender {
       });
       return;
     }
-    await cliente.messages.create({
-      to: telefono,
-      from: this.config.getOrThrow<string>("TWILIO_SMS_FROM"),
-      body,
-    });
+    const smsFrom = this.config.get<string>("TWILIO_SMS_FROM");
+    if (!smsFrom) {
+      // Todavia no se compro el numero de SMS -- mensaje claro en vez del 500 generico de
+      // getOrThrow, el canal SMS es una omision conocida, no un bug.
+      throw new ServiceUnavailableException("El envio por SMS todavia no esta disponible -- probá con WhatsApp");
+    }
+    await cliente.messages.create({ to: telefono, from: smsFrom, body });
   }
 }

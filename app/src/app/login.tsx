@@ -42,10 +42,12 @@ export default function Login(): React.JSX.Element {
 
   const telefono = `${PREFIJO.replace(" ", "")}${resto}`;
 
+  const canal: CanalOtp = porWhatsApp ? "WHATSAPP" : "SMS";
+
   const mutacion = useMutation({
-    mutationFn: () => solicitarOtp(telefono, (porWhatsApp ? "WHATSAPP" : "SMS") as CanalOtp),
+    mutationFn: () => solicitarOtp(telefono, canal),
     onSuccess: () => {
-      router.push({ pathname: "/verificar", params: { telefono } });
+      router.push({ pathname: "/verificar", params: { telefono, canal } });
     },
   });
 
